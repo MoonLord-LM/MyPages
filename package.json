@@ -4,7 +4,6 @@
   "description": "Static Site Generator Test",
   "main": "index.js",
   "scripts": {
-    "test": "test",
     "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs"
   },
