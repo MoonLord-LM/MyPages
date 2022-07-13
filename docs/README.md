@@ -30,7 +30,7 @@ footer: MIT Licensed | Copyright © 2018-present Evan You
 <CodeGroup>
   <CodeGroupItem title="YARN" active>
 
-```javascript
+```bash
 # 在你的项目中安装
 yarn add -D vuepress@next
 
@@ -48,7 +48,7 @@ yarn vuepress build
 
   <CodeGroupItem title="NPM">
 
-```javascript
+```bash
 # 在你的项目中安装
 npm install -D vuepress@next
 
