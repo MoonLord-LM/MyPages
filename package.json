@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/MoonLord-LM/MyPages/issues"
   },
-  "homepage": "https://github.com/MoonLord-LM/MyPages#readme"
+  "homepage": "https://github.com/MoonLord-LM/MyPages#readme",
+  "devDependencies": {
+    "vuepress": "^2.0.0-beta.49"
+  }
 }
