@@ -1,6 +1,6 @@
 :: check Node.js
 node --version
-call npm version
+call npm --version
 
 :: install VuePress
 npm init
