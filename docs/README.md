@@ -1,7 +1,11 @@
 ---
 home: true
-title: 首页
+title: 浏览器页签标题
 heroImage: /images/hero.png
+heroImageDark: /images/hero.png
+heroAlt: 图片无法展示时显示的文本
+heroText: 首页大标题
+tagline: 首页次标题
 actions:
   - text: 快速上手
     link: /zh/guide/getting-started.html
@@ -24,6 +28,9 @@ features:
     details: 默认的打包工具是 Vite ，也同样支持 Webpack 。选一个你喜欢的来使用吧！
 footer: MIT Licensed | Copyright © 2018-present Evan You
 ---
+
+### 首页 Frontmatter 标签说明
+https://v2.vuepress.vuejs.org/zh/reference/default-theme/frontmatter.html#首页
 
 ### 像数 1, 2, 3 一样容易
 
