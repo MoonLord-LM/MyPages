@@ -28,4 +28,3 @@ jobs:
 
     - run: npm install -D vuepress@next
     - run: npm run docs:build -- vuepress build docs
-    - run: npm test
