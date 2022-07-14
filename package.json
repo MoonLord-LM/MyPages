@@ -22,5 +22,8 @@
   "homepage": "https://github.com/MoonLord-LM/MyPages#readme",
   "devDependencies": {
     "vuepress": "^2.0.0-beta.49"
+  },
+  "directories": {
+    "doc": "docs"
   }
 }
