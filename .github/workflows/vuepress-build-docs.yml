@@ -31,6 +31,8 @@ jobs:
 
     - run: npm run docs:build -- vuepress build docs
 
+    - run: echo 'github.moonLord.cn' > docs/.vuepress/dist/CNAME
+
     # https://github.com/crazy-max/ghaction-github-pages
     - uses: crazy-max/ghaction-github-pages@v3
       with:
