@@ -39,6 +39,25 @@ module.exports = {
           },
         ]
       },
+      // 菜单 3
+      {
+        text: '菜单 3 链接',
+        link: 'https://www.github.com',
+      },
+      // 菜单 4
+      {
+        text: '菜单 4 链接组',
+        children: [
+          {
+            text: '链接 1 GitHub',
+            link: 'https://www.github.com',
+          },
+          {
+            text: '链接 2 Google',
+            link: 'https://www.google.com',
+          },
+        ]
+      },
     ],
 
     // 导航栏右侧的仓库地址
