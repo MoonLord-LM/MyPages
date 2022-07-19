@@ -20,8 +20,8 @@ module.exports = {
       // 菜单 1
       {
         text: '菜单 1 NavbarItem',
-        link: '/menu1/README.md',
-        activeMatch: '/menu1',
+        link: '/菜单1/README.md',
+        activeMatch: '/菜单1',
       },
       // 菜单 2
       {
@@ -29,13 +29,13 @@ module.exports = {
         children: [
           {
             text: '文章 1',
-            link: '/menu2/article1.md',
-            activeMatch: '/menu2/article1',
+            link: '/菜单2/文章1.md',
+            activeMatch: '/菜单2/文章1',
           },
           {
             text: '文章 2',
-            link: '/menu2/article2.md',
-            activeMatch: '/menu2/article2',
+            link: '/菜单2/文章2.md',
+            activeMatch: '/菜单2/文章2',
           },
         ]
       },
