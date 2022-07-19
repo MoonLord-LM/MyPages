@@ -62,10 +62,10 @@ module.exports = {
 
     // 导航栏右侧的仓库地址
     repoLabel: '仓库地址',
-    repo: 'https://github.com/MoonLord-LM/MyPages/',
+    repo: 'https://github.com/MoonLord-LM/MyPages',
 
     // 正文中的编辑本页
-    docsRepo: 'https://github.com/MoonLord-LM/MyPages/',
+    docsRepo: 'https://github.com/MoonLord-LM/MyPages',
     docsBranch: 'master',
     docsDir: 'docs',
     editLinkPattern: ':repo/edit/:branch/:path',
