@@ -27,6 +27,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - run: npm install -D vuepress@next
+    - run: npm install -D "vuepress@next"
+    - run: npm install -D "@vuepress/plugin-search@next"
 
     - run: npm run docs:build -- vuepress build docs
