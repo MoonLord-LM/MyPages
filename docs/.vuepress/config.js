@@ -19,21 +19,26 @@ module.exports = {
     navbar: [
       // 菜单 1
       {
-        text: '菜单 1',
-        children: ['/menu1/article1.md', '/menu1/article2.md'],
+        text: '菜单 1 NavbarItem',
+        link: '/menu1/README.md',
+        activeMatch: '/menu1',
       },
-      // NavbarItem
+      // 菜单 2
       {
-        text: 'Foo',
-        link: '/foo/',
+        text: '菜单 2 NavbarGroup',
+        children: [
+          {
+            text: '文章 1',
+            link: '/menu2/article1.md',
+            activeMatch: '/menu2/article1',
+          },
+          {
+            text: '文章 2',
+            link: '/menu2/article2.md',
+            activeMatch: '/menu2/article2',
+          },
+        ]
       },
-      // NavbarGroup
-      {
-        text: 'Group',
-        children: ['/group/foo.md', '/group/bar.md'],
-      },
-      // 字符串 - 页面文件路径
-      '/bar/README.md',
     ],
 
     // 导航栏右侧的仓库地址
@@ -44,7 +49,7 @@ module.exports = {
     docsRepo: 'https://github.com/MoonLord-LM/MyPages/',
     docsBranch: 'master',
     docsDir: 'docs',
-    editLinkPattern: ':repo/-/edit/:branch/:path',
+    editLinkPattern: ':repo/edit/:branch/:path',
     editLinkText: '编辑本页面',
 
   }),
