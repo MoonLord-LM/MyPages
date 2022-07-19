@@ -17,23 +17,35 @@ module.exports = {
 
     // 导航栏右侧的菜单
     navbar: [
-        // NavbarItem
-        {
-          text: 'Foo',
-          link: '/foo/',
-        },
-        // NavbarGroup
-        {
-          text: 'Group',
-          children: ['/group/foo.md', '/group/bar.md'],
-        },
-        // 字符串 - 页面文件路径
-        '/bar/README.md',
+      // 菜单 1
+      {
+        text: '菜单 1',
+        children: ['/menu1/article1.md', '/menu1/article2.md'],
+      },
+      // NavbarItem
+      {
+        text: 'Foo',
+        link: '/foo/',
+      },
+      // NavbarGroup
+      {
+        text: 'Group',
+        children: ['/group/foo.md', '/group/bar.md'],
+      },
+      // 字符串 - 页面文件路径
+      '/bar/README.md',
     ],
 
     // 导航栏右侧的仓库地址
-    repoLabel: '联系我们',
+    repoLabel: '仓库地址',
     repo: 'https://github.com/MoonLord-LM/MyPages/',
+
+    // 正文中的编辑本页
+    docsRepo: 'https://github.com/MoonLord-LM/MyPages/',
+    docsBranch: 'master',
+    docsDir: 'docs',
+    editLinkPattern: ':repo/-/edit/:branch/:path',
+    editLinkText: '编辑本页面',
 
   }),
 
