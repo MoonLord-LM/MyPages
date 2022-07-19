@@ -1,8 +1,12 @@
-const { defaultTheme } = require('@vuepress/theme-default')
+const { defaultTheme } = require('@vuepress/theme-default');
+const { searchPlugin } = require('@vuepress/plugin-search')
 
 module.exports = {
   // 基础路径
   base: '/',
+
+  // 基础标题
+  title: 'MyPages Title',
 
   // 主题设置
   theme: defaultTheme({
@@ -32,4 +36,20 @@ module.exports = {
     repo: 'https://github.com/MoonLord-LM/MyPages/',
 
   }),
+
+  // 插件设置
+  plugins: [
+    searchPlugin({
+      maxSuggestions: 10,
+      locales: {
+        '/': {
+          placeholder: 'Search',
+        },
+        '/zh/': {
+          placeholder: '搜索',
+        },
+      },
+    }),
+  ],
+
 }
