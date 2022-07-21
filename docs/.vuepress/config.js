@@ -1,5 +1,5 @@
 const { defaultTheme } = require('@vuepress/theme-default');
-const { searchPlugin } = require('@vuepress/plugin-search')
+const { searchPlugin } = require('@vuepress/plugin-search');
 
 module.exports = {
   // 基础路径
@@ -20,22 +20,28 @@ module.exports = {
       // 菜单 1
       {
         text: '菜单 1 NavbarItem',
-        link: '/菜单1/README.md',
-        activeMatch: '/菜单1',
+        link: '/menu1/menu1.md',
+        activeMatch: '/menu1',
       },
       // 菜单 2
       {
-        text: '菜单 2 NavbarGroup',
+        text: '菜单 2 NavbarItem',
+        link: '/menu2/menu2.md',
+        activeMatch: '/menu2',
+      },
+      // 菜单 3
+      {
+        text: '菜单 3 NavbarGroup',
         children: [
           {
             text: '文章 1',
-            link: '/菜单2/文章1.md',
-            activeMatch: '/菜单2/文章1',
+            link: '/menu3/article1.md',
+            activeMatch: '/menu3/article1',
           },
           {
             text: '文章 2',
-            link: '/菜单2/文章2.md',
-            activeMatch: '/菜单2/文章2',
+            link: '/menu3/article2.md',
+            activeMatch: '/menu3/article2',
           },
         ]
       },
