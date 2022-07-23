@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="generator" content="VuePress 2.0.0-beta.49">
+    <style>
+      :root {
+        --c-bg: #fff;
+      }
+      html.dark {
+        --c-bg: #22272e;
+      }
+      html, body {
+        background-color: var(--c-bg);
+      }
+    </style>
+    <script>
+      const userMode = localStorage.getItem('vuepress-color-scheme');
+			const systemDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+			if (userMode === 'dark' || (userMode !== 'light' && systemDarkMode)) {
+				document.documentElement.classList.toggle('dark', true);
+			}
+    </script>
+    <title>MyPages Title</title><meta name="description" content="">
+    <link rel="modulepreload" href="/assets/app.3482f6c3.js"><link rel="modulepreload" href="/assets/404.html.a8f77622.js"><link rel="modulepreload" href="/assets/404.html.7d858b3d.js"><link rel="prefetch" href="/assets/index.html.a6a105c3.js"><link rel="prefetch" href="/assets/menu1.html.c4610a27.js"><link rel="prefetch" href="/assets/menu2.html.ebf10eb0.js"><link rel="prefetch" href="/assets/article1.html.43479104.js"><link rel="prefetch" href="/assets/article2.html.5d84cf84.js"><link rel="prefetch" href="/assets/index.html.58001a89.js"><link rel="prefetch" href="/assets/menu1.html.8e3711d8.js"><link rel="prefetch" href="/assets/menu2.html.9db7c873.js"><link rel="prefetch" href="/assets/article1.html.b9897dc6.js"><link rel="prefetch" href="/assets/article2.html.61e3163e.js"><link rel="prefetch" href="/assets/404.cb8e2743.js"><link rel="prefetch" href="/assets/Layout.0606240e.js">
+    <link rel="stylesheet" href="/assets/style.96ee71b5.css">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="theme-container"><main class="page"><div class="theme-default-content"><h1>404</h1><blockquote>Looks like we&#39;ve got some broken links.</blockquote><a href="/" class="">Take me home</a></div></main></div><!----><!--]--></div>
+    <script type="module" src="/assets/app.3482f6c3.js" defer></script>
+  </body>
+</html>
