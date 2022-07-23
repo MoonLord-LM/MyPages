@@ -5,7 +5,8 @@
 
 version: 2
 updates:
-  - package-ecosystem: "npm" # maven、npm、docker、gradle、pip
+  - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly" # daily、weekly、monthly
+      interval: "weekly"
+
