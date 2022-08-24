@@ -1,7 +1,8 @@
-const { defaultTheme } = require('@vuepress/theme-default');
-const { searchPlugin } = require('@vuepress/plugin-search');
+import { defineUserConfig } from 'vuepress'
+import { defaultTheme } from '@vuepress/theme-default';
+import { searchPlugin } from '@vuepress/plugin-search';
 
-module.exports = {
+export default defineUserConfig({
   // 基础路径
   base: '/',
 
@@ -94,4 +95,4 @@ module.exports = {
     }),
   ],
 
-}
+})
