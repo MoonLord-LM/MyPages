@@ -21,39 +21,69 @@ export default defineUserConfig({
       // 菜单 1
       {
         text: '菜单 1 NavbarItem',
-        link: '/menu1/menu1.md',
-        activeMatch: '/menu1',
+        link: '/menu1/article1.md',
+        activeMatch: '/menu1/article1',
       },
       // 菜单 2
       {
-        text: '菜单 2 NavbarItem',
-        link: '/menu2/menu2.md',
-        activeMatch: '/menu2',
-      },
-      // 菜单 3
-      {
-        text: '菜单 3 NavbarGroup',
+        text: '菜单 2 NavbarGroup',
         children: [
           {
-            text: '文章 1',
-            link: '/menu3/article1.md',
-            activeMatch: '/menu3/article1',
+            text: '子菜单 1',
+            link: '/menu1/article1.md',
+            activeMatch: '/menu1/article1',
           },
           {
-            text: '文章 2',
-            link: '/menu3/article2.md',
-            activeMatch: '/menu3/article2',
+            text: '子菜单 2',
+            link: '/menu2/article2.md',
+            activeMatch: '/menu2/article2',
           },
         ]
       },
       // 菜单 3
       {
-        text: '菜单 3 链接',
-        link: 'https://www.github.com',
+        text: '菜单 3 NavbarGroup Level 2',
+        children: [
+          {
+            text: '子菜单分类 1',
+            children : [
+              {
+                text: '子菜单 1',
+                link: '/menu1/article1.md',
+                activeMatch: '/menu1/article1',
+              },
+              {
+                text: '子菜单 2',
+                link: '/menu2/article2.md',
+                activeMatch: '/menu2/article2',
+              },
+            ]
+          },
+          {
+            text: '子菜单分类 2',
+            children : [
+              {
+                text: '子菜单 3',
+                link: '/menu3/article3.md',
+                activeMatch: '/menu3/article3',
+              },
+              {
+                text: '子菜单 4',
+                link: '/menu3/article4.md',
+                activeMatch: '/menu3/article4',
+              },
+            ]
+          },
+        ]
       },
       // 菜单 4
       {
-        text: '菜单 4 链接组',
+        text: '菜单 4 链接',
+        link: 'https://www.github.com',
+      },
+      // 菜单 5
+      {
+        text: '菜单 5 链接组',
         children: [
           {
             text: '链接 1 GitHub',
