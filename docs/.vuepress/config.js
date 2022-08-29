@@ -1,6 +1,7 @@
 import { defineUserConfig } from 'vuepress';
 import { defaultTheme } from '@vuepress/theme-default';
 import { searchPlugin } from '@vuepress/plugin-search';
+import { mdEnhancePlugin } from "vuepress-plugin-md-enhance";
 
 export default defineUserConfig({
   // 基础路径
@@ -122,6 +123,9 @@ export default defineUserConfig({
           placeholder: '搜索',
         },
       },
+    }),
+    mdEnhancePlugin({
+      mermaid: true,
     }),
   ],
 
