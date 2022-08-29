@@ -7,3 +7,4 @@ if not exist "package.json" ( call npm init )
 :: install VuePress
 call npm install -D "vuepress@next"
 call npm install -D "@vuepress/plugin-search@next"
+call npm install -D "vuepress-plugin-md-enhance@next"
