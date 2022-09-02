@@ -12,4 +12,5 @@ call npm list "vuepress-plugin-md-enhance@next" ^
 call npm run docs:build
 
 pause
+cls
 goto :begin
