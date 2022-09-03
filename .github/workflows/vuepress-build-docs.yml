@@ -48,7 +48,8 @@ jobs:
     - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/version-management-tomcat/pom.xml"
     - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/parent/pom.xml"
 
-    - run: mv "${user.home}/.m2/repository/cn/moonlord/" 'docs/.vuepress/dist/maven/cn/moonlord/'
+    - run: mkdir -p 'docs/.vuepress/dist/maven/cn/moonlord/'
+    - run: mv "/home/runner/.m2/repository/cn/moonlord" 'docs/.vuepress/dist/maven/cn/moonlord/'
 
 
 
