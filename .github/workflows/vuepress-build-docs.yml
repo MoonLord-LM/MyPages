@@ -35,9 +35,22 @@ jobs:
 
     - run: echo 'github.moonLord.cn' > 'docs/.vuepress/dist/CNAME'
 
+
+
+    # https://github.com/MoonLord-LM/MyJava
+
     - run: mkdir -p 'tmp/maven/MoonLord-LM/MyJava'
     - run: git clone 'https://github.com/MoonLord-LM/MyJava.git' 'tmp/maven/MoonLord-LM/MyJava'
+
     - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/super-parent/pom.xml"
+    - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/version-management-bouncy-castle/pom.xml"
+    - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/version-management-groovy/pom.xml"
+    - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/version-management-tomcat/pom.xml"
+    - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/parent/pom.xml"
+
+    - run: mv "${user.home}/.m2/repository/cn/moonlord/" 'docs/.vuepress/dist/maven/cn/moonlord/'
+
+
 
     # https://github.com/crazy-max/ghaction-github-pages
     - uses: crazy-max/ghaction-github-pages@v3
