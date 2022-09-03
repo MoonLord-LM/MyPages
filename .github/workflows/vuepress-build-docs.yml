@@ -35,7 +35,9 @@ jobs:
 
     - run: echo 'github.moonLord.cn' > 'docs/.vuepress/dist/CNAME'
 
-    - run: git clone 'https://github.com/MoonLord-LM/MyJava.git' 'docs/.vuepress/dist'
+    - run: mkdir -p 'tmp/maven/MoonLord-LM/MyJava'
+    - run: git clone 'https://github.com/MoonLord-LM/MyJava.git' 'tmp/maven/MoonLord-LM/MyJava'
+    - run: mvn -B -U -e install --file "tmp/maven/MoonLord-LM/MyJava/super-parent/pom.xml"
 
     # https://github.com/crazy-max/ghaction-github-pages
     - uses: crazy-max/ghaction-github-pages@v3
