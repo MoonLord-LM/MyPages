@@ -33,7 +33,9 @@ jobs:
 
     - run: npm run docs:build -- vuepress build docs
 
-    - run: echo 'github.moonLord.cn' > docs/.vuepress/dist/CNAME
+    - run: echo 'github.moonLord.cn' > 'docs/.vuepress/dist/CNAME'
+
+    - run: git clone 'https://github.com/MoonLord-LM/MyJava.git' 'docs/.vuepress/dist'
 
     # https://github.com/crazy-max/ghaction-github-pages
     - uses: crazy-max/ghaction-github-pages@v3
