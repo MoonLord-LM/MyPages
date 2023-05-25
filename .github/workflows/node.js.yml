@@ -29,7 +29,7 @@ jobs:
 
     - run: npm install -D "vuepress@next"
     - run: npm install -D "@vuepress/plugin-search@next"
-    - run: npm install -D "vuepress-plugin-md-enhance@next"
+    - run: npm install -D "vuepress-plugin-md-enhance"
     
     - run: cat 'package-lock.json'
 
