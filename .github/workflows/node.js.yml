@@ -33,4 +33,4 @@ jobs:
     
     - run: cat 'package-lock.json'
 
-    - run: npm run docs:build -- vuepress build docs
+    - run: npm run docs:build
