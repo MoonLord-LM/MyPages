@@ -18,6 +18,8 @@ export default defineUserConfig({
     logoDark: '/images/hero.png',
 
     // 导航栏右侧的菜单
+    navbar: false,
+    /*
     navbar: [
       // 菜单 1
       {
@@ -97,6 +99,7 @@ export default defineUserConfig({
         ]
       },
     ],
+    */
 
     // 导航栏右侧的仓库地址
     repoLabel: '仓库地址',
