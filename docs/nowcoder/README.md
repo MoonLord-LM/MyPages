@@ -1,73 +1,32 @@
----
-home: true
-title: 浏览器页签标题
-heroImage: /images/hero.png
-heroImageDark: /images/hero.png
-heroAlt: 图片无法展示时显示的文本
-heroText: 首页大标题
-tagline: 首页次标题
-actions:
-  - text: 快速上手
-    link: /zh/guide/getting-started.html
-    type: primary
-  - text: 项目简介
-    link: /zh/guide/
-    type: secondary
-features:
-  - title: 简洁至上
-    details: 以 Markdown 为中心的项目结构，以最少的配置帮助你专注于写作。
-  - title: Vue 驱动
-    details: 享受 Vue 的开发体验，可以在 Markdown 中使用 Vue 组件，又可以使用 Vue 来开发自定义主题。
-  - title: 高性能
-    details: VuePress 会为每个页面预渲染生成静态的 HTML，同时，每个页面被加载的时候，将作为 SPA 运行。
-  - title: 主题
-    details: 提供了一个开箱即用的默认主题。你也可以挑选一个社区主题，或者创建一个你自己的主题。
-  - title: 插件
-    details: 灵活的插件API，使得插件可以为你的站点提供许多即插即用的功能。
-  - title: 打包工具
-    details: 默认的打包工具是 Vite ，也同样支持 Webpack 。选一个你喜欢的来使用吧！
-footer: MIT Licensed | Copyright © 2018-present Evan You
----
+# 牛客网考试真题
 
-### 首页 Frontmatter 标签说明
-https://v2.vuepress.vuejs.org/zh/reference/default-theme/frontmatter.html#首页
-
-### 像数 1, 2, 3 一样容易
-
-<CodeGroup>
-  <CodeGroupItem title="YARN" active>
-
-```bash
-# 在你的项目中安装
-yarn add -D vuepress@next
-
-# 新建一个 markdown 文件
-echo '# Hello VuePress' > README.md
-
-# 开始写作
-yarn vuepress dev
-
-# 构建静态文件
-yarn vuepress build
-```
-
-  </CodeGroupItem>
-
-  <CodeGroupItem title="NPM">
-
-```bash
-# 在你的项目中安装
-npm install -D vuepress@next
-
-# 新建一个 markdown 文件
-echo '# Hello VuePress' > README.md
-
-# 开始写作
-npx vuepress dev
-
-# 构建静态文件
-npx vuepress build
-```
-
-  </CodeGroupItem>
-</CodeGroup>
+[A卷 2022Q4 - 1](/A卷2022Q4-1.html)
+[A卷 2022Q4 - 2](/A卷2022Q4-2.html)
+[A卷 2022Q4 - 3](/A卷2022Q4-3.html)
+[A卷 2022Q4 - 4](/A卷2022Q4-4.html)
+[A卷 2022Q4 - 5](/A卷2022Q4-5.html)
+[A卷 2022Q4 - 6](/A卷2022Q4-6.html)
+[A卷 2022Q4 - 7](/A卷2022Q4-7.html)
+[A卷 2022Q4 - 8](/A卷2022Q4-8.html)
+[A卷 2022Q4 - 9](/A卷2022Q4-9.html)
+[A卷 2022Q4 - 10](/A卷2022Q4-10.html)
+[A卷 2022Q4 - 11](/A卷2022Q4-11.html)
+[A卷 2022Q4 - 12](/A卷2022Q4-12.html)
+[A卷 2022Q4 - 13](/A卷2022Q4-13.html)
+[A卷 2022Q4 - 14](/A卷2022Q4-14.html)
+[A卷 2022Q4 - 15](/A卷2022Q4-15.html)
+[A卷 2022Q4 - 16](/A卷2022Q4-16.html)
+[A卷 2022Q4 - 17](/A卷2022Q4-17.html)
+[A卷 2022Q4 - 18](/A卷2022Q4-18.html)
+[A卷 2022Q4 - 19](/A卷2022Q4-19.html)
+[A卷 2022Q4 - 20](/A卷2022Q4-20.html)
+[A卷 2022Q4 - 21](/A卷2022Q4-21.html)
+[A卷 2022Q4 - 22](/A卷2022Q4-22.html)
+[A卷 2022Q4 - 23](/A卷2022Q4-23.html)
+[A卷 2022Q4 - 24](/A卷2022Q4-24.html)
+[A卷 2022Q4 - 25](/A卷2022Q4-25.html)
+[A卷 2022Q4 - 26](/A卷2022Q4-26.html)
+[A卷 2022Q4 - 27](/A卷2022Q4-27.html)
+[A卷 2022Q4 - 28](/A卷2022Q4-28.html)
+[A卷 2022Q4 - 29](/A卷2022Q4-29.html)
+[A卷 2022Q4 - 30](/A卷2022Q4-30.html)
