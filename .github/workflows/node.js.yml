@@ -27,6 +27,4 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - run: cat 'package-lock.json'
-
     - run: npm run docs:build
