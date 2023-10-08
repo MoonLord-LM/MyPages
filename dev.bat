@@ -1,5 +1,6 @@
 :begin
 
+call npm install
 call npm run docs:dev
 
 pause

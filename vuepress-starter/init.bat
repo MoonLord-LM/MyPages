@@ -15,6 +15,7 @@ call npm install -D "vuepress-plugin-md-enhance"
 mkdir "docs"
 echo # Hello VuePress > "docs/README.md"
 
+call npm install
 call npm run docs:build
 call npm run docs:dev
 
