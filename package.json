@@ -2,18 +2,17 @@
   "name": "mypages",
   "version": "1.0.0",
   "description": "Static Site Generator Test",
-  "main": "index.js",
   "scripts": {
     "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs",
-    "info": "vuepress info"
+    "docs:build": "vuepress build docs"
   },
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MoonLord-LM/MyPages.git"
   },
   "keywords": [
-    "MoonLord-LM"
+    "MoonLord-LM", "MyPages"
   ],
   "author": "MoonLord-LM",
   "license": "ISC",
@@ -21,7 +20,9 @@
     "url": "https://github.com/MoonLord-LM/MyPages/issues"
   },
   "homepage": "https://github.com/MoonLord-LM/MyPages#readme",
-  "directories": {
-    "doc": "docs"
+  "devDependencies": {
+    "@vuepress/plugin-search": "^2.0.0-beta.67",
+    "vuepress": "^2.0.0-beta.67",
+    "vuepress-plugin-md-enhance": "^2.0.0-beta.237"
   }
 }

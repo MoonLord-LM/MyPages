@@ -1,5 +1,3 @@
-@echo off
-
 :begin
 
 del /F /S /Q "package.json" >nul 2>nul
