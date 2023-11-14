@@ -1,0 +1,6 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Tue Nov 14 01:03:31 UTC 2023
+common-0.0.1-SNAPSHOT.jar>=
+common-0.0.1-SNAPSHOT.pom>=
+common-0.0.1-SNAPSHOT-javadoc.jar>=
+common-0.0.1-SNAPSHOT-sources.jar>=

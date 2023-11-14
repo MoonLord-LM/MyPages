@@ -1,0 +1,1 @@
+import{_ as o,r as a,o as l,c as n,b as e,a as s,w as c,d as r}from"./app-d668e8e6.js";const _={},m=e("p",null,"This is the example :",-1);function p(i,d){const t=a("RouterLink");return l(),n("div",null,[m,e("p",null,[s(t,{to:"/html/example.html"},{default:c(()=>[r("link for example.html")]),_:1})])])}const u=o(_,[["render",p],["__file","example.html.vue"]]);export{u as default};
