@@ -2,8 +2,8 @@
 
 del /F /S /Q "package.json" >nul 2>nul
 del /F /S /Q "package-lock.json" >nul 2>nul
-rmdir /S /Q "node_modules"
-rmdir /S /Q "docs"
+rmdir /S /Q "node_modules" >nul 2>nul
+rmdir /S /Q "docs" >nul 2>nul
 
 echo {"name":"mypages","version":"1.0.0","description":"Static Site Generator Test","scripts":{"docs:dev":"vuepress dev docs","docs:build":"vuepress build docs"}}>"package.json"
 
