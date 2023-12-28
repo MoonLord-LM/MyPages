@@ -21,8 +21,8 @@
   },
   "homepage": "https://github.com/MoonLord-LM/MyPages#readme",
   "devDependencies": {
-    "@vuepress/plugin-search": "^2.0.0-beta.67",
-    "vuepress": "^2.0.0-beta.67",
-    "vuepress-plugin-md-enhance": "^2.0.0-beta.237"
+    "@vuepress/plugin-search": "^2.0.0-rc.0",
+    "vuepress": "^2.0.0-rc.0",
+    "vuepress-plugin-md-enhance": "^2.0.0-rc.7"
   }
 }
