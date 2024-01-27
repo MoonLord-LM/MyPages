@@ -43,11 +43,8 @@ jobs:
     - run: mkdir -p 'tmp/maven/MoonLord-LM/MyJava'
     - run: git clone 'https://github.com/MoonLord-LM/MyJava.git' 'tmp/maven/MoonLord-LM/MyJava'
 
-    - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/super-parent/pom.xml"
-    - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/version-management-bouncy-castle/pom.xml"
-    - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/version-management-groovy/pom.xml"
-    - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/version-management-tomcat/pom.xml"
-    - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/parent/pom.xml"
+    - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/0-maven-management/super-parent/pom.xml"
+    - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/0-maven-management/pom.xml"
     - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/pom.xml"
 
     - run: mkdir -p 'docs/.vuepress/dist/maven/cn/'
