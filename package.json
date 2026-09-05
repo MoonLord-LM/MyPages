@@ -12,7 +12,8 @@
     "url": "git+https://github.com/MoonLord-LM/MyPages.git"
   },
   "keywords": [
-    "MoonLord-LM", "MyPages"
+    "MoonLord-LM",
+    "MyPages"
   ],
   "author": "MoonLord-LM",
   "license": "ISC",
@@ -21,8 +22,10 @@
   },
   "homepage": "https://github.com/MoonLord-LM/MyPages#readme",
   "devDependencies": {
-    "@vuepress/plugin-search": "^2.0.0-rc.0",
-    "vuepress": "^2.0.0-rc.0",
-    "vuepress-plugin-md-enhance": "^2.0.0-rc.7"
+    "@vuepress/bundler-vite": "2.0.0-rc.30",
+    "@vuepress/plugin-search": "2.0.0-rc.131",
+    "@vuepress/theme-default": "2.0.0-rc.132",
+    "sass-embedded": "1.104.0",
+    "vuepress": "2.0.0-rc.30"
   }
 }

@@ -1,11 +1,14 @@
 import { defineUserConfig } from 'vuepress';
+import { viteBundler } from '@vuepress/bundler-vite';
 import { defaultTheme } from '@vuepress/theme-default';
 import { searchPlugin } from '@vuepress/plugin-search';
-import { mdEnhancePlugin } from "vuepress-plugin-md-enhance";
 
 export default defineUserConfig({
   // 基础路径
   base: '/',
+
+  // 打包器（VuePress v2 需显式声明）
+  bundler: viteBundler(),
 
   // 基础标题
   title: 'MyPages Title',
@@ -122,13 +125,7 @@ export default defineUserConfig({
         '/': {
           placeholder: 'Search',
         },
-        '/zh/': {
-          placeholder: '搜索',
-        },
       },
-    }),
-    mdEnhancePlugin({
-      mermaid: true,
     }),
   ],
 
