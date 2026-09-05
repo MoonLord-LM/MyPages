@@ -1,6 +1,3 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: vuepress-build-docs
 
 on:
@@ -9,50 +6,34 @@ on:
   pull_request:
     branches: [ "master" ]
   schedule:
-  # - cron:  '0/15 * * * *'
-  # - cron:  '* 0/6 * * *'
-    - cron:  '* 0/12 * * *'
+    # 每日 UTC 23:57 触发
+    # 注意：仓库长时间无活动时，GitHub 会自动停用定时 workflow
+    - cron: '57 23 * * *'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [18.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [22.x]
 
     steps:
-    - uses: actions/checkout@v3
-
+    - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-
+        cache: npm
     - run: npm install
     - run: npm run docs:build
-
     - run: echo 'github.moonLord.cn' > 'docs/.vuepress/dist/CNAME'
-
-
-
-    # https://github.com/MoonLord-LM/MyJava
-
     - run: mkdir -p 'tmp/maven/MoonLord-LM/MyJava'
     - run: git clone 'https://github.com/MoonLord-LM/MyJava.git' 'tmp/maven/MoonLord-LM/MyJava'
-
     - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/0-maven-management/super-parent/pom.xml"
     - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/0-maven-management/pom.xml"
     - run: mvn -B -U -e install -DcreateChecksum=true --file "tmp/maven/MoonLord-LM/MyJava/pom.xml"
-
     - run: mkdir -p 'docs/.vuepress/dist/maven/cn/'
     - run: mv '/home/runner/.m2/repository/cn/moonlord' 'docs/.vuepress/dist/maven/cn/'
-
-
-
-    # https://github.com/crazy-max/ghaction-github-pages
     - uses: crazy-max/ghaction-github-pages@v3
       with:
         build_dir: docs/.vuepress/dist
