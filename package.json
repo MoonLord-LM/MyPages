@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/MoonLord-LM/MyPages#readme",
   "devDependencies": {
-    "@vuepress/bundler-vite": "2.0.0-rc.30",
+    "@vuepress/bundler-vite": "2.0.0-rc.31",
     "@vuepress/plugin-search": "2.0.0-rc.131",
     "@vuepress/theme-default": "2.0.0-rc.132",
     "sass-embedded": "1.104.0",
