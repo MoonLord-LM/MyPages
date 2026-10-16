@@ -215,6 +215,9 @@ function injectHeader(html, outPath, srcDir) {
     hdr = markActiveNav(relativizeNav(hdr, depth), outPath, depth);
     // 再统一调整模板内其余静态资源引用（src / href / url()）：按模板位置解析后回退到页面目录
     hdr = adjustRelativeRefs(hdr, base, path.dirname(outPath));
+    // 根目录（depth 0）的顶栏导航去掉多余的 ./ 前缀：href="index.html" 而非 "./index.html"
+    // 必须在 adjustRelativeRefs 之后执行，否则裸相对路径会被重新解析前缀
+    hdr = hdr.replace(/(<a\s+class="nav-link[^"]*"\s+href=")\.\//g, '$1');
     return html.replace(/<body([^>]*)>/i, '<body$1>\n' + hdr);
 }
 
