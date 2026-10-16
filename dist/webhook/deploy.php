@@ -3,7 +3,7 @@ const REPO_URL    = 'https://github.com/MoonLord-LM/MyPages.git';
 const REPO_BRANCH = 'master';
 const RUN_LOCK    = '/tmp/deploy/MoonLord-LM/MyPages.lock';
 const REPO_DIR    = '/tmp/deploy/MoonLord-LM/MyPages';
-const LOG_FILE    = '/var/log/deploy.log';
+const LOG_FILE    = '/var/log/nginx/deploy.log';
 const RELEASES    = '/var/www/releases';
 const TARGET      = '/var/www/html';
 
