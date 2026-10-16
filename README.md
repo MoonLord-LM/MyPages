@@ -3,13 +3,13 @@
 Static Site Generator  
 静态页面生成工具  
 
-将 `/pages` 目录下的 Markdown / HTML 源文件，构建为可部署的静态站点，输出到 `/dist` 目录  
-支持公共模板拼接、自动列表、代码高亮、远程图片本地化、站点地图自动生成  
+将 `/pages` 目录下的 Markdown / HTML 等源文件，构建为可部署的静态站点，输出到 `/dist` 目录  
+支持公共模板拼接、自动列表、代码高亮、远程图片本地化、自动生成站点地图  
 
 ## [使用说明]
 
 依赖 Node.js 环境运行  
-执行 `build.bat` 即可将 `/pages` 文件夹中的源文件，生成最终 html 到 `/dist` 文件夹中
+执行 `build.bat` 即可将 `/pages` 文件夹中的源文件，构建生成到 `/dist` 文件夹中  
 
 ## [生成规则]
 
@@ -28,12 +28,12 @@ Static Site Generator
 
 ### 静态资源
 
+推荐使用 `/assets` 目录，单独存放页面使用的视频、图片、js、css、字体等各种静态资源文件  
 `/pages` 目录下的所有文件，只要不是 html 或 md 文件，一律视为静态资源  
 静态资源会被原样复制到 `/dist` 中对应的路径下，目录结构与 `/pages` 保持一致  
 例如 `/pages/favicon.ico` → `/dist/favicon.ico`  
 页面中引用静态资源时，必须使用相对路径，例如 `./assets/image/logo.png`  
-如果 Markdown 中使用远程图片链接（`http(s)://`），自动下载并保存到页面所在目录的 `assets/`，并改写为本地相对引用  
-推荐使用 `/assets` 目录，单独存放页面使用的视频、图片、js、css、字体等各种静态资源文件  
+如果 Markdown 中使用远程图片链接（`http(s)://`），自动下载并保存到页面所在目录的 `assets/`，并改写为本地相对路径  
 
 ### 公共模板
 
@@ -59,12 +59,12 @@ Static Site Generator
 
 ```
 MyPages/
-├── build.bat                          # 构建脚本
+├── build.bat                             # 构建脚本
 ├── tools/
-│   ├── tools.bat                      # 工具脚本
+│   ├── tools.bat                         # 工具脚本
 │   └── github/
-│       ├── github-profile.bat         # 采集 GitHub 用户资料脚本
-│       ├── github-languages-color.bat # 采集 GitHub Linguist 语言配色
-├── pages/                             # 站点源文件
-└── dist/                              # 站点构建产物
+│       ├── github-profile.bat            # 采集 GitHub 用户资料脚本
+│       ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色脚本
+├── pages/                                # 站点源文件
+└── dist/                                 # 站点构建产物
 ```
