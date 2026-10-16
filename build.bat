@@ -112,8 +112,24 @@ if not exist "!temp_dir!\node_modules\marked" (
     echo.
 )
 
-call node "!temp_js!"
-if !errorlevel! neq 0 (
+set "build_attempt=0"
+set "build_ok=0"
+:build_retry
+    set /a build_attempt+=1
+    echo [构建尝试 !build_attempt!/3]
+    echo.
+    call node "!temp_js!"
+    if !errorlevel! equ 0 (
+        set "build_ok=1"
+        goto build_done
+    )
+    echo.
+    echo 构建生成失败（第 !build_attempt! 次），准备重试
+    if !build_attempt! lss 3 (
+        goto build_retry
+    )
+:build_done
+if !build_ok! neq 1 (
     echo.
     echo 错误：构建生成失败
     echo.
