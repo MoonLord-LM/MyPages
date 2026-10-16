@@ -478,8 +478,17 @@ function formatSize(bytes) {
 
 function formatTime(date) {
     const pad = (x) => String(x).padStart(2, '0');
-    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) +
-        ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+    // 统一按中国时区（Asia/Shanghai / UTC+8，中国不实行夏令时）显示，并附带时区标识
+    // 不再依赖构建机本地时区，保证 git 提交时间、文件修改时间在全球任何机器构建都一致
+    const parts = new Intl.DateTimeFormat('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+    }).formatToParts(date);
+    const get = (type) => { const p = parts.find((x) => x.type === type); return p ? p.value : ''; };
+    return get('year') + '-' + get('month') + '-' + get('day') + ' ' +
+        get('hour') + ':' + get('minute') + ':' + get('second') + ' (UTC+8)';
 }
 
 const REPO_ROOT = (() => {
