@@ -458,7 +458,6 @@ const AUTOLIST_CSS = `
 .auto-list li.home { margin: 0; padding: 0; }
 .auto-list li.home a { display: flex; align-items: center; justify-content: flex-start; margin: -16px -16px 0; padding: 18px 16px; border-bottom: 1px solid #d8dee4; }
 .auto-list li.home a svg { width: 16px; height: 16px; display: block; }
-.auto-list-content { }
 @media (max-width: 1360px) {
   .auto-list-content { margin-left: 240px; }
 }
