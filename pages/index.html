@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主页</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    /* ===== 基础 reset ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+      color: #222;
+      line-height: 1.6;
+      background: #fafafa;
+    }
+    a { text-decoration: none; }
+
+    /* ===== 首页落地区（顶部导航栏由 header.html 注入） ===== */
+    .home { }
+    .hero {
+      min-height: calc(100vh - 54px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+    .hero-inner { max-width: 880px; width: 100%; text-align: center; }
+    .hero h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: #1e3c72;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    .hero-sub { font-size: 1.1rem; color: #555; margin-bottom: 2.5rem; }
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .entry-card {
+      display: block;
+      background: #fff;
+      border: 1px solid #e3e8ef;
+      border-radius: 14px;
+      padding: 28px 24px;
+      color: #222;
+      text-align: left;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .entry-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .1);
+      border-color: #2a5298;
+    }
+    .entry-card h2 { font-size: 1.4rem; color: #2a5298; margin-bottom: 8px; }
+    .entry-card p { color: #666; font-size: .95rem; }
+  </style>
+</head>
+<body>
+
+  <!-- 首页落地区 -->
+  <main class="home">
+    <section class="hero">
+      <div class="hero-inner">
+        <h1>欢迎来到我的站点</h1>
+        <p class="hero-sub">这里是首页</p>
+        <div class="entry-grid">
+          <a class="entry-card" href="github/index.html">
+            <h2>开源</h2>
+            <p>GitHub 个人资料与开源项目</p>
+          </a>
+          <a class="entry-card" href="admin/index.html">
+            <h2>监控</h2>
+            <p>服务器监控与管理</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

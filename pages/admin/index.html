@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>服务器监控与管理</title>
+<style>
+:root { color-scheme: light; }
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #1f2328;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px 64px; }
+.wrap > h1 {
+  font-size: 2em; padding-bottom: .3em; border-bottom: 1px solid #d8dee4;
+  margin: 0 0 8px; font-weight: 600; line-height: 1.25;
+}
+.section { font-size: 1.4em; font-weight: 600; margin: 48px 0 18px; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; }
+.section:first-of-type { margin-top: 48px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.card {
+  display: block; text-decoration: none; color: inherit;
+  background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 8px;
+  padding: 20px; position: relative; cursor: pointer;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.card:hover { box-shadow: 0 4px 14px rgba(31,35,40,.12); transform: translateY(-2px); border-color: #0969da; text-decoration: none; }
+.card .en { margin: 0 0 4px; font-size: 1.5em; font-weight: 700; color: #1f2328; line-height: 1.15; }
+.card .cn { margin: 0 0 14px; font-size: .9em; color: #59636e; line-height: 1.4; }
+.tag {
+  display: inline-block; font-size: .72em; color: #59636e; background: #ffffff;
+  border: 1px solid #d1d9e0; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px;
+}
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a {
+  flex: 1 1 auto; text-align: center; padding: 8px 12px; border: 1px solid #d1d9e0;
+  border-radius: 6px; background: #ffffff; color: #0969da; text-decoration: none;
+  font-size: .9em; transition: background .15s, border-color .15s;
+}
+.links a:hover { background: #ddf4ff; border-color: #0969da; text-decoration: none; }
+.links a:not(.primary) { position: relative; z-index: 2; }
+.links a.primary::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>服务器监控与管理</h1>
+  <h2 class="section">监控看板</h2>
+  <div class="grid">
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Grafana</h2>
+      <p class="cn">服务器健康看板</p>
+      <div class="links">
+        <a class="primary" href="https://grafana.moonlord.cc/public-dashboards/9185baf88ff14041b8ceb88d9522c447" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-grafana.moonlord.cc/public-dashboards/9185baf88ff14041b8ceb88d9522c447" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-grafana.moonlord.cc/public-dashboards/a13a9385cc9e4412925a51048777124f" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">内网穿透</span>
+      <h2 class="en">OpenList</h2>
+      <p class="cn">文件服务与在线浏览</p>
+      <div class="links">
+        <a class="primary" href="https://openlist.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-openlist.moonlord.cc" target="_blank" rel="noopener">通道1</a>
+        <a href="https://02-openlist.moonlord.cc" target="_blank" rel="noopener">通道2</a>
+        <a href="https://localhost-https-15244.moonlord.cc" target="_blank" rel="noopener">通道3</a>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 class="section">管理面板</h2>
+  <div class="grid">
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Cockpit</h2>
+      <p class="cn">服务器系统管理</p>
+      <div class="links">
+        <a class="primary" href="https://cockpit.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-cockpit.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-cockpit.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Portainer</h2>
+      <p class="cn">Docker 容器可视化管理</p>
+      <div class="links">
+        <a class="primary" href="https://portainer.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-portainer.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-portainer.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Frp</h2>
+      <p class="cn">内网穿透服务管理</p>
+      <div class="links">
+        <a class="primary" href="https://frp.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-frp.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-frp.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Prometheus</h2>
+      <p class="cn">指标采集与告警</p>
+      <div class="links">
+        <a class="primary" href="https://prometheus.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-prometheus.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-prometheus.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Grafana</h2>
+      <p class="cn">可视化监控与仪表盘</p>
+      <div class="links">
+        <a class="primary" href="https://grafana.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-grafana.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-grafana.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

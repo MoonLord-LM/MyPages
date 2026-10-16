@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>服务器监控与管理</title>
+<style>
+:root { color-scheme: light; }
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #1f2328;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px 64px; }
+.wrap > h1 {
+  font-size: 2em; padding-bottom: .3em; border-bottom: 1px solid #d8dee4;
+  margin: 0 0 8px; font-weight: 600; line-height: 1.25;
+}
+.section { font-size: 1.4em; font-weight: 600; margin: 48px 0 18px; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; }
+.section:first-of-type { margin-top: 48px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.card {
+  display: block; text-decoration: none; color: inherit;
+  background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 8px;
+  padding: 20px; position: relative; cursor: pointer;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.card:hover { box-shadow: 0 4px 14px rgba(31,35,40,.12); transform: translateY(-2px); border-color: #0969da; text-decoration: none; }
+.card .en { margin: 0 0 4px; font-size: 1.5em; font-weight: 700; color: #1f2328; line-height: 1.15; }
+.card .cn { margin: 0 0 14px; font-size: .9em; color: #59636e; line-height: 1.4; }
+.tag {
+  display: inline-block; font-size: .72em; color: #59636e; background: #ffffff;
+  border: 1px solid #d1d9e0; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px;
+}
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a {
+  flex: 1 1 auto; text-align: center; padding: 8px 12px; border: 1px solid #d1d9e0;
+  border-radius: 6px; background: #ffffff; color: #0969da; text-decoration: none;
+  font-size: .9em; transition: background .15s, border-color .15s;
+}
+.links a:hover { background: #ddf4ff; border-color: #0969da; text-decoration: none; }
+.links a:not(.primary) { position: relative; z-index: 2; }
+.links a.primary::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+</style>
+</head>
+<body>
+<style>
+  /* ===== 顶部导航（全部收在 #site-nav 命名空间，避免与页面 CSS 冲突） ===== */
+  /* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
+  #site-nav, #site-nav * { box-sizing: border-box; }
+  #site-nav ul, #site-nav ol, #site-nav li { margin: 0; padding: 0; list-style: none; }
+  #site-nav a { text-decoration: none; }
+  #site-nav {
+    /* 默认在文档流里挤压下方内容；滚动时吸顶始终在最顶端（知乎式） */
+    position: sticky; top: 0; height: 54px; z-index: 1000;
+    /* 满宽出血：突破页面 body 的左右内边距，始终铺满视口宽度 */
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    display: flex; align-items: stretch;
+    background: linear-gradient(135deg, #d8e9fb 0%, #e6f0fc 50%, #f1e9fb 100%);
+    box-shadow: 0 4px 18px rgba(31, 60, 114, 0.12);
+  }
+  #site-nav .nav-container {
+    width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+    display: flex; align-items: center;
+  }
+  #site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; margin-left: 4rem; }
+  #site-nav .nav-menu li { display: flex; align-items: stretch; }
+  #site-nav .nav-menu .nav-link {
+    color: rgba(30, 60, 114, 0.78); font-weight: 600; font-size: 1.02rem;
+    display: flex; align-items: center; height: 100%; padding: 0 18px; position: relative;
+    transition: color .25s, background .25s;
+  }
+  #site-nav .nav-menu .nav-link::after {
+    content: ""; position: absolute; left: 18px; right: 18px; bottom: 8px;
+    height: 2px; background: #00e0ff; transform: scaleX(0); transform-origin: center;
+    transition: transform .25s ease;
+  }
+  #site-nav .nav-menu .nav-link:hover { color: #1e3c72; background: rgba(30, 60, 114, 0.08); }
+  #site-nav .nav-menu .nav-link:hover::after { transform: scaleX(1); }
+  /* 选中项：整条竖块填充变色，铺满顶栏高度 */
+  #site-nav .nav-menu .nav-link.active {
+    color: #fff; font-weight: 700; border-radius: 0;
+    background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+  }
+
+  /* ===== 搜索按钮 ===== */
+  #site-nav .nav-search-btn {
+    margin-left: auto; width: 40px; height: 40px;
+    border: 1px solid rgba(30, 60, 114, .25); border-radius: 50%;
+    background: linear-gradient(135deg, #cfe1f7, #e4d8f6); color: #1e3c72; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(31, 60, 114, .12);
+    transition: background .25s, transform .25s;
+  }
+  #site-nav .nav-search-btn:hover {
+    background: linear-gradient(135deg, #bcd6f5, #d8c8f0); transform: translateY(-1px);
+  }
+  #site-nav .nav-search-btn svg { width: 15px; height: 15px; }
+
+  /* ===== 搜索弹层（收在 #searchOverlay 命名空间） ===== */
+  #searchOverlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .45);
+    display: none; align-items: flex-start; justify-content: center;
+    padding-top: 120px; z-index: 2000;
+  }
+  #searchOverlay.open { display: flex; }
+  #searchOverlay .search-box {
+    width: min(560px, 90vw); background: #fff; border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3); padding: 20px;
+  }
+  #searchOverlay .search-box h3 { font-size: 1.1rem; margin-bottom: 12px; color: #222; }
+  #searchOverlay .search-row { display: flex; gap: 10px; }
+  #searchOverlay .search-input {
+    flex: 1; padding: 11px 14px; font-size: 1rem;
+    border: 1px solid #ccc; border-radius: 8px; outline: none;
+  }
+  #searchOverlay .search-input:focus { border-color: #2a5298; }
+  #searchOverlay .search-submit {
+    padding: 11px 20px; border: none; border-radius: 8px;
+    background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff;
+    font-weight: 600; font-size: 1rem; cursor: pointer;
+  }
+  #searchOverlay .search-submit:hover { opacity: .92; }
+  #searchOverlay .search-hint { margin-top: 10px; font-size: .82rem; color: #888; }
+
+  /* 防止满宽出血（100vw）在存在竖向滚动条时产生横向滚动；
+     用 clip 而非 hidden：不会把 body 变成滚动容器，因而不会破坏 sticky 吸顶 */
+  body { overflow-x: clip; }
+
+  /* ===== 注入页适配：导航栏已改为正常文档流，仅侧栏需避开其高度 ===== */
+  .auto-list { top: 54px !important; }
+</style>
+
+<nav class="top-navbar" id="site-nav">
+  <div class="nav-container">
+    <ul class="nav-menu">
+      <li><a class="nav-link" href="../index.html">首页</a></li>
+      <li><a class="nav-link" href="../github/index.html">开源</a></li>
+      <li><a class="nav-link active" href="../admin/index.html">监控</a></li>
+      <li><a class="nav-link" href="../about/index.html">关于</a></li>
+    </ul>
+    <button class="nav-search-btn" id="searchToggle" aria-label="搜索">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-box">
+    <h3>全网搜索</h3>
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="输入关键词…" autocomplete="off">
+      <button class="search-submit" id="searchSubmit">搜索</button>
+    </div>
+    <p class="search-hint">使用 Google 搜索 “site:moonlord.cc + 关键词”</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const toggle  = document.getElementById('searchToggle');
+    const overlay = document.getElementById('searchOverlay');
+    const input   = document.getElementById('searchInput');
+    const submit  = document.getElementById('searchSubmit');
+
+    function openSearch() { overlay.classList.add('open'); input.focus(); }
+    function closeSearch() { overlay.classList.remove('open'); }
+    function doSearch() {
+      const q = input.value.trim();
+      const site = 'site:moonlord.cc';
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(q ? site + ' ' + q : site);
+      window.open(url, '_blank');
+      closeSearch();
+    }
+
+    toggle.addEventListener('click', openSearch);
+    submit.addEventListener('click', doSearch);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeSearch(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
+    });
+  })();
+</script>
+
+<!-- Google Analytics Tag -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3WLVV25DZ0"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
+<!-- End Google Analytics Tag -->
+
+<div class="wrap">
+  <h1>服务器监控与管理</h1>
+  <h2 class="section">监控看板</h2>
+  <div class="grid">
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Grafana</h2>
+      <p class="cn">服务器健康看板</p>
+      <div class="links">
+        <a class="primary" href="https://grafana.moonlord.cc/public-dashboards/9185baf88ff14041b8ceb88d9522c447" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-grafana.moonlord.cc/public-dashboards/9185baf88ff14041b8ceb88d9522c447" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-grafana.moonlord.cc/public-dashboards/a13a9385cc9e4412925a51048777124f" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">内网穿透</span>
+      <h2 class="en">OpenList</h2>
+      <p class="cn">文件服务与在线浏览</p>
+      <div class="links">
+        <a class="primary" href="https://openlist.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-openlist.moonlord.cc" target="_blank" rel="noopener">通道1</a>
+        <a href="https://02-openlist.moonlord.cc" target="_blank" rel="noopener">通道2</a>
+        <a href="https://localhost-https-15244.moonlord.cc" target="_blank" rel="noopener">通道3</a>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 class="section">管理面板</h2>
+  <div class="grid">
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Cockpit</h2>
+      <p class="cn">服务器系统管理</p>
+      <div class="links">
+        <a class="primary" href="https://cockpit.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-cockpit.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-cockpit.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Portainer</h2>
+      <p class="cn">Docker 容器可视化管理</p>
+      <div class="links">
+        <a class="primary" href="https://portainer.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-portainer.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-portainer.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Frp</h2>
+      <p class="cn">内网穿透服务管理</p>
+      <div class="links">
+        <a class="primary" href="https://frp.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-frp.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-frp.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Prometheus</h2>
+      <p class="cn">指标采集与告警</p>
+      <div class="links">
+        <a class="primary" href="https://prometheus.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-prometheus.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-prometheus.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">多节点</span>
+      <h2 class="en">Grafana</h2>
+      <p class="cn">可视化监控与仪表盘</p>
+      <div class="links">
+        <a class="primary" href="https://grafana.moonlord.cc" target="_blank" rel="noopener">主站</a>
+        <a href="https://01-grafana.moonlord.cc" target="_blank" rel="noopener">服务器 1</a>
+        <a href="https://02-grafana.moonlord.cc" target="_blank" rel="noopener">服务器 2</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+<footer class="site-footer">
+</footer>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "28204d87bcf54906b3651e8f84588b48"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+</body>
+</html>
