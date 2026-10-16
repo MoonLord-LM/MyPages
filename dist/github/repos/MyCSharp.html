@@ -88,6 +88,7 @@ body {
 </head>
 <body>
 <style>
+  :root { --nav-h: 54px; }
   /* ===== 顶部导航（全部收在 #site-nav 命名空间，避免与页面 CSS 冲突） ===== */
   /* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
   #site-nav, #site-nav * { box-sizing: border-box; }
@@ -95,7 +96,7 @@ body {
   #site-nav a { text-decoration: none; }
   #site-nav {
     /* 默认在文档流里挤压下方内容；滚动时吸顶始终在最顶端（知乎式） */
-    position: sticky; top: 0; height: 54px; z-index: 1000;
+    position: sticky; top: 0; height: var(--nav-h, 54px); z-index: 1000;
     /* 满宽出血：突破页面 body 的左右内边距，始终铺满视口宽度 */
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
@@ -172,10 +173,10 @@ body {
   body { overflow-x: clip; }
 
   /* ===== 注入页适配：导航栏已改为正常文档流，仅侧栏需避开其高度 ===== */
-  .auto-list { top: 54px !important; }
+  .auto-list { top: var(--nav-h, 54px) !important; }
 </style>
 
-<nav class="top-navbar" id="site-nav">
+<nav id="site-nav">
   <div class="nav-container">
     <ul class="nav-menu">
       <li><a class="nav-link" href="../../index.html">首页</a></li>
@@ -193,7 +194,7 @@ body {
   </div>
 </nav>
 
-<div class="search-overlay" id="searchOverlay">
+<div id="searchOverlay">
   <div class="search-box">
     <h3>全网搜索</h3>
     <div class="search-row">
@@ -260,7 +261,6 @@ body {
 .auto-list li.home { margin: 0; padding: 0; }
 .auto-list li.home a { display: flex; align-items: center; justify-content: flex-start; margin: -16px -16px 0; padding: 18px 16px; border-bottom: 1px solid #d8dee4; }
 .auto-list li.home a svg { width: 16px; height: 16px; display: block; }
-.auto-list-content { }
 @media (max-width: 1360px) {
   .auto-list-content { margin-left: 240px; }
 }
@@ -470,9 +470,6 @@ My.Task.KillAsync(&quot;calc.exe&quot;);
 </article>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
 <script>document.addEventListener("DOMContentLoaded",function(){if(window.hljs){document.querySelectorAll(".markdown-body pre code").forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});}});</script>
-<footer class="site-footer">
-</footer>
-
 <!-- Cloudflare Web Analytics -->
 <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "28204d87bcf54906b3651e8f84588b48"}'></script>
 <!-- End Cloudflare Web Analytics -->
