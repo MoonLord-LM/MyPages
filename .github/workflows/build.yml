@@ -1,0 +1,43 @@
+name: build
+
+on:
+  schedule:
+    - cron: '57 23 * * *'
+  workflow_dispatch:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run build.bat
+        shell: cmd
+        run: call build.bat <nul
+
+      - name: Commit and push
+        if: github.event_name != 'pull_request'
+        shell: powershell
+        run: |
+          git add -A
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "auto-build by [ build.bat ]"
+            git push origin HEAD
+          } else {
+            Write-Host 'No changes after build.bat.'
+          }
