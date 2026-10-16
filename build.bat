@@ -146,24 +146,20 @@ const PAGES = '-----PROJECT PAGES DIR-----';
 const DIST = '-----PROJECT DIST DIR-----';
 const SITE_URL = '-----PROJECT SITE URL-----';
 
-function loadTemplate(name) {
-    const p = path.join(PAGES, name);
-    if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8');
-    return '';
+// 按页面源文件目录，向同级 / 上级逐级查找最临近的公共模板（header.html / footer.html）
+// 两者独立处理；缺失则视为无模板。模板内容按路径缓存，避免重复读盘。
+const templateCache = new Map();
+function loadTemplateAt(p) {
+    if (templateCache.has(p)) return templateCache.get(p);
+    const c = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+    templateCache.set(p, c);
+    return c;
 }
-const HEADER_HTML = loadTemplate('header.html');
-const FOOTER_HTML = loadTemplate('footer.html');
 
 // 站点根绝对路径(/...)按页面深度转换为相对路径，使全站链接相对且可移植
 function pageDepth(outPath) {
     const rel = path.relative(DIST, path.dirname(outPath));
     return rel === '' ? 0 : rel.split(path.sep).length;
-}
-function toRelative(html, depth) {
-    // depth 0：去掉站点根斜杠，变成相对当前目录(./)；
-    // depth>0：用 ../ 逐级回退。这样无论是站点根还是 file:// 打开都可用。
-    const prefix = '../'.repeat(depth);
-    return html.replace(/(href=["'])\/([^"']*)/g, (m, q, p) => q + prefix + p);
 }
 
 // 根据当前页面所在分区，返回应高亮的顶栏菜单项（与左侧菜单的 active 行为一致）
@@ -175,9 +171,10 @@ function navActiveSection(outPath) {
     if (rel.startsWith('about/')) return 'about';
     return '';
 }
-// 源码 header 使用相对 HTML 路径；按当前页面深度补 ../ 前缀，使各层级页面都能正确跳转
+// 源码 header 使用相对 HTML 路径；按当前页面深度补前缀，使各层级页面都能正确跳转
+// depth 0 用 ./ 前缀（与子目录页面的 ../ 一致），避免被 adjustRelativeRefs 当作裸相对路径重复处理
 function relativizeNav(hdr, depth) {
-    const prefix = '../'.repeat(depth);
+    const prefix = depth === 0 ? './' : '../'.repeat(depth);
     return hdr.replace(/(<a class="nav-link"\s+href=")([^"]*)(")/g,
         (m, open, href, close) => open + prefix + href + close);
 }
@@ -186,22 +183,29 @@ function relativizeNav(hdr, depth) {
 function markActiveNav(hdr, outPath, depth) {
     const section = navActiveSection(outPath);
     if (!section) return hdr;
-    const prefix = '../'.repeat(depth);
+    const prefix = depth === 0 ? './' : '../'.repeat(depth);
     const target = prefix + ({ index: 'index.html', github: 'github/index.html', admin: 'admin/index.html', about: 'about/index.html' })[section];
     const re = new RegExp('(<a class="nav-link" href=")' + target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"');
     return hdr.replace(re, '<a class="nav-link active" href="' + target + '"');
 }
 
-function injectHeader(html, outPath) {
-    if (!HEADER_HTML) return html;
+function injectHeader(html, outPath, srcDir) {
+    const tp = findTemplate(srcDir, 'header.html');
+    if (!tp) return html;
     const depth = pageDepth(outPath);
-    const hdr = markActiveNav(relativizeNav(HEADER_HTML, depth), outPath, depth);
+    const base = path.dirname(tp);
+    let hdr = loadTemplateAt(tp);
+    // 先处理顶栏导航的相对路径与 active 高亮（产出 ./ 或 ../ 前缀，避免被下面的通用重写重复处理）
+    hdr = markActiveNav(relativizeNav(hdr, depth), outPath, depth);
+    // 再统一调整模板内其余静态资源引用（src / href / url()）：按模板位置解析后回退到页面目录
+    hdr = adjustRelativeRefs(hdr, base, path.dirname(outPath));
     return html.replace(/<body([^>]*)>/i, '<body$1>\n' + hdr);
 }
 
-function injectFooter(html, outPath) {
-    if (!FOOTER_HTML) return html;
-    const ftr = toRelative(FOOTER_HTML, pageDepth(outPath));
+function injectFooter(html, outPath, srcDir) {
+    const tp = findTemplate(srcDir, 'footer.html');
+    if (!tp) return html;
+    const ftr = adjustRelativeRefs(loadTemplateAt(tp), path.dirname(tp), path.dirname(outPath));
     return html.replace(/<\/body>/i, ftr + '\n</body>');
 }
 
@@ -233,14 +237,22 @@ function findTemplate(dir, name) {
 function adjustRelativeRefs(content, templateAssetBase, pageOutDir) {
     function rewritePath(ref) {
         if (!ref) return ref;
-        if (/^(https?:)?\/\//i.test(ref)) return ref;
-        if (/^[#?]/.test(ref)) return ref;
-        if (/^(data|mailto):/i.test(ref)) return ref;
-        if (path.isAbsolute(ref)) return ref;
-        const absAsset = path.resolve(templateAssetBase, ref);
+        if (/^(https?:)?\/\//i.test(ref)) return ref;   // 协议相对 / http(s) 外链
+        if (/^[#?]/.test(ref)) return ref;              // 锚点 / 查询
+        if (/^(data|mailto):/i.test(ref)) return ref;   // 特殊协议
+        if (ref.startsWith('/')) {                      // 站点根绝对路径：按 DIST 根解析后回退到页面目录
+            const absAsset = path.resolve(DIST, ref.slice(1));
+            let relPath = path.relative(pageOutDir, absAsset).split(path.sep).join('/');
+            if (relPath === '') relPath = './' + path.basename(ref);
+            if (!/^(\.\.?\/)/.test(relPath)) relPath = './' + relPath;
+            return relPath;
+        }
+        if (path.isAbsolute(ref)) return ref;           // 其它绝对路径：保持原样
+        if (/^(\.\.?\/)/.test(ref)) return ref;         // 已经是 ./ 或 ../ 的相对路径（如顶栏导航）：保持原样
+        const absAsset = path.resolve(templateAssetBase, ref);   // 模板内裸相对资源：按模板位置解析
         let relPath = path.relative(pageOutDir, absAsset).split(path.sep).join('/');
         if (relPath === '') relPath = './' + path.basename(ref);
-        if (!/^(\.\.?\/|\/)/.test(relPath)) relPath = './' + relPath;
+        if (!/^(\.\.?\/)/.test(relPath)) relPath = './' + relPath;
         return relPath;
     }
 
@@ -348,7 +360,7 @@ function escapeHtml(s) {
     return String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 }
 
-function renderMarkdownPage(title, bodyHtml, outPath) {
+function renderMarkdownPage(title, bodyHtml, outPath, srcDir) {
     const head = [
         '<!DOCTYPE html>',
         '<html lang="zh-CN">',
@@ -369,7 +381,7 @@ function renderMarkdownPage(title, bodyHtml, outPath) {
         '</body>',
         '</html>'
     ].join('\n');
-    return injectFooter(injectHeader(head + '\n' + bodyHtml + '\n' + tail, outPath), outPath);
+    return injectFooter(injectHeader(head + '\n' + bodyHtml + '\n' + tail, outPath, srcDir), outPath, srcDir);
 }
 
 function outPathFor(srcFile) {
@@ -392,13 +404,13 @@ function processPage(srcFile, bodyHtml, navHtml) {
             const tm = titleMatch[0].replace(/<[^>]+>/g, '').trim();
             if (tm) title = tm;
         }
-        fs.writeFileSync(outPath, renderMarkdownPage(title, wrapWithNav(bodyHtml, navHtml), outPath), 'utf8');
+        fs.writeFileSync(outPath, renderMarkdownPage(title, wrapWithNav(bodyHtml, navHtml), outPath, srcDir), 'utf8');
         pageCount++;
         console.log('已处理: ' + path.relative(DIST, outPath));
         return;
     }
 
-    const finalHtml = injectFooter(injectHeader(wrapWithNav(bodyHtml, navHtml), outPath), outPath);
+    const finalHtml = injectFooter(injectHeader(wrapWithNav(bodyHtml, navHtml), outPath, srcDir), outPath, srcDir);
     fs.writeFileSync(outPath, finalHtml, 'utf8');
     pageCount++;
     console.log('已处理: ' + path.relative(DIST, outPath));
@@ -539,7 +551,8 @@ async function localizeImages(html, outPath, baseName) {
         }
         if (fileName) {
             const rel = 'assets/' + fileName;
-            html = html.replace(m[0], m[1] + rel + m[2] + m[4]);
+            // 用函数形式替换，避免 URL/文件名/标签文本中的 $& $` $' $n 被当作特殊模式误处理
+            html = html.replace(m[0], () => m[1] + rel + m[2] + m[4]);
         }
     }
     if (failed.length) {
@@ -596,7 +609,7 @@ function buildTable(indexOutPath, fileEntries) {
     return '<table>\n  <tbody>\n' + rows + '\n  </tbody>\n</table>';
 }
 
-function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml) {
+function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
     const head = [
         '<!DOCTYPE html>',
         '<html lang="zh-CN">',
@@ -616,7 +629,7 @@ function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml) {
         '<h1>' + escapeHtml(dirLabel) + '</h1>\n' +
         listHtml + '\n' +
         '</article>\n</div>';
-    return injectFooter(injectHeader(head + '\n' + body + '\n</body>\n</html>', indexOutPath), indexOutPath);
+    return injectFooter(injectHeader(head + '\n' + body + '\n</body>\n</html>', indexOutPath, srcDir), indexOutPath, srcDir);
 }
 
 const staticFiles = [];
@@ -750,7 +763,7 @@ for (const [dir, baseMap] of pageFilesByDir) {
         }
     }
     fileEntries.sort((a, b) => a.label.localeCompare(b.label));
-    fs.writeFileSync(indexOutPath, renderListPage(dirLabel, indexOutPath, fileEntries, navHtmlIndex), 'utf8');
+    fs.writeFileSync(indexOutPath, renderListPage(dirLabel, indexOutPath, fileEntries, navHtmlIndex, dir), 'utf8');
     pageCount++;
     console.log('已生成列表: ' + path.relative(DIST, indexOutPath));
 }
