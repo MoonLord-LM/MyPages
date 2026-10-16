@@ -1,5 +1,9 @@
 # MyPages
 
+[![build](https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml/badge.svg)](https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml)
+[![github-profile](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-profile.yml/badge.svg)](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-profile.yml)
+[![github-languages-color](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-languages-color.yml/badge.svg)](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-languages-color.yml)
+
 Static Site Generator  
 静态页面生成工具  
 
@@ -63,8 +67,8 @@ MyPages/
 ├── tools/
 │   ├── tools.bat                         # 工具脚本
 │   └── github/
-│       ├── github-profile.bat            # 采集 GitHub 用户资料脚本
-│       ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色脚本
+│       ├── github-profile.bat            # 采集 GitHub 用户资料
+│       ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
 ├── pages/                                # 站点源文件
 └── dist/                                 # 站点构建产物
 ```
