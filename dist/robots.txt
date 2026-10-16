@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+Content-Signal: search=yes, ai-input=no, ai-train=no
+Sitemap: https://www.moonlord.cc/sitemap.xml

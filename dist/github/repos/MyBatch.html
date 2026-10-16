@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyBatch</title>
+<style>
+:root { color-scheme: light; }
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #1f2328;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+}
+.markdown-body {
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-border-default: #d1d9e0;
+  --color-border-muted: #d8dee4;
+  --color-fg-default: #1f2328;
+  --color-fg-muted: #59636e;
+  --color-accent-fg: #0969da;
+  --color-neutral-muted: rgba(175, 184, 193, 0.2);
+  box-sizing: border-box;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  color: var(--color-fg-default);
+  font-size: 16px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+.markdown-body * { box-sizing: border-box; }
+.markdown-body > *:first-child { margin-top: 0 !important; }
+.markdown-body > *:last-child { margin-bottom: 0 !important; }
+.markdown-body a { color: var(--color-accent-fg); text-decoration: none; }
+.markdown-body a:hover { text-decoration: underline; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  margin: 24px 0 16px; font-weight: 600; line-height: 1.25;
+}
+.markdown-body h1 { font-size: 2em; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
+.markdown-body h2 { font-size: 1.5em; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
+.markdown-body h3 { font-size: 1.25em; }
+.markdown-body h4 { font-size: 1em; }
+.markdown-body h5 { font-size: .875em; }
+.markdown-body h6 { font-size: .85em; color: var(--color-fg-muted); }
+.markdown-body p { margin: 0 0 16px; }
+.markdown-body ul, .markdown-body ol { margin: 0 0 16px; padding-left: 2em; }
+.markdown-body li { margin: .25em 0; }
+.markdown-body li::marker { color: var(--color-fg-muted); }
+.markdown-body blockquote {
+  margin: 0 0 16px; padding: 0 1em; color: var(--color-fg-muted);
+  border-left: .25em solid var(--color-border-default);
+}
+.markdown-body code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 85%; padding: .2em .4em; border-radius: 6px;
+  background-color: var(--color-neutral-muted);
+}
+.markdown-body pre {
+  margin: 0 0 16px; padding: 16px; overflow: auto;
+  font-size: 85%; line-height: 1.45; border-radius: 6px;
+  background-color: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border-muted);
+}
+.markdown-body pre code {
+  display: block; padding: 0; font-size: 100%;
+  background-color: transparent; border: 0; border-radius: 0;
+  overflow-x: auto; white-space: pre;
+}
+.markdown-body pre code.hljs { background: transparent; padding: 0; }
+.markdown-body table {
+  border-collapse: collapse; display: block; width: max-content;
+  max-width: 100%; margin: 0 0 16px; overflow: auto;
+}
+.markdown-body table th, .markdown-body table td {
+  border: 1px solid var(--color-border-default); padding: 6px 13px;
+}
+.markdown-body table th { font-weight: 600; background-color: var(--color-canvas-subtle); }
+.markdown-body table tr:nth-child(2n) { background-color: var(--color-canvas-subtle); }
+.markdown-body img { max-width: 100%; }
+.markdown-body hr { height: 1px; border: 0; background: var(--color-border-muted); margin: 24px 0; }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/styles/default.min.css">
+</head>
+<body>
+<style>
+  /* ===== 顶部导航（全部收在 #site-nav 命名空间，避免与页面 CSS 冲突） ===== */
+  /* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
+  #site-nav, #site-nav * { box-sizing: border-box; }
+  #site-nav ul, #site-nav ol, #site-nav li { margin: 0; padding: 0; list-style: none; }
+  #site-nav a { text-decoration: none; }
+  #site-nav {
+    /* 默认在文档流里挤压下方内容；滚动时吸顶始终在最顶端（知乎式） */
+    position: sticky; top: 0; height: 54px; z-index: 1000;
+    /* 满宽出血：突破页面 body 的左右内边距，始终铺满视口宽度 */
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    display: flex; align-items: stretch;
+    background: linear-gradient(135deg, #d8e9fb 0%, #e6f0fc 50%, #f1e9fb 100%);
+    box-shadow: 0 4px 18px rgba(31, 60, 114, 0.12);
+  }
+  #site-nav .nav-container {
+    width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+    display: flex; align-items: center;
+  }
+  #site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; margin-left: 4rem; }
+  #site-nav .nav-menu li { display: flex; align-items: stretch; }
+  #site-nav .nav-menu .nav-link {
+    color: rgba(30, 60, 114, 0.78); font-weight: 600; font-size: 1.02rem;
+    display: flex; align-items: center; height: 100%; padding: 0 18px; position: relative;
+    transition: color .25s, background .25s;
+  }
+  #site-nav .nav-menu .nav-link::after {
+    content: ""; position: absolute; left: 18px; right: 18px; bottom: 8px;
+    height: 2px; background: #00e0ff; transform: scaleX(0); transform-origin: center;
+    transition: transform .25s ease;
+  }
+  #site-nav .nav-menu .nav-link:hover { color: #1e3c72; background: rgba(30, 60, 114, 0.08); }
+  #site-nav .nav-menu .nav-link:hover::after { transform: scaleX(1); }
+  /* 选中项：整条竖块填充变色，铺满顶栏高度 */
+  #site-nav .nav-menu .nav-link.active {
+    color: #fff; font-weight: 700; border-radius: 0;
+    background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+  }
+
+  /* ===== 搜索按钮 ===== */
+  #site-nav .nav-search-btn {
+    margin-left: auto; width: 40px; height: 40px;
+    border: 1px solid rgba(30, 60, 114, .25); border-radius: 50%;
+    background: linear-gradient(135deg, #cfe1f7, #e4d8f6); color: #1e3c72; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(31, 60, 114, .12);
+    transition: background .25s, transform .25s;
+  }
+  #site-nav .nav-search-btn:hover {
+    background: linear-gradient(135deg, #bcd6f5, #d8c8f0); transform: translateY(-1px);
+  }
+  #site-nav .nav-search-btn svg { width: 15px; height: 15px; }
+
+  /* ===== 搜索弹层（收在 #searchOverlay 命名空间） ===== */
+  #searchOverlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .45);
+    display: none; align-items: flex-start; justify-content: center;
+    padding-top: 120px; z-index: 2000;
+  }
+  #searchOverlay.open { display: flex; }
+  #searchOverlay .search-box {
+    width: min(560px, 90vw); background: #fff; border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3); padding: 20px;
+  }
+  #searchOverlay .search-box h3 { font-size: 1.1rem; margin-bottom: 12px; color: #222; }
+  #searchOverlay .search-row { display: flex; gap: 10px; }
+  #searchOverlay .search-input {
+    flex: 1; padding: 11px 14px; font-size: 1rem;
+    border: 1px solid #ccc; border-radius: 8px; outline: none;
+  }
+  #searchOverlay .search-input:focus { border-color: #2a5298; }
+  #searchOverlay .search-submit {
+    padding: 11px 20px; border: none; border-radius: 8px;
+    background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff;
+    font-weight: 600; font-size: 1rem; cursor: pointer;
+  }
+  #searchOverlay .search-submit:hover { opacity: .92; }
+  #searchOverlay .search-hint { margin-top: 10px; font-size: .82rem; color: #888; }
+
+  /* 防止满宽出血（100vw）在存在竖向滚动条时产生横向滚动；
+     用 clip 而非 hidden：不会把 body 变成滚动容器，因而不会破坏 sticky 吸顶 */
+  body { overflow-x: clip; }
+
+  /* ===== 注入页适配：导航栏已改为正常文档流，仅侧栏需避开其高度 ===== */
+  .auto-list { top: 54px !important; }
+</style>
+
+<nav class="top-navbar" id="site-nav">
+  <div class="nav-container">
+    <ul class="nav-menu">
+      <li><a class="nav-link" href="../../index.html">首页</a></li>
+      <li><a class="nav-link active" href="../../github/index.html">开源</a></li>
+      <li><a class="nav-link" href="../../admin/index.html">监控</a></li>
+      <li><a class="nav-link" href="../../about/index.html">关于</a></li>
+    </ul>
+    <button class="nav-search-btn" id="searchToggle" aria-label="搜索">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-box">
+    <h3>全网搜索</h3>
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="输入关键词…" autocomplete="off">
+      <button class="search-submit" id="searchSubmit">搜索</button>
+    </div>
+    <p class="search-hint">使用 Google 搜索 “site:moonlord.cc + 关键词”</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const toggle  = document.getElementById('searchToggle');
+    const overlay = document.getElementById('searchOverlay');
+    const input   = document.getElementById('searchInput');
+    const submit  = document.getElementById('searchSubmit');
+
+    function openSearch() { overlay.classList.add('open'); input.focus(); }
+    function closeSearch() { overlay.classList.remove('open'); }
+    function doSearch() {
+      const q = input.value.trim();
+      const site = 'site:moonlord.cc';
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(q ? site + ' ' + q : site);
+      window.open(url, '_blank');
+      closeSearch();
+    }
+
+    toggle.addEventListener('click', openSearch);
+    submit.addEventListener('click', doSearch);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeSearch(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
+    });
+  })();
+</script>
+
+<!-- Google Analytics Tag -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3WLVV25DZ0"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
+<!-- End Google Analytics Tag -->
+
+<article class="markdown-body">
+<style>
+.auto-list {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  overflow: auto;
+  padding: 16px;
+  box-sizing: border-box;
+  border-right: 1px solid #d8dee4;
+  background: #f6f8fa;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.auto-list ul { list-style: none; margin: 0; padding: 0; }
+.auto-list li { margin: 0; }
+.auto-list a { display: block; padding: 8px 16px; margin: 0 -16px; color: #1a1a1a; text-decoration: none; word-break: break-all; }
+.auto-list a:hover { background: #eef3f8; text-decoration: none; }
+.auto-list a.active { background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; font-weight: 600; }
+.auto-list li.home { margin: 0; padding: 0; }
+.auto-list li.home a { display: flex; align-items: center; justify-content: flex-start; margin: -16px -16px 0; padding: 18px 16px; border-bottom: 1px solid #d8dee4; }
+.auto-list li.home a svg { width: 16px; height: 16px; display: block; }
+.auto-list-content { }
+@media (max-width: 1360px) {
+  .auto-list-content { margin-left: 240px; }
+}
+@media (max-width: 768px) {
+  .auto-list { position: static; width: auto; border-right: none; border-bottom: 1px solid #d8dee4; }
+  .auto-list-content { margin-left: 0; }
+}
+</style>
+<nav class="auto-list">
+  <ul>
+    <li class="home"><a href="./index.html" title="返回目录首页" aria-label="返回目录首页"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.36v7.026A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V11a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75v3.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.229c0-.531.242-1.034.657-1.366l5.25-4.2z"></path></svg></a></li>
+    <li><a href="./GameSaveBackup.html">GameSaveBackup</a></li>
+    <li><a href="./LolAutoPlay.html">LolAutoPlay</a></li>
+    <li><a href="./MoonAssistant.html">MoonAssistant</a></li>
+    <li><a href="./MyAndroid.html">MyAndroid</a></li>
+    <li><a class="active" href="./MyBatch.html">MyBatch</a></li>
+    <li><a href="./MyChromeExtension.html">MyChromeExtension</a></li>
+    <li><a href="./MyCSharp.html">MyCSharp</a></li>
+    <li><a href="./MyJava.html">MyJava</a></li>
+    <li><a href="./MyJS.html">MyJS</a></li>
+    <li><a href="./MyPages.html">MyPages</a></li>
+    <li><a href="./MyPHP.html">MyPHP</a></li>
+    <li><a href="./MyShell.html">MyShell</a></li>
+    <li><a href="./MySpringBoot.html">MySpringBoot</a></li>
+    <li><a href="./MyVisualBasic.html">MyVisualBasic</a></li>
+    <li><a href="./QiNiuMaster.html">QiNiuMaster</a></li>
+  </ul>
+</nav>
+<div class="auto-list-content">
+<p><a href="https://github.com/MoonLord-LM/MyBatch">https://github.com/MoonLord-LM/MyBatch</a></p>
+<hr>
+<h1>MyBatch</h1>
+<p><a href="https://github.com/MoonLord-LM/MyBatch/actions/workflows/self-check.yml"><img src="assets/MyBatch-001.svg" alt="self-check"></a></p>
+<p>A collection of commonly used Windows Batch scripts  </p>
+<p>一些常用的 Windows 批处理脚本集合  </p>
+<h2>[功能分类]</h2>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>功能分类</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/tree/master/gui">gui</a></td>
+<td><a href="#%E7%AA%97%E4%BD%93%E7%A8%8B%E5%BA%8F">窗体程序</a></td>
+<td>控制台任务批量管理</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/tree/master/console/file">console/file</a></td>
+<td><a href="#%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86">文件处理</a></td>
+<td>压缩解压、加密解密、打包、去重、生成列表等</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/tree/master/console/media">console/media</a></td>
+<td><a href="#%E5%A4%9A%E5%AA%92%E4%BD%93%E5%B7%A5%E5%85%B7">多媒体工具</a></td>
+<td>视频合并、切片、转码、AI 放大插帧、封面管理、字幕管理、批量重命名等</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/tree/master/console/server">console/server</a></td>
+<td><a href="#%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1">网络服务</a></td>
+<td>内网穿透、本地文件服务器等</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/tree/master/console/system">console/system</a></td>
+<td><a href="#%E7%B3%BB%E7%BB%9F%E4%BC%98%E5%8C%96">系统优化</a></td>
+<td>垃圾清理、缓存清理等</td>
+</tr>
+</tbody></table>
+<h2>[脚本清单]</h2>
+<h3>窗体程序</h3>
+<table>
+<thead>
+<tr>
+<th>脚本 / 文件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/gui/MyBatchTask%20%E4%BB%BB%E5%8A%A1%E7%AE%A1%E7%90%86.ps1">MyBatchTask 任务管理.ps1</a></td>
+<td>图形化任务 / 进程管理工具</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/gui/%E7%B2%BE%E7%AE%80%20ps1%20%E4%BB%A3%E7%A0%81.bat">精简 ps1 代码.bat</a></td>
+<td>压缩精简 PowerShell 脚本体积（去空白 / 注释）</td>
+</tr>
+</tbody></table>
+<h3>文件处理</h3>
+<table>
+<thead>
+<tr>
+<th>脚本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%20ed2k%20%E9%93%BE%E6%8E%A5%E7%94%9F%E6%88%90.bat">文件 ed2k 链接生成.bat</a></td>
+<td>为文件生成 eD2k 电驴下载链接</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E7%BC%96%E7%A0%81%20-%2001%20%E5%8F%8D%E8%BD%AC.bat">文件编码 - 01 反转.bat</a></td>
+<td>对文件做 0/1 位反转的轻量编码 / 混淆</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E7%BC%96%E7%A0%81%20-%20PEM%20%E6%A0%BC%E5%BC%8F.bat">文件编码 - PEM 格式.bat</a></td>
+<td>把任意文件编码为 PEM 文本格式（Base64 + 头尾）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E6%89%93%E5%8C%85%E4%B8%BA%20bat%20%E6%A0%BC%E5%BC%8F.bat">文件打包为 bat 格式.bat</a></td>
+<td>把文件打包进单个 .bat，运行时还原为原文件</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E6%89%93%E5%8C%85%E4%B8%BA%20cli-exe%20%E6%A0%BC%E5%BC%8F.bat">文件打包为 cli-exe 格式.bat</a></td>
+<td>打包为命令行 exe（带图标）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E6%89%93%E5%8C%85%E4%B8%BA%20cli-exe%20%E6%A0%BC%E5%BC%8F%20-%20%E6%97%A0%E5%9B%BE%E6%A0%87%E7%89%88.bat">文件打包为 cli-exe 格式 - 无图标版.bat</a></td>
+<td>打包为命令行 exe（无图标）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E6%89%93%E5%8C%85%E4%B8%BA%20gui-exe%20%E6%A0%BC%E5%BC%8F.bat">文件打包为 gui-exe 格式.bat</a></td>
+<td>打包为带图形界面的 exe</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E6%89%93%E5%8C%85%E4%B8%BA%20gui-exe%20%E6%A0%BC%E5%BC%8F%20-%20%E6%97%A0%E5%9B%BE%E6%A0%87%E7%89%88.bat">文件打包为 gui-exe 格式 - 无图标版.bat</a></td>
+<td>打包为带图形界面的 exe（无图标）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%93%88%E5%B8%8C%E5%80%BC%E7%94%9F%E6%88%90%20-%20RHash%20%E7%89%88.bat">文件哈希值生成 - RHash 版.bat</a></td>
+<td>用 RHash 计算文件多算法哈希值</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%93%88%E5%B8%8C%E5%80%BC%E7%94%9F%E6%88%90.bat">文件哈希值生成.bat</a></td>
+<td>计算文件的哈希值</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8A%A0%E8%A7%A3%E5%AF%86%20-%20%E5%8A%A0%E5%AF%86.bat">文件加解密 - 加密.bat</a></td>
+<td>加密文件</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8A%A0%E8%A7%A3%E5%AF%86%20-%20%E8%A7%A3%E5%AF%86.bat">文件加解密 - 解密.bat</a></td>
+<td>解密文件</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8A%A0%E5%AF%86%E5%8E%8B%E7%BC%A9%20-%207z%20%E5%AD%98%E5%82%A8.bat">文件加密压缩 - 7z 存储.bat</a></td>
+<td>加密压缩为 7z（仅存储不压缩）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8A%A0%E5%AF%86%E5%8E%8B%E7%BC%A9%20-%207z%20%E6%9C%80%E4%BD%B3.bat">文件加密压缩 - 7z 最佳.bat</a></td>
+<td>加密压缩为 7z（最佳压缩率）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%A4%B9%E6%98%BE%E7%A4%BA.bat">文件夹显示.bat</a></td>
+<td>取消文件夹隐藏属性，使其可见</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%A4%B9%E9%9A%90%E8%97%8F.bat">文件夹隐藏.bat</a></td>
+<td>设置文件夹为隐藏属性</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E8%A7%A3%E7%A0%81%20-%20PEM%20%E6%A0%BC%E5%BC%8F.bat">文件解码 - PEM 格式.bat</a></td>
+<td>把 PEM 文本解码还原为原文件</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8%E7%94%9F%E6%88%90%20-%20csv%20%E6%A0%BC%E5%BC%8F.bat">文件列表生成 - csv 格式.bat</a></td>
+<td>导出目录下文件清单（CSV，含大小 / 时间）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8%E7%94%9F%E6%88%90%20-%20json%20%E6%A0%BC%E5%BC%8F.bat">文件列表生成 - json 格式.bat</a></td>
+<td>导出目录下文件清单（JSON）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8%E7%94%9F%E6%88%90%20-%20txt%20%E6%A0%BC%E5%BC%8F.bat">文件列表生成 - txt 格式.bat</a></td>
+<td>导出目录下文件清单（TXT）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%90%8D%E5%88%97%E8%A1%A8%E7%94%9F%E6%88%90%20-%20csv%20%E6%A0%BC%E5%BC%8F.bat">文件名列表生成 - csv 格式.bat</a></td>
+<td>仅导出文件名字列表（CSV）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%90%8D%E5%88%97%E8%A1%A8%E7%94%9F%E6%88%90%20-%20json%20%E6%A0%BC%E5%BC%8F.bat">文件名列表生成 - json 格式.bat</a></td>
+<td>仅导出文件名字列表（JSON）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%90%8D%E5%88%97%E8%A1%A8%E7%94%9F%E6%88%90%20-%20txt%20%E6%A0%BC%E5%BC%8F.bat">文件名列表生成 - txt 格式.bat</a></td>
+<td>仅导出文件名字列表（TXT）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%90%8D%E5%88%A0%E9%99%A4%E9%87%8D%E5%A4%8D%E5%89%8D%E5%90%8E%E7%BC%80.bat">文件名删除重复前后缀.bat</a></td>
+<td>批量去除文件名中重复的相同前后缀</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8E%8B%E7%BC%A9%20-%207z%20%E5%AD%98%E5%82%A8.bat">文件压缩 - 7z 存储.bat</a></td>
+<td>压缩为 7z（仅存储不压缩）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8E%8B%E7%BC%A9%20-%207z%20%E6%9C%80%E4%BD%B3.bat">文件压缩 - 7z 最佳.bat</a></td>
+<td>压缩为 7z（最佳压缩率）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8E%8B%E7%BC%A9%20-%20exe%20%E5%AD%98%E5%82%A8.bat">文件压缩 - exe 存储.bat</a></td>
+<td>压缩为自解压 exe（存储）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8E%8B%E7%BC%A9%20-%20exe%20%E6%9C%80%E4%BD%B3.bat">文件压缩 - exe 最佳.bat</a></td>
+<td>压缩为自解压 exe（最佳）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8E%8B%E7%BC%A9%20-%20zip%20%E5%AD%98%E5%82%A8.bat">文件压缩 - zip 存储.bat</a></td>
+<td>压缩为 zip（存储）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E5%8E%8B%E7%BC%A9%20-%20zip%20%E6%9C%80%E4%BD%B3.bat">文件压缩 - zip 最佳.bat</a></td>
+<td>压缩为 zip（最佳）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E9%87%8D%E5%A4%8D%E6%B8%85%E7%90%86%20-%20%E4%BB%85%E6%AF%94%E5%AF%B9%E5%A4%A7%E5%B0%8F.bat">文件重复清理 - 仅比对大小.bat</a></td>
+<td>仅按文件大小比对去重清理</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E9%87%8D%E5%A4%8D%E6%B8%85%E7%90%86%20-%20%E5%BF%AB%E9%80%9F%E7%89%88.bat">文件重复清理 - 快速版.bat</a></td>
+<td>按大小 + 快速哈希去重清理</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E9%87%8D%E5%A4%8D%E6%B8%85%E7%90%86.bat">文件重复清理.bat</a></td>
+<td>按完整哈希去重清理重复文件</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E8%87%AA%E5%8A%A8%E8%A7%A3%E5%8E%8B.bat">文件自动解压.bat</a></td>
+<td>识别格式并自动解压压缩包</td>
+</tr>
+</tbody></table>
+<h3>多媒体工具</h3>
+<table>
+<thead>
+<tr>
+<th>脚本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%B1%8F%E5%B9%95%E5%BD%95%E5%88%B6%E5%85%B3%E9%97%AD.bat">屏幕录制关闭.bat</a></td>
+<td>关闭系统屏幕录制</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%B1%8F%E5%B9%95%E5%BD%95%E5%88%B6%E5%BC%80%E5%90%AF%20-%200.5%20%E5%80%8D%E5%88%86%E8%BE%A8%E7%8E%87.bat">屏幕录制开启 - 0.5 倍分辨率.bat</a></td>
+<td>开启屏幕录制（输出 0.5 倍分辨率）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%B1%8F%E5%B9%95%E5%BD%95%E5%88%B6%E5%BC%80%E5%90%AF%20-%20%E5%AE%8C%E6%95%B4%E5%88%86%E8%BE%A8%E7%8E%87.bat">屏幕录制开启 - 完整分辨率.bat</a></td>
+<td>开启屏幕录制（输出完整分辨率）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%B1%8F%E5%B9%95%E5%BB%B6%E6%97%B6%E5%BD%95%E5%88%B6%E5%BC%80%E5%90%AF%20-%200.5%20%E5%80%8D%E5%88%86%E8%BE%A8%E7%8E%87.bat">屏幕延时录制开启 - 0.5 倍分辨率.bat</a></td>
+<td>延时后开始屏幕录制（0.5 倍分辨率）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%B1%8F%E5%B9%95%E5%BB%B6%E6%97%B6%E5%BD%95%E5%88%B6%E5%BC%80%E5%90%AF%20-%20%E5%AE%8C%E6%95%B4%E5%88%86%E8%BE%A8%E7%8E%87.bat">屏幕延时录制开启 - 完整分辨率.bat</a></td>
+<td>延时后开始屏幕录制（完整分辨率）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E6%9F%A5%E7%9C%8B.bat">视频编码查看.bat</a></td>
+<td>查看视频的编码格式信息</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E8%BD%AC%E6%8D%A2%E4%B8%BA%20av1%20-%20%E7%94%BB%E8%B4%A8%E4%BC%98%E5%85%88.bat">视频编码转换为 av1 - 画质优先.bat</a></td>
+<td>转码为 AV1（画质优先）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E8%BD%AC%E6%8D%A2%E4%B8%BA%20av1%20-%20%E9%80%9F%E5%BA%A6%E4%BC%98%E5%85%88.bat">视频编码转换为 av1 - 速度优先.bat</a></td>
+<td>转码为 AV1（速度优先）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E8%BD%AC%E6%8D%A2%E4%B8%BA%20h264.bat">视频编码转换为 h264.bat</a></td>
+<td>转码为 H.264</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E8%BD%AC%E6%8D%A2%E4%B8%BA%20h265.bat">视频编码转换为 h265.bat</a></td>
+<td>转码为 H.265 / HEVC</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%9A%84%E7%94%BB%E9%9D%A2%E5%86%85%E5%AE%B9%E6%9B%BF%E6%8D%A2.bat">视频的画面内容替换.bat</a></td>
+<td>替换视频画面内容</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%9A%84%E5%A3%B0%E9%9F%B3%E5%86%85%E5%AE%B9%E6%9B%BF%E6%8D%A2.bat">视频的声音内容替换.bat</a></td>
+<td>替换视频音轨</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%9A%84%E9%9F%B3%E7%94%BB%E5%86%85%E5%AE%B9%E6%9B%BF%E6%8D%A2.bat">视频的音画内容替换.bat</a></td>
+<td>同时替换画面与音轨</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA2%E5%80%8D%20-%20%E5%8A%A8%E6%BC%AB%20AI%20%E7%89%88.bat">视频分辨率扩大为2倍 - 动漫 AI 版.bat</a></td>
+<td>AI 超分放大视频至 2 倍（动漫模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA2%E5%80%8D.bat">视频分辨率扩大为2倍.bat</a></td>
+<td>放大视频分辨率至 2 倍</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA3%E5%80%8D%20-%20%E5%8A%A8%E6%BC%AB%20AI%20%E7%89%88.bat">视频分辨率扩大为3倍 - 动漫 AI 版.bat</a></td>
+<td>AI 超分放大视频至 3 倍（动漫模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA4%E5%80%8D%20-%20%E5%8A%A8%E6%BC%AB%20AI%20%E7%89%88.bat">视频分辨率扩大为4倍 - 动漫 AI 版.bat</a></td>
+<td>AI 超分放大视频至 4 倍（动漫模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA4%E5%80%8D%20-%20%E9%80%9A%E7%94%A8%20AI%20%E7%89%88.bat">视频分辨率扩大为4倍 - 通用 AI 版.bat</a></td>
+<td>AI 超分放大视频至 4 倍（通用模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%88%86%E8%BE%A8%E7%8E%87%E7%BC%A9%E5%B0%8F%E4%B8%BA0.5%E5%80%8D.bat">视频分辨率缩小为0.5倍.bat</a></td>
+<td>缩小视频分辨率至 0.5 倍</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%B0%81%E9%9D%A2%E5%AF%BC%E5%87%BA.bat">视频封面导出.bat</a></td>
+<td>提取视频封面图</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%B0%81%E9%9D%A2%E6%A3%80%E6%9F%A5.bat">视频封面检查.bat</a></td>
+<td>检查视频是否含封面</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%B0%81%E9%9D%A2%E5%B5%8C%E5%85%A5.bat">视频封面嵌入.bat</a></td>
+<td>嵌入封面到视频</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%B0%81%E9%9D%A2%E7%A7%BB%E9%99%A4.bat">视频封面移除.bat</a></td>
+<td>移除视频封面</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E6%A0%BC%E5%BC%8F%E5%B0%81%E8%A3%85%E4%B8%BA%20mkv.bat">视频格式封装为 mkv.bat</a></td>
+<td>封装为 MKV 容器（不重编码）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E6%A0%BC%E5%BC%8F%E5%B0%81%E8%A3%85%E4%B8%BA%20mp4.bat">视频格式封装为 mp4.bat</a></td>
+<td>封装为 MP4 容器（不重编码）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%90%88%E5%B9%B6.bat">视频合并.bat</a></td>
+<td>合并多个视频片段</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E7%94%BB%E9%9D%A2%E6%88%AA%E5%8F%96.bat">视频画面截取.bat</a></td>
+<td>截取视频某一帧画面</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E9%99%8D%E5%99%AA.bat">视频降噪.bat</a></td>
+<td>对视频降噪处理</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%88%87%E7%89%87%E6%88%AA%E5%8F%96.bat">视频切片截取.bat</a></td>
+<td>按时间段切片截取视频片段</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E8%AF%A6%E7%BB%86%E5%8F%82%E6%95%B0%E5%AF%BC%E5%87%BA.bat">视频详细参数导出.bat</a></td>
+<td>导出视频详细参数信息</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E9%9F%B3%E9%A2%91%E5%AF%BC%E5%87%BA.bat">视频音频导出.bat</a></td>
+<td>提取视频中的音频</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%B8%A7%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA2%E5%80%8D%20-%20%E9%80%9A%E7%94%A8%20AI%20%E7%89%88.bat">视频帧率扩大为2倍 - 通用 AI 版.bat</a></td>
+<td>AI 插帧把帧率提高至 2 倍</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%B8%A7%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA3%E5%80%8D%20-%20%E9%80%9A%E7%94%A8%20AI%20%E7%89%88.bat">视频帧率扩大为3倍 - 通用 AI 版.bat</a></td>
+<td>AI 插帧把帧率提高至 3 倍</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%B8%A7%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA4%E5%80%8D%20-%20%E9%80%9A%E7%94%A8%20AI%20%E7%89%88.bat">视频帧率扩大为4倍 - 通用 AI 版.bat</a></td>
+<td>AI 插帧把帧率提高至 4 倍</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20VID%20+%20%E7%94%9F%E6%88%90%E6%97%B6%E9%97%B4.bat">视频重命名 - 改为 VID + 生成时间.bat</a></td>
+<td>按 VID + 生成时间规则重命名视频</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20mmexport%20+%20%E4%BF%9D%E5%AD%98%E6%97%B6%E9%97%B4.bat">视频重命名 - 改为 mmexport + 保存时间.bat</a></td>
+<td>按微信导出规则重命名视频</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%B7%BB%E5%8A%A0%E7%94%9F%E6%88%90%E6%97%A5%E6%9C%9F%E5%89%8D%E7%BC%80.bat">视频重命名 - 添加生成日期前缀.bat</a></td>
+<td>为视频名添加生成日期前缀</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%AD%97%E5%B9%95%E5%AF%BC%E5%87%BA.bat">视频字幕导出.bat</a></td>
+<td>提取视频字幕</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%AD%97%E5%B9%95%E5%B5%8C%E5%85%A5.bat">视频字幕嵌入.bat</a></td>
+<td>嵌入字幕到视频</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E8%A7%86%E9%A2%91%E5%AD%97%E5%B9%95%E7%A7%BB%E9%99%A4.bat">视频字幕移除.bat</a></td>
+<td>移除视频字幕</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA2%E5%80%8D%20-%20%E5%8A%A8%E6%BC%AB%20AI%20%E7%89%88.bat">图片分辨率扩大为2倍 - 动漫 AI 版.bat</a></td>
+<td>AI 超分放大图片至 2 倍（动漫模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA3%E5%80%8D%20-%20%E5%8A%A8%E6%BC%AB%20AI%20%E7%89%88.bat">图片分辨率扩大为3倍 - 动漫 AI 版.bat</a></td>
+<td>AI 超分放大图片至 3 倍（动漫模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA4%E5%80%8D%20-%20%E5%8A%A8%E6%BC%AB%20AI%20%E7%89%88.bat">图片分辨率扩大为4倍 - 动漫 AI 版.bat</a></td>
+<td>AI 超分放大图片至 4 倍（动漫模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E5%88%86%E8%BE%A8%E7%8E%87%E6%89%A9%E5%A4%A7%E4%B8%BA4%E5%80%8D%20-%20%E9%80%9A%E7%94%A8%20AI%20%E7%89%88.bat">图片分辨率扩大为4倍 - 通用 AI 版.bat</a></td>
+<td>AI 超分放大图片至 4 倍（通用模型）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E8%AF%A6%E7%BB%86%E5%8F%82%E6%95%B0%E5%AF%BC%E5%87%BA.bat">图片详细参数导出.bat</a></td>
+<td>导出图片详细参数信息</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E4%BF%AE%E6%94%B9%E6%97%B6%E9%97%B4%E4%B8%8E%E5%91%BD%E5%90%8D%E6%A3%80%E6%9F%A5.bat">图片修改时间与命名检查.bat</a></td>
+<td>检查图片修改时间与文件名是否一致</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E4%BF%AE%E6%94%B9%E6%97%B6%E9%97%B4%E4%B8%8E%E5%91%BD%E5%90%8D%E5%88%B7%E6%96%B0%E4%B8%80%E8%87%B4.bat">图片修改时间与命名刷新一致.bat</a></td>
+<td>把图片修改时间刷新为与文件名一致</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20IMG%20+%20%E6%8B%8D%E6%91%84%E6%97%B6%E9%97%B4.bat">图片重命名 - 改为 IMG + 拍摄时间.bat</a></td>
+<td>按 IMG + 拍摄时间重命名图片</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20IMG%20+%20%E4%BF%AE%E6%94%B9%E6%97%B6%E9%97%B4.bat">图片重命名 - 改为 IMG + 修改时间.bat</a></td>
+<td>按 IMG + 修改时间重命名图片</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20mmexport%20+%20%E4%BF%9D%E5%AD%98%E6%97%B6%E9%97%B4.bat">图片重命名 - 改为 mmexport + 保存时间.bat</a></td>
+<td>按微信导出规则重命名图片</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20QQ%E6%88%AA%E5%9B%BE%20+%20%E4%BF%AE%E6%94%B9%E6%97%B6%E9%97%B4.bat">图片重命名 - 改为 QQ截图 + 修改时间.bat</a></td>
+<td>按 QQ 截图规则重命名图片</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20Screenshot%20+%20%E6%88%AA%E5%B1%8F%E6%97%B6%E9%97%B4.bat">图片重命名 - 改为 Screenshot + 截屏时间.bat</a></td>
+<td>按 Screenshot 规则重命名图片</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E5%9B%BE%E7%89%87%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%94%B9%E4%B8%BA%20%E6%8B%8D%E6%91%84%E6%97%B6%E9%97%B4%E5%BA%8F%E5%8F%B7.bat">图片重命名 - 改为 拍摄时间序号.bat</a></td>
+<td>按拍摄时间 + 序号重命名图片</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E9%9F%B3%E9%A2%91%E5%B0%81%E9%9D%A2%E5%AF%BC%E5%87%BA.bat">音频封面导出.bat</a></td>
+<td>提取音频封面图</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E9%9F%B3%E9%A2%91%E5%B0%81%E9%9D%A2%E5%B5%8C%E5%85%A5.bat">音频封面嵌入.bat</a></td>
+<td>嵌入封面到音频</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/%E9%9F%B3%E9%A2%91%E5%B0%81%E9%9D%A2%E7%A7%BB%E9%99%A4.bat">音频封面移除.bat</a></td>
+<td>移除音频封面</td>
+</tr>
+</tbody></table>
+<h3>网络服务</h3>
+<table>
+<thead>
+<tr>
+<th>脚本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/server/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%20CloudFlare.bat">内网穿透 CloudFlare.bat</a></td>
+<td>通过 CloudFlare 建立内网穿透隧道</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/server/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%20Frp.bat">内网穿透 Frp.bat</a></td>
+<td>通过 Frp 建立内网穿透</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/server/%E6%96%87%E4%BB%B6%E6%9C%8D%E5%8A%A1%E5%99%A8%20OpenList.bat">文件服务器 OpenList.bat</a></td>
+<td>启动 OpenList 文件服务器</td>
+</tr>
+</tbody></table>
+<h3>系统优化</h3>
+<table>
+<thead>
+<tr>
+<th>脚本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E6%89%93%E5%BC%80%E8%99%9A%E6%8B%9F%E5%BA%94%E7%94%A8%E5%88%97%E8%A1%A8.bat">打开虚拟应用列表.bat</a></td>
+<td>打开 Windows 虚拟应用列表</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E6%89%93%E5%BC%80%E8%87%AA%E5%90%AF%E5%8A%A8%E6%96%87%E4%BB%B6%E5%A4%B9%20-%20%E5%BD%93%E5%89%8D%E7%94%A8%E6%88%B7.bat">打开自启动文件夹 - 当前用户.bat</a></td>
+<td>打开当前用户的启动文件夹</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E6%89%93%E5%BC%80%E8%87%AA%E5%90%AF%E5%8A%A8%E6%96%87%E4%BB%B6%E5%A4%B9%20-%20%E6%89%80%E6%9C%89%E7%94%A8%E6%88%B7.bat">打开自启动文件夹 - 所有用户.bat</a></td>
+<td>打开所有用户的启动文件夹</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E5%B1%80%E5%9F%9F%E7%BD%91%E6%9C%BA%E5%99%A8%E6%89%AB%E6%8F%8F.bat">局域网机器扫描.bat</a></td>
+<td>扫描局域网内存活的主机</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E5%9E%83%E5%9C%BE%E6%96%87%E4%BB%B6%E6%B8%85%E7%90%86.bat">垃圾文件清理.bat</a></td>
+<td>清理系统垃圾文件</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E6%B8%85%E7%90%86%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E7%BB%84%E7%BB%87%E7%AE%A1%E7%90%86%E7%AD%96%E7%95%A5.bat">清理浏览器的组织管理策略.bat</a></td>
+<td>清除浏览器被组策略锁定的管理项</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E5%9B%BE%E6%A0%87%E7%BC%93%E5%AD%98%E6%B8%85%E7%90%86.bat">图标缓存清理.bat</a></td>
+<td>重建 / 清理图标缓存</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E6%98%BE%E7%A4%BA%E5%99%A8%E5%85%B3%E9%97%AD.bat">显示器关闭.bat</a></td>
+<td>关闭显示器进入节能状态</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E6%98%BE%E7%A4%BA%E5%99%A8%E5%BC%80%E5%90%AF.bat">显示器开启.bat</a></td>
+<td>唤醒 / 开启显示器</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/system/%E9%87%8D%E5%90%AF%E6%A1%8C%E9%9D%A2%E8%BF%9B%E7%A8%8B.bat">重启桌面进程.bat</a></td>
+<td>重启 Windows 资源管理器（explorer）</td>
+</tr>
+</tbody></table>
+<h2>[目录结构]</h2>
+<pre><code>MyBatch/
+├── gui/             # 窗体程序
+├── console/
+│   ├── file/        # 文件处理
+│   ├── media/       # 多媒体工具
+│   ├── server/      # 网络服务
+│   └── system/      # 系统优化
+├── example/         # 零散示例脚本
+├── LLM.md           # 提示信息
+├── README.md        # 工程说明
+└── self-check.bat   # 自检脚本
+</code></pre>
+
+</div>
+</article>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
+<script>document.addEventListener("DOMContentLoaded",function(){if(window.hljs){document.querySelectorAll(".markdown-body pre code").forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});}});</script>
+<footer class="site-footer">
+</footer>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "28204d87bcf54906b3651e8f84588b48"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+</body>
+</html>
