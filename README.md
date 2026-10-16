@@ -13,7 +13,7 @@ Static Site Generator
 ## [使用说明]
 
 依赖 Node.js 环境运行  
-执行 `build.bat` 即可将 `/pages` 文件夹中的源文件，构建生成到 `/dist` 文件夹中  
+执行 `build.bat` 即可完成构建  
 
 ## [生成规则]
 
