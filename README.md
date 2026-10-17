@@ -1,8 +1,7 @@
 # MyPages
 
 [![build](https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml/badge.svg)](https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml)
-[![github-profile](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-profile.yml/badge.svg)](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-profile.yml)
-[![github-languages-color](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-languages-color.yml/badge.svg)](https://github.com/MoonLord-LM/MyPages/actions/workflows/github-languages-color.yml)
+[![tools](https://github.com/MoonLord-LM/MyPages/actions/workflows/tools.yml/badge.svg)](https://github.com/MoonLord-LM/MyPages/actions/workflows/tools.yml)
 
 Static Site Generator  
 静态页面生成工具  

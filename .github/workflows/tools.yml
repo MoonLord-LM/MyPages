@@ -1,19 +1,19 @@
-name: github-languages-color
+name: tools
 
 on:
   schedule:
-    - cron: '57 23 */15 * *'
+    - cron: '57 23 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: github-languages-color-${{ github.ref }}
+  group: tools-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  github-languages-color:
+  tools:
     runs-on: windows-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -21,9 +21,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Run github-languages-color.bat
+      - name: Run tools.bat
         shell: cmd
-        run: call tools\github\github-languages-color.bat <nul
+        run: call tools\tools.bat <nul
 
       - name: Commit and push
         if: github.event_name != 'pull_request'
@@ -32,8 +32,8 @@ jobs:
           git add -A
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
-            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "auto-build by [ github-languages-color.bat ]"
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "auto-build by [ tools.bat ]"
             git push origin HEAD
           } else {
-            Write-Host 'No changes after github-languages-color.bat.'
+            Write-Host 'No changes after tools.bat.'
           }
