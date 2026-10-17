@@ -293,7 +293,36 @@ body {
 <p><a href="https://github.com/MoonLord-LM/MyPages">https://github.com/MoonLord-LM/MyPages</a></p>
 <hr>
 <h1>MyPages</h1>
-<p>Static Site Generator Test   </p>
+<p><a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml"><img src="assets/MyPages-001.svg" alt="build"></a>
+<a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/tools.yml"><img src="assets/MyPages-002.svg" alt="tools"></a></p>
+<p>Static Site Generator<br>静态页面生成工具  </p>
+<p>将 <code>/pages</code> 目录下的 Markdown / HTML 等源文件，构建为可部署的静态站点，输出到 <code>/dist</code> 目录<br>支持公共模板拼接、代码高亮、远程图片本地化、自动生成列表页、自动生成站点地图  </p>
+<h2>[使用说明]</h2>
+<p>依赖 Node.js 环境运行<br>执行 <code>build.bat</code> 即可完成构建  </p>
+<h2>[生成规则]</h2>
+<h3>页面文件</h3>
+<p><code>/pages</code> 目录下存放 html 或 md 文件，视为页面文件<br>优先使用 html 文件生成页面，如果没有同名的 html 文件，则使用 md 文件进行生成<br>例如首页的内容就应该存放到 <code>/pages/index.html</code> 或 <code>/pages/index.md</code><br>保留名：<code>header.html</code> 和 <code>footer.html</code>，视为公共模板文件，不视作页面文件  </p>
+<h3>生成结果</h3>
+<p>页面生成后，按原目录结构，存放到 <code>/dist</code> 目录中，例如 <code>/pages/blog/post.md</code> → <code>/dist/blog/post.html</code><br>静态资源，按原目录结构，复制到 <code>/dist</code> 目录中，例如 <code>/pages/assets/style/blog.css</code> → <code>/dist/assets/style/blog.css</code><br>公共模板文件 <code>header.html</code> 和 <code>footer.html</code> 不复制  </p>
+<h3>静态资源</h3>
+<p>推荐使用 <code>/assets</code> 目录，单独存放页面使用的视频、图片、js、css、字体等各种静态资源文件<br><code>/pages</code> 目录下的所有文件，只要不是 html 或 md 文件，一律视为静态资源<br>静态资源会被原样复制到 <code>/dist</code> 中对应的路径下，目录结构与 <code>/pages</code> 保持一致<br>例如 <code>/pages/favicon.ico</code> → <code>/dist/favicon.ico</code><br>页面中引用静态资源时，必须使用相对路径，例如 <code>./assets/image/logo.png</code><br>如果 Markdown 中使用远程图片链接（<code>http(s)://</code>），自动下载并保存到页面所在目录的 <code>assets/</code>，并改写为本地相对路径  </p>
+<h3>公共模板</h3>
+<p><code>header.html</code> 和 <code>footer.html</code> 作为页面头部和底部加载的公共模板，与原始 html 进行拼接处理<br><code>header.html</code> 的拼接位置在原始 html 的 <code>&lt;body&gt;</code> 标签后面，紧挨着的位置<br><code>footer.html</code> 的拼接位置在原始 html 的 <code>&lt;/body&gt;</code> 标签前面，紧挨着的位置<br>自动尝试向同级或上级目录，寻找最临近的 <code>header.html</code> 和 <code>footer.html</code> 文件，两者独立处理，缺失某个则仅省略该模板<br>模板中的静态资源引用，按模板文件的位置写相对路径，但是生成时，需要根据最终文件的位置，自动调整相对路径<br>自动调整相对路径，支持 <code>src</code>、<code>href</code>、<code>url()</code> 写法  </p>
+<h3>自动列表</h3>
+<p>当某个文件夹下存在多个页面，但没有 index 页面存在时，触发自动列表规则<br>首先，生成一个 <code>index.html</code> 的列表页面，展示当前文件夹下的全部文件名，大小，和提交时间，并带有跳转到每个页面的链接<br>然后，对此文件夹下的每个页面的 html 增加内容，在页面左侧展示一个简单的竖向列表菜单，可以在列表间跳转以及返回 index 页面  </p>
+<h3>站点地图</h3>
+<p>自动列举 <code>/dist</code> 中所有的 html、php 文件，生成站点地图，存放到 <code>/dist/sitemap.xml</code> 中<br>站点地图需要精确到文件名，例如 <code>index.html</code> 和 <code>index.php</code> 是两个不同的文件，都列举出来  </p>
+<h2>[代码结构]</h2>
+<pre><code>MyPages/
+├── build.bat                             # 构建脚本
+├── tools/
+│   ├── tools.bat                         # 工具脚本
+│   └── github/
+│       ├── github-profile.bat            # 采集 GitHub 用户资料
+│       ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
+├── pages/                                # 站点源文件
+└── dist/                                 # 站点构建产物
+</code></pre>
 
 </div>
 </article>
