@@ -1,7 +1,7 @@
 <?php
 
-# 需要创建目录并授权：
-# mkdir -p '/var/www/releases' && chown -R 'www-data:www-data' '/var/www/releases' '/var/www/html'
+# 需要授权：
+# chown -R 'www-data:www-data' '/var/www/'
 
 const REPO_URL    = 'https://github.com/MoonLord-LM/MyPages.git';
 const REPO_BRANCH = 'master';
