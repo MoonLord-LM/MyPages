@@ -8,36 +8,48 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-powershell -NoProfile -Command "Write-Host '处理当前目录中的工具脚本' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '运行 github\github-profile.bat 脚本，并同步生成的文件，到 ..\pages\github 目录' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用当前目录中的工具脚本' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 github\github-languages-color.bat 脚本，生成 languages-color.json 文件' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 github\github-profile.bat 脚本，并同步生成的文件，到 ..\pages\github 目录' -ForegroundColor Green"
 echo.
 
 
 
-set "gen_tool=!script_dir!github\github-profile.bat"
+set "tool1=!script_dir!github\github-languages-color.bat"
+set "tool2=!script_dir!github\github-profile.bat"
 set "src_dir=!script_dir!github\profile"
 set "dst_dir=!script_dir!..\pages\github"
 
-
-
-echo 开始运行生成器: !gen_tool! & REM
-echo 生成结果目录: !src_dir! & REM
+echo 开始调用: !tool1! & REM
 echo.
-
-call "!gen_tool!" <nul
+call "!tool1!" <nul
 if !errorlevel! neq 0 (
-    echo 错误：生成器执行失败，已终止同步
+    echo 错误：执行失败
     echo.
     pause
     exit /b 1
 )
+
+echo 开始调用: !tool2! & REM
+echo.
+call "!tool2!" <nul
+if !errorlevel! neq 0 (
+    echo 错误：执行失败
+    echo.
+    pause
+    exit /b 1
+)
+
+echo 检查生成结果: !src_dir! & REM
+echo.
 if not exist "!src_dir!" (
     echo 错误：未找到生成结果目录 "!src_dir!"
     echo.
     pause
     exit /b 1
 )
-echo 生成器执行完成
+
+echo 生成完成，开始同步文件
 echo.
 
 REM 从自身文件末尾的 -----BEGIN POWERSHELL CODE----- / -----END POWERSHELL CODE----- 之间提取 PowerShell 代码
