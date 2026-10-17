@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: '57 23 * * *'
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'tools/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'tools/**'
 
 permissions:
   contents: write

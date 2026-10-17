@@ -384,7 +384,13 @@ if ($profile.created_at) {
     $meta += "<span>$joinedIcon Joined $joined</span>"
 }
 
-$generated = (Get-Date).ToString('yyyy-MM-dd HH:mm zzz')
+# 统一按北京时间（UTC+8，中国不实行夏令时）生成，避免跟随运行机时区
+try {
+    $utc8Zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('China Standard Time')
+} catch {
+    $utc8Zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('Asia/Shanghai')
+}
+$generated = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $utc8Zone).ToString('yyyy-MM-dd HH:mm') + ' +08:00'
 
 $html = @"
 <!DOCTYPE html>
