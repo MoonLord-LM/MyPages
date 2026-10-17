@@ -1,9 +1,13 @@
 <?php
+
+# 需要授权：
+# chown -R 'www-data:www-data' '/var/www/'
+
 const REPO_URL    = 'https://github.com/MoonLord-LM/MyPages.git';
 const REPO_BRANCH = 'master';
 const RUN_LOCK    = '/tmp/deploy/MoonLord-LM/MyPages.lock';
 const REPO_DIR    = '/tmp/deploy/MoonLord-LM/MyPages';
-const LOG_FILE    = '/var/log/nginx/deploy.log';
+const LOG_FILE    = '/tmp/deploy/MoonLord-LM/deploy.log';
 const RELEASES    = '/var/www/releases';
 const TARGET      = '/var/www/html';
 
@@ -16,12 +20,17 @@ function respond($s, $m) {
     log_msg($m);
     http_response_code($s);
     header('Content-Type: text/plain; charset=utf-8');
-    echo $m;
+    echo $m. "\n\n\n";
+    if (!file_exists(LOG_FILE)) {
+        echo 'log not found: ' . LOG_FILE;
+    } else {
+        readfile(LOG_FILE);
+    }
     exit;
 }
 
 function run($cmd) {
-    $cmd = 'timeout 300 ' . $cmd . ' 2>&1';
+    $cmd = 'timeout 300 sh -c ' . escapeshellarg($cmd) . ' 2>&1';
     $d = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
     $p = proc_open($cmd, $d, $x);
     fclose($x[0]);
