@@ -11,6 +11,10 @@ const LOG_FILE    = '/tmp/deploy/MoonLord-LM/deploy.log';
 const RELEASES    = '/var/www/releases';
 const TARGET      = '/var/www/html';
 
+date_default_timezone_set('Asia/Shanghai');
+mb_internal_encoding('UTF-8');
+ini_set('default_charset', 'UTF-8');
+
 function log_msg($m) {
     $l = date('[Y-m-d H:i:s] ') . $m . "\n";
     file_put_contents(LOG_FILE, $l, FILE_APPEND);
@@ -46,6 +50,8 @@ function run($cmd) {
     }
     return ['code' => $code, 'msg' => $msg];
 }
+
+log_msg('try lock');
 
 $lockDir = dirname(RUN_LOCK);
 if (!is_dir($lockDir) && !mkdir($lockDir, 0755, true)) {
