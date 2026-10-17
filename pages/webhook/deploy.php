@@ -3,7 +3,8 @@
 # 需要授权：
 # chown -R 'www-data:www-data' '/var/www/'
 
-# 如果部署过程中出现 No input file specified. 报错，需要禁用 PHP 的 realpath 软链接缓存
+# 本脚本使用软链接进行无缝切换
+# 如果部署后，一段时间内出现 [ No input file specified.] 报错，需要禁用 PHP 的 realpath 软链接缓存
 # 可以修改 PHP 配置 realpath_cache_ttl = 0
 # 或者在 Nginx 配置 fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
 
