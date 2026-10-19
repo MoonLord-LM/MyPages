@@ -2,7 +2,7 @@ name: tools
 
 on:
   schedule:
-    - cron: '57 23 * * *'
+    - cron: '57 22 * * *'
   workflow_dispatch:
 
 permissions:
