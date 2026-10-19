@@ -58,7 +58,7 @@ Static Site Generator
 自动列举 `/dist` 中所有的 html、php 文件，生成站点地图，存放到 `/dist/sitemap.xml` 中  
 站点地图需要精确到文件名，例如 `index.html` 和 `index.php` 是两个不同的文件，都列举出来  
 
-## [代码结构]
+## [工程结构]
 
 ```
 MyPages/
