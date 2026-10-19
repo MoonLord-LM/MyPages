@@ -15,6 +15,21 @@ echo.
 
 
 
+REM 设置 Git 仓库的本地配置
+git config --local core.autocrlf false
+git config --local core.safecrlf false
+git config --local core.ignorecase false
+git config --local core.quotepath false
+git config --local i18n.logoutputencoding utf-8
+git config --local i18n.commitencoding utf-8
+
+echo.
+echo 当前 Git 配置：
+git config --local --list
+echo.
+
+
+
 set "tool1=!script_dir!github\github-languages-color.bat"
 set "tool2=!script_dir!github\github-profile.bat"
 set "src_dir=!script_dir!github\profile"
