@@ -11,7 +11,7 @@ Static Site Generator
 
 ## [使用说明]
 
-依赖 Node.js 环境运行  
+依赖 Node.js 运行，需先安装 [`Node.js`](https://nodejs.org/en/download)  
 执行 `build.bat` 即可完成构建  
 
 ## [生成规则]
