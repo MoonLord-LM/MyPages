@@ -266,14 +266,14 @@ function Get-Last-Commit-Date($Owner, $RepoName) {
     return ''
 }
 
-# 为每个 md 文件生成头部信息：第一行最后提交时间，第二行项目链接，随后空行 + 分隔线 + 空行
+# 为每个 md 文件生成头部信息：第一行最后提交时间，第二行项目链接（每行末尾 2 空格，符合 md 换行），随后空行 + 分隔线 + 空行
 function Build-Repo-Header($Repo, $LastCommitDate) {
     $owner = $Repo.owner.login
     $repoName = $Repo.name
     $repoUrl = "https://github.com/$owner/$repoName"
     $lines = @()
-    $lines += $LastCommitDate
-    $lines += $repoUrl
+    $lines += ($LastCommitDate + '  ')
+    $lines += ($repoUrl + '  ')
     $lines += ''
     $lines += '---'
     $lines += ''

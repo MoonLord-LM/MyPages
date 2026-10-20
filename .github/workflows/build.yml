@@ -7,8 +7,10 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
+    paths: ['pages/*', 'build.bat', '.github/workflows/build.yml']
   pull_request:
     branches: [master]
+    paths: ['pages/*', 'build.bat', '.github/workflows/build.yml']
 
 permissions:
   contents: write
