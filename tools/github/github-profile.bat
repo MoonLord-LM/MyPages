@@ -243,12 +243,36 @@ function Sanitize-File-Name($Name) {
     return ($Name -replace '[\\/:*?"<>|]', '_').Trim()
 }
 
-# 为每个 md 文件生成头部信息：仅在开头拼 4 行（项目链接 + 空行 + 分隔线 + 空行）
-function Build-Repo-Header($Repo) {
+# 统一按北京时间（UTC+8，中国不实行夏令时）生成时间，避免跟随运行机时区
+try {
+    $utc8Zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('China Standard Time')
+} catch {
+    $utc8Zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('Asia/Shanghai')
+}
+
+# 获取仓库最后一次提交的修改时间（转换为北京时间）
+function Get-Last-Commit-Date($Owner, $RepoName) {
+    try {
+        $commitMeta = Invoke-RestMethod -Uri "https://api.github.com/repos/$Owner/$RepoName/commits?per_page=1" -Headers $ua -UseBasicParsing
+        if ($commitMeta -and $commitMeta.Count -gt 0) {
+            $dateStr = $commitMeta[0].commit.committer.date
+            if (-not $dateStr) { $dateStr = $commitMeta[0].commit.author.date }
+            if ($dateStr) {
+                $dt = [DateTime]::Parse($dateStr).ToUniversalTime()
+                return [System.TimeZoneInfo]::ConvertTimeFromUtc($dt, $utc8Zone).ToString('yyyy-MM-dd HH:mm') + ' +08:00'
+            }
+        }
+    } catch { }
+    return ''
+}
+
+# 为每个 md 文件生成头部信息：第一行最后提交时间，第二行项目链接，随后空行 + 分隔线 + 空行
+function Build-Repo-Header($Repo, $LastCommitDate) {
     $owner = $Repo.owner.login
     $repoName = $Repo.name
     $repoUrl = "https://github.com/$owner/$repoName"
     $lines = @()
+    $lines += $LastCommitDate
     $lines += $repoUrl
     $lines += ''
     $lines += '---'
@@ -263,28 +287,31 @@ foreach ($r in $repos) {
     $repo = $r.name
     $safeName = Sanitize-File-Name $repo
     $mdPath = Join-Path $readmeDir "$safeName.md"
+    $lastCommitDate = Get-Last-Commit-Date $owner $repo
     try {
         $readmeMeta = Invoke-RestMethod -Uri "https://api.github.com/repos/$owner/$repo/readme" -Headers $ua -UseBasicParsing
     } catch {
-        # 没有 README（含 404）：保存空文件，保证每个仓库都有对应的 md 占位
+        # 没有 README（含 404）：保存含头部信息的占位文件，保证每个仓库都有对应的 md
         if ($_.Exception.Message -match 'rate limit') {
             Write-Host '错误：GitHub API 速率限制已触发，无法继续采集 README' -ForegroundColor Red
             break
         }
-        [System.IO.File]::WriteAllText($mdPath, '', [System.Text.UTF8Encoding]::new($false))
+        $header = Build-Repo-Header $r $lastCommitDate
+        [System.IO.File]::WriteAllText($mdPath, $header, [System.Text.UTF8Encoding]::new($false))
         $emptyCount++
-        Write-Host "  仓库 $repo 无 README，已保存空文件: $safeName.md"
+        Write-Host "  仓库 $repo 无 README，已保存占位文件: $safeName.md"
         continue
     }
     if (-not $readmeMeta.download_url) {
-        [System.IO.File]::WriteAllText($mdPath, '', [System.Text.UTF8Encoding]::new($false))
+        $header = Build-Repo-Header $r $lastCommitDate
+        [System.IO.File]::WriteAllText($mdPath, $header, [System.Text.UTF8Encoding]::new($false))
         $emptyCount++
-        Write-Host "  仓库 $repo 无可用 README 链接，已保存空文件: $safeName.md"
+        Write-Host "  仓库 $repo 无可用 README 链接，已保存占位文件: $safeName.md"
         continue
     }
     try {
         $raw = Invoke-WebRequest -Uri $readmeMeta.download_url -Headers $ua -UseBasicParsing
-        $header = Build-Repo-Header $r
+        $header = Build-Repo-Header $r $lastCommitDate
         $content = $header + $raw.Content
         [System.IO.File]::WriteAllText($mdPath, $content, [System.Text.UTF8Encoding]::new($false))
         $readmeCount++
@@ -293,7 +320,7 @@ foreach ($r in $repos) {
         Write-Host "  警告：仓库 $repo 的 README 下载失败：$($_.Exception.Message)" -ForegroundColor Yellow
     }
 }
-Write-Host "共采集 $readmeCount 个 README，另保存 $emptyCount 个空文件"
+Write-Host "共采集 $readmeCount 个 README，另保存 $emptyCount 个含头部的占位文件"
 
 $topLangs = $langBytes.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 9
 
@@ -384,12 +411,7 @@ if ($profile.created_at) {
     $meta += "<span>$joinedIcon Joined $joined</span>"
 }
 
-# 统一按北京时间（UTC+8，中国不实行夏令时）生成，避免跟随运行机时区
-try {
-    $utc8Zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('China Standard Time')
-} catch {
-    $utc8Zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('Asia/Shanghai')
-}
+# 生成时间同样按北京时间（UTC+8，定义见上方 README 采集区）
 $generated = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $utc8Zone).ToString('yyyy-MM-dd HH:mm') + ' +08:00'
 
 $html = @"
