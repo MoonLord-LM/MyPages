@@ -293,7 +293,7 @@ body {
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-10-20 16:49:11 +08:00<br><a href="https://github.com/MoonLord-LM/MyPages">https://github.com/MoonLord-LM/MyPages</a>  </p>
+<p>2026-10-20 17:27:33 +08:00<br><a href="https://github.com/MoonLord-LM/MyPages">https://github.com/MoonLord-LM/MyPages</a>  </p>
 <hr>
 <h1>MyPages</h1>
 <p><a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml"><img src="assets/MyPages-001.svg" alt="build"></a>
@@ -312,7 +312,7 @@ body {
 <h3>公共模板</h3>
 <p><code>header.html</code> 和 <code>footer.html</code> 作为页面头部和底部加载的公共模板，与原始 html 进行拼接处理<br><code>header.html</code> 的拼接位置在原始 html 的 <code>&lt;body&gt;</code> 标签后面，紧挨着的位置<br><code>footer.html</code> 的拼接位置在原始 html 的 <code>&lt;/body&gt;</code> 标签前面，紧挨着的位置<br>自动尝试向同级或上级目录，寻找最临近的 <code>header.html</code> 和 <code>footer.html</code> 文件，两者独立处理，缺失某个则仅省略该模板<br>模板中的静态资源引用，按模板文件的位置写相对路径，但是生成时，需要根据最终文件的位置，自动调整相对路径<br>自动调整相对路径，支持 <code>src</code>、<code>href</code>、<code>url()</code> 写法  </p>
 <h3>自动列表</h3>
-<p>当某个文件夹下存在多个页面，但没有 index 页面存在时，触发自动列表规则<br>首先，生成一个 <code>index.html</code> 的列表页面，展示当前文件夹下的全部文件名，大小，和提交时间，并带有跳转到每个页面的链接<br>然后，对此文件夹下的每个页面的 html 增加内容，在页面左侧展示一个简单的竖向列表菜单，可以在列表间跳转以及返回 index 页面  </p>
+<p>当某个文件夹下存在多个页面，但没有 index 页面存在时，触发自动列表规则<br>首先，生成一个 <code>index.html</code> 的列表页面，展示当前文件夹下的全部页面和摘要信息，并带有跳转到每个页面的链接<br>对于 md 文件，摘要信息是第一行文本内容，对于 html 文件，摘要信息优先取 title，或者取 body 的第一行文本内容<br>然后，对此文件夹下的每个页面的 html 增加内容，在页面左侧展示一个简单的竖向列表菜单，可以在列表间跳转以及返回 index 页面  </p>
 <h3>站点地图</h3>
 <p>自动列举 <code>/dist</code> 中所有的 html、php 文件，生成站点地图，存放到 <code>/dist/sitemap.xml</code> 中<br>站点地图需要精确到文件名，例如 <code>index.html</code> 和 <code>index.php</code> 是两个不同的文件，都列举出来  </p>
 <h2>[工程结构]</h2>
