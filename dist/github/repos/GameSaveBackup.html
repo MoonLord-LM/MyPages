@@ -293,11 +293,144 @@ body {
 <p><a href="https://github.com/MoonLord-LM/GameSaveBackup">https://github.com/MoonLord-LM/GameSaveBackup</a></p>
 <hr>
 <h1>GameSaveBackup</h1>
-<p>A simple file backup tool that can be used for game saves and other purposes.<br>Just download the entire <a href="https://github.com/MoonLord-LM/GameSaveBackup/tree/master/cli-en"><code>cli-en</code></a> directory and double-click <a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/cli-en/Backup.bat"><code>Backup.bat</code></a> to run.<br>You can modify the <a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/cli-en/config.json"><code>config.json</code></a> file to support more games.  </p>
-<p>Features:<br>100% pure batch script.<br>Bidirectional synchronization based on the last update time of files in user directory and save directory.<br>Using <a href="https://github.com/git/git"><code>git</code></a> for file version control.  </p>
-<h1>游戏存档备份</h1>
-<p>一个简单的文件备份工具，可用于游戏存档或其他用途。<br>只需下载整个 <a href="https://github.com/MoonLord-LM/GameSaveBackup/tree/master/cli-zh"><code>cli-zh</code></a> 目录，然后双击 <a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/cli-zh/%E5%A4%87%E4%BB%BD.bat"><code>备份.bat</code></a> 即可运行。<br>可以修改 <a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/cli-zh/%E9%85%8D%E7%BD%AE.json"><code>配置.json</code></a> 文件，适配更多游戏。  </p>
-<p>说明：<br>100% 纯批处理脚本。<br>按用户目录和存档目录中文件的最后更新时间，进行双向同步。<br>使用 <a href="https://github.com/git/git"><code>git</code></a> 进行文件版本控制。  </p>
+<p><a href="https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/self-check.yml"><img src="assets/GameSaveBackup-001.svg" alt="self-check"></a>
+<a href="https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/build.yml"><img src="assets/GameSaveBackup-002.svg" alt="build"></a></p>
+<p>一个基于 Git 的简单的文件备份工具，可用于游戏存档等资料文件的备份、还原、同步等  </p>
+<p>A simple Git-based file backup tool for backing up, restoring and synchronizing game saves and other data files  </p>
+<h2>[使用说明]</h2>
+<p>依赖 Git 运行，需要先安装 <a href="https://git-scm.com/downloads"><code>git</code></a>  </p>
+<p>以下文件，任选其一，下载运行即可：<br>命令行中文版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/%E5%A4%87%E4%BB%BD.bat"><code>备份.bat</code></a><br>命令行英文版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/Backup.bat"><code>Backup.bat</code></a><br>图形界面 ps1 版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/GameSaveBackup.ps1"><code>GameSaveBackup.ps1</code></a><br>图形界面 exe 版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/build/GameSaveBackup.exe"><code>GameSaveBackup.exe</code></a>  </p>
+<h3>实现机制</h3>
+<p>备份位置：所有备份数据统一存放在程序所在文件夹的 <code>Backup</code> 子文件夹内<br>双向同步：按本地文件与备份文件的最近修改时间，自动判断执行「备份」还是「还原」<br>版本控制：每次产生备份文件变动，都会提交到本地 Git 仓库，可追溯历史<br>文件安全：覆盖本地文件时，会先将旧文件删除到回收站，支持从回收站找回  </p>
+<h3>配置文件</h3>
+<p>配置文件路径：程序文件夹下的 <code>Backup/配置.json</code> 或者 <code>Backup/config.json</code><br>当文件不存在时，程序会使用内嵌的默认配置，并自动创建配置文件  </p>
+<p>格式示例如下：  </p>
+<pre><code class="language-json">[
+  {
+    &quot;name&quot;: &quot;艾尔登法环&quot;,
+    &quot;save&quot;: &quot;%USERPROFILE%\\AppData\\Roaming\\EldenRing&quot;
+  },
+  {
+    &quot;name&quot;: &quot;缺氧&quot;,
+    &quot;save&quot;: &quot;%USERPROFILE%\\Documents\\Klei\\OxygenNotIncluded&quot;,
+    &quot;ignore&quot;: [
+      &quot;%USERPROFILE%\\Documents\\Klei\\OxygenNotIncluded\\RetiredColonies&quot;
+    ]
+  }
+]
+</code></pre>
+<p>配置说明：<br><code>name</code> 属性，备份项目名称，例如游戏名称<br><code>save</code> 属性，需要备份的路径，例如游戏存档所在路径<br><code>ignore</code> 可选属性，备份时需要排除的路径  </p>
+<h3>默认配置</h3>
+<p>默认的备份配置如下：  </p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>备份路径</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>艾尔登法环</td>
+<td><code>%USERPROFILE%\AppData\Roaming\EldenRing</code></td>
+</tr>
+<tr>
+<td>幻兽帕鲁</td>
+<td><code>%USERPROFILE%\AppData\Local\Pal\Saved\SaveGames</code></td>
+</tr>
+<tr>
+<td>部落幸存者</td>
+<td><code>%USERPROFILE%\AppData\LocalLow\SZSS INTERACTIVE\Settlement Survival</code></td>
+</tr>
+<tr>
+<td>最后纪元</td>
+<td><code>%USERPROFILE%\AppData\LocalLow\Eleventh Hour Games\Last Epoch</code></td>
+</tr>
+<tr>
+<td>虐杀原形</td>
+<td><code>%USERPROFILE%\Documents\Prototype</code></td>
+</tr>
+<tr>
+<td>尼尔：机械纪元</td>
+<td><code>%USERPROFILE%\Documents\My Games\NieR_Automata</code></td>
+</tr>
+<tr>
+<td>真三国无双 8：帝国</td>
+<td><code>%USERPROFILE%\Documents\KoeiTecmo\Dynasty Warriors 9 Empires</code></td>
+</tr>
+<tr>
+<td>无双大蛇 3</td>
+<td><code>%USERPROFILE%\Documents\KoeiTecmo\WARRIORS OROCHI 4</code></td>
+</tr>
+<tr>
+<td>真三国无双 5</td>
+<td><code>%USERPROFILE%\Documents\KOEI\Shin Sangokumusou 5</code></td>
+</tr>
+<tr>
+<td>亿万僵尸</td>
+<td><code>%USERPROFILE%\Documents\My Games\They Are Billions</code></td>
+</tr>
+<tr>
+<td>星球基地</td>
+<td><code>%USERPROFILE%\Documents\Planetbase</code></td>
+</tr>
+<tr>
+<td>缺氧</td>
+<td><code>%USERPROFILE%\Documents\Klei\OxygenNotIncluded</code></td>
+</tr>
+<tr>
+<td>饥荒联机版</td>
+<td><code>%USERPROFILE%\Documents\Klei\DoNotStarveTogether</code></td>
+</tr>
+<tr>
+<td>博德之门 3</td>
+<td><code>%USERPROFILE%\AppData\Local\Larian Studios\Baldur&#39;s Gate 3</code></td>
+</tr>
+<tr>
+<td>三国志 8：重制版</td>
+<td><code>%USERPROFILE%\Documents\KoeiTecmo\SAN8R</code></td>
+</tr>
+<tr>
+<td>古墓丽影 10：崛起</td>
+<td><code>%USERPROFILE%\Documents\CPY_SAVES\CPY\391220</code></td>
+</tr>
+<tr>
+<td>古墓丽影 11：暗影</td>
+<td><code>%USERPROFILE%\Documents\Shadow of the Tomb Raider</code></td>
+</tr>
+<tr>
+<td>光与影：33 号远征队</td>
+<td><code>%USERPROFILE%\AppData\Local\Sandfall\Saved</code></td>
+</tr>
+<tr>
+<td>对马岛之魂</td>
+<td><code>%USERPROFILE%\Documents\Ghost of Tsushima DIRECTOR&#39;S CUT</code></td>
+</tr>
+<tr>
+<td>纪念碑谷</td>
+<td><code>%USERPROFILE%\AppData\LocalLow\ustwo games\Monument Valley</code></td>
+</tr>
+<tr>
+<td>虫虫大作战</td>
+<td><code>%PROGRAMDATA%\AlderGames\BugBits</code></td>
+</tr>
+<tr>
+<td>棋弈无限：围棋</td>
+<td><code>%USERPROFILE%\AppData\LocalLow\Studio Amateur\JustGo</code></td>
+</tr>
+</tbody></table>
+<h2>[工程结构]</h2>
+<pre><code>GameSaveBackup/
+├── source/
+│   ├── 备份.bat                 # 中文命令行版
+│   ├── Backup.bat               # 英文命令行版
+│   └── GameSaveBackup.ps1       # 图形界面 ps1 版
+├── build/
+│   ├── build.bat                # 构建脚本
+│   └── GameSaveBackup.exe       # 图形界面 exe 版
+├── self-check.bat               # 自检脚本
+├── LLM.md                       # 提示信息
+└── README.md                    # 工程说明
+</code></pre>
 
 </div>
 </article>
