@@ -81,6 +81,9 @@ body {
 }
 .markdown-body table th { font-weight: 600; background-color: var(--color-canvas-subtle); }
 .markdown-body table tr:nth-child(2n) { background-color: var(--color-canvas-subtle); }
+.markdown-body table td.name { white-space: nowrap; }
+.markdown-body table td.desc { max-width: 560px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-fg-muted); }
+.markdown-body table td.desc.desc-empty { color: #8893a0; }
 .markdown-body img { max-width: 100%; }
 .markdown-body hr { height: 1px; border: 0; background: var(--color-border-muted); margin: 24px 0; }
 </style>
