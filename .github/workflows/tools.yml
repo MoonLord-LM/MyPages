@@ -5,6 +5,12 @@ on:
     - cron: '57 21 * * *'
       timezone: 'Asia/Shanghai'
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths: ['tools/*.bat', '.github/workflows/tools.yml']
+  pull_request:
+    branches: [master]
+    paths: ['tools/*.bat', '.github/workflows/tools.yml']
 
 permissions:
   contents: write
