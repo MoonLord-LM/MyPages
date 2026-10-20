@@ -8,9 +8,6 @@ on:
   push:
     branches: [master]
     paths: ['tools/**/*.bat', '.github/workflows/tools.yml']
-  pull_request:
-    branches: [master]
-    paths: ['tools/**/*.bat', '.github/workflows/tools.yml']
 
 permissions:
   contents: write
@@ -39,15 +36,12 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v5
-        with:
-          core-autocrlf: false
 
       - name: Run tools.bat
         shell: cmd
         run: call tools\tools.bat <nul
 
       - name: Commit and push
-        if: github.event_name != 'pull_request'
         shell: powershell
         run: |
           git add -A
