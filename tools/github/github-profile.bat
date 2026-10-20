@@ -259,7 +259,7 @@ function Get-Last-Commit-Date($Owner, $RepoName) {
             if (-not $dateStr) { $dateStr = $commitMeta[0].commit.author.date }
             if ($dateStr) {
                 $dt = [DateTime]::Parse($dateStr).ToUniversalTime()
-                return [System.TimeZoneInfo]::ConvertTimeFromUtc($dt, $utc8Zone).ToString('yyyy-MM-dd HH:mm') + ' +08:00'
+                return [System.TimeZoneInfo]::ConvertTimeFromUtc($dt, $utc8Zone).ToString('yyyy-MM-dd HH:mm:ss') + ' +08:00'
             }
         }
     } catch { }
@@ -412,7 +412,7 @@ if ($profile.created_at) {
 }
 
 # 生成时间同样按北京时间（UTC+8，定义见上方 README 采集区）
-$generated = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $utc8Zone).ToString('yyyy-MM-dd HH:mm') + ' +08:00'
+$generated = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $utc8Zone).ToString('yyyy-MM-dd HH:mm:ss') + ' +08:00'
 
 $html = @"
 <!DOCTYPE html>
