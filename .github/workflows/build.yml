@@ -13,7 +13,7 @@ on:
     paths: ['pages/**', 'build.bat', '.github/workflows/build.yml']
   workflow_run:
     workflows: ["tools"]
-    types: [success]
+    types: [completed]
 
 permissions:
   contents: write
@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
