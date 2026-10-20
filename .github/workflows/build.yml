@@ -11,6 +11,9 @@ on:
   pull_request:
     branches: [master]
     paths: ['pages/**', 'build.bat', '.github/workflows/build.yml']
+  workflow_run:
+    workflows: ["tools"]
+    types: [success]
 
 permissions:
   contents: write
@@ -18,7 +21,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: My-Pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
