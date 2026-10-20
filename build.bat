@@ -386,6 +386,9 @@ body {
 }
 .markdown-body table th { font-weight: 600; background-color: var(--color-canvas-subtle); }
 .markdown-body table tr:nth-child(2n) { background-color: var(--color-canvas-subtle); }
+.markdown-body table td.name { white-space: nowrap; }
+.markdown-body table td.desc { max-width: 560px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-fg-muted); }
+.markdown-body table td.desc.desc-empty { color: #8893a0; }
 .markdown-body img { max-width: 100%; }
 .markdown-body hr { height: 1px; border: 0; background: var(--color-border-muted); margin: 24px 0; }
 `;
@@ -639,16 +642,62 @@ function buildNav(currentOutPath, descriptors) {
     return '<nav class="auto-list">\n  <ul>\n' + homeItem + '\n' + items + '\n  </ul>\n</nav>';
 }
 
+// 取文本中第一行非空内容（去除首尾空白）
+function firstNonEmptyLine(text) {
+    const lines = String(text).split(/\r?\n/);
+    for (const line of lines) {
+        const t = line.trim();
+        if (t) return t;
+    }
+    return '';
+}
+
+// md 文件：取首行非空文本（去除 Markdown 标题/列表标记）
+function mdFirstLine(srcFile) {
+    let text = '';
+    try { text = fs.readFileSync(srcFile, 'utf8'); } catch (e) { return ''; }
+    const line = firstNonEmptyLine(text);
+    return line.replace(/^#{1,6}\s+/, '').replace(/^[-*+]\s+/, '').trim();
+}
+
+// html 文件：优先取 <title> 文本；否则取 <body> 去除标签后的首行纯文本
+function htmlFirstLine(srcFile) {
+    let text = '';
+    try { text = fs.readFileSync(srcFile, 'utf8'); } catch (e) { return ''; }
+    const titleMatch = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    if (titleMatch) {
+        const t = titleMatch[1].replace(/<[^>]+>/g, '').trim();
+        if (t) return t;
+    }
+    const bodyMatch = text.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    let bodyText = bodyMatch ? bodyMatch[1] : text;
+    bodyText = bodyText.replace(/<script[\s\S]*?<\/script>/gi, ' ');
+    bodyText = bodyText.replace(/<style[\s\S]*?<\/style>/gi, ' ');
+    bodyText = bodyText.replace(/<[^>]+>/g, ' ');
+    bodyText = bodyText.replace(/&[a-zA-Z]+;/g, ' ').replace(/&#\d+;/g, ' ');
+    return firstNonEmptyLine(bodyText);
+}
+
+// 依据扩展名返回文件的首行说明：md -> 首行非空文本；html -> title 或 body 首行纯文本
+function fileDescription(srcFile, ext) {
+    const e = (ext || path.extname(srcFile)).toLowerCase();
+    if (e === '.md') return mdFirstLine(srcFile);
+    if (e === '.html') return htmlFirstLine(srcFile);
+    return '';
+}
+
 function buildTable(indexOutPath, fileEntries) {
     const rows = fileEntries.map((e) => {
         let rel = path.relative(path.dirname(indexOutPath), e.link).split(path.sep).join('/');
         if (rel === '') rel = './' + path.basename(e.link);
         if (!/^(\.\.?\/|\/)/.test(rel)) rel = './' + rel;
-        return '    <tr><td><a href="' + rel + '">' + escapeHtml(e.label) + '</a></td>' +
-            '<td>' + formatSize(e.size) + '</td>' +
-            '<td>' + formatTime(e.mtime) + '</td></tr>';
+        const desc = e.desc
+            ? '<td class="desc" title="' + escapeHtml(e.desc) + '">' + escapeHtml(e.desc) + '</td>'
+            : '<td class="desc desc-empty">—</td>';
+        return '    <tr><td class="name"><a href="' + rel + '">' + escapeHtml(e.label) + '</a></td>' +
+            desc + '</tr>';
     }).join('\n');
-    return '<table>\n  <tbody>\n' + rows + '\n  </tbody>\n</table>';
+    return '<table>\n  <thead>\n    <tr><th>文件名</th><th>说明</th></tr>\n  </thead>\n  <tbody>\n' + rows + '\n  </tbody>\n</table>';
 }
 
 function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
@@ -796,12 +845,12 @@ for (const [dir, baseMap] of pageFilesByDir) {
     for (const d of descriptors) {
         let size = d.stats.size;
         try { size = fs.statSync(d.outPath).size; } catch (e) {}
-        fileEntries.push({ label: d.base, link: d.outPath, size: size, mtime: entryTime(d.srcFile, d.stats.mtime) });
+        fileEntries.push({ label: d.base, link: d.outPath, size: size, mtime: entryTime(d.srcFile, d.stats.mtime), desc: fileDescription(d.srcFile, d.ext) });
     }
     for (const sf of staticFiles) {
         if (path.dirname(sf.full) === dir) {
             const dest = path.join(DIST, path.relative(PAGES, sf.full));
-            fileEntries.push({ label: path.basename(sf.full), link: dest, size: sf.stats.size, mtime: entryTime(sf.full, sf.stats.mtime) });
+            fileEntries.push({ label: path.basename(sf.full), link: dest, size: sf.stats.size, mtime: entryTime(sf.full, sf.stats.mtime), desc: '' });
         }
     }
     fileEntries.sort((a, b) => a.label.localeCompare(b.label));
