@@ -1,4 +1,4 @@
-2026-10-20 21:26:22 +08:00  
+2026-10-22 01:01:44 +08:00  
 https://github.com/MoonLord-LM/GameSaveBackup  
 
 ---
@@ -6,7 +6,7 @@ https://github.com/MoonLord-LM/GameSaveBackup
 [![self-check](https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/self-check.yml/badge.svg)](https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/self-check.yml)
 [![build](https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/build.yml/badge.svg)](https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/build.yml)
 
-一个基于 Git 的简单的文件备份工具，可用于游戏存档等资料文件的备份、还原、同步等  
+一个简单的基于 Git 的文件备份工具，可用于游戏存档等资料文件的备份、还原、同步等  
 
 A simple Git-based file backup tool for backing up, restoring and synchronizing game saves and other data files  
 
