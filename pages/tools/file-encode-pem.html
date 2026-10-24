@@ -272,21 +272,34 @@
   })();
   </script>
   <script>
+    // 确保 .bat 脚本是「下载」而不是被浏览器打开预览：
+    // 优先取回内容后用 blob 触发下载；取回失败时回退为带 download 的原生点击，绝不跳转预览。
+    // 带修饰键或中键点击时不拦截，保留浏览器原生行为（新标签打开、链接另存为等）。
     document.querySelectorAll('.scripts a[download]').forEach(function (a) {
       a.addEventListener('click', function (e) {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
         var href = a.getAttribute('href');
-        fetch(href).then(function (r) { return r.blob(); }).then(function (blob) {
+        var name = a.getAttribute('download') || a.textContent.trim();
+        fetch(href).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.blob();
+        }).then(function (blob) {
           var url = URL.createObjectURL(blob);
           var tmp = document.createElement('a');
           tmp.href = url;
-          tmp.download = a.getAttribute('download') || a.textContent.trim();
+          tmp.download = name;
           document.body.appendChild(tmp);
           tmp.click();
           document.body.removeChild(tmp);
           setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
         }).catch(function () {
-          window.location.href = href;
+          var tmp = document.createElement('a');
+          tmp.href = href;
+          tmp.download = name;
+          document.body.appendChild(tmp);
+          tmp.click();
+          document.body.removeChild(tmp);
         });
       });
     });
