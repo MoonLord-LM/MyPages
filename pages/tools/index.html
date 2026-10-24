@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工具</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+      color: #222; line-height: 1.6; background: #fafafa;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 48px 16px; }
+    h1 { font-size: 2rem; color: #1e3c72; margin-bottom: 12px; }
+    .sub { color: #555; margin-bottom: 28px; }
+    .tool-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .tool-card {
+      display: block; background: #fff; border: 1px solid #e3e8ef; border-radius: 14px;
+      padding: 24px; color: #222; box-shadow: 0 6px 20px rgba(0,0,0,.06);
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.1); border-color: #2a5298; }
+    .tool-card h2 { font-size: 1.3rem; color: #2a5298; margin-bottom: 8px; }
+    .tool-card p { color: #666; font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>工具</h1>
+    <p class="sub">纯浏览器端的实用小工具集合</p>
+    <div class="tool-list">
+      <a class="tool-card" href="file-encrypt-aes-256-gcm.html">
+        <h2>文件加解密 - AES-256-GCM 算法</h2>
+        <p>将输入的密码使用 <code>PBKDF2-HMAC-SHA512</code>（迭代 1000 万次）派生出 256 位密钥，再对文件进行 <code>AES-256-GCM</code> 加解密。</p>
+      </a>
+      <a class="tool-card" href="file-encode-pem.html">
+        <h2>文件编解码 - PEM 格式</h2>
+        <p>将输入的文件编码为 <code>PEM</code> 格式，或将其解码还原为原始文件。</p>
+      </a>
+    </div>
+
+  </main>
+</body>
+</html>
