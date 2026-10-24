@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件编解码 - PEM 格式</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+      color: #222; line-height: 1.6; background: #fafafa;
+    }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 32px 16px 64px; }
+    h1 { font-size: 1.9rem; color: #1e3c72; margin-bottom: 8px; }
+    .mode-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .mode-tabs button {
+      flex: 1; padding: 10px; font-size: 1rem; font-weight: 600; cursor: pointer;
+      border: 1px solid #cdd7e3; background: #fff; color: #2a5298; border-radius: 10px;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .mode-tabs button.active {
+      background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; border-color: transparent;
+    }
+
+    .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; }
+
+    .drop {
+      border: 2px dashed #b9c6d8; border-radius: 12px; padding: 28px; text-align: center;
+      color: #5a6b80; background: #f7faff; cursor: pointer; transition: border-color .2s, background .2s;
+    }
+    .drop.dragover { border-color: #6ba0ea; background: #eaf2fd; }
+    .drop strong { color: #2a5298; }
+    .drop input[type="file"] { display: none; }
+    .file-info { margin-top: 12px; font-size: .9rem; color: #333; word-break: break-all; }
+
+    .actions { display: flex; gap: 12px; margin-top: 20px; }
+    .btn {
+      padding: 11px 22px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+      cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+      transition: opacity .2s, transform .1s;
+    }
+    .btn:hover { opacity: .92; }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .log {
+      margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: .9rem;
+      background: #f6f8fa; border: 1px solid #e3e8ef; white-space: pre-wrap; word-break: break-all;
+      max-height: 240px; overflow: auto;
+    }
+    .log.ok { background: #eafaf0; border-color: #b7e4c7; color: #1a7f43; }
+    .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
+    .log.hide { display: none; }
+
+    /* 顶部提示（多行展示） */
+    .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: .9rem; color: #4a5b70; }
+    .tips div { line-height: 1.8; }
+    .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
+
+    /* 配套脚本下载 */
+    .scripts { margin-bottom: 16px; font-size: .9rem; color: #4a5b70; }
+    .scripts-label { display: inline-block; margin-bottom: 6px; }
+    .scripts a { display: inline-block; margin: 0 10px 6px 0; padding: 6px 14px; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
+    .scripts a:hover { border-color: #2a5298; background: #f0f5fc; }
+    .scripts .gh-link { display: inline-block; margin: 0 10px 6px 0; padding: 6px 14px; vertical-align: middle; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
+    .scripts .gh-link:hover { border-color: #2a5298; background: #f0f5fc; }
+    .scripts .gh-link svg { width: 1em; height: 1em; fill: currentColor; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>文件编解码 - PEM 格式</h1>
+    <div class="scripts">
+      <span class="scripts-label">批处理脚本（与网页功能一致）：</span>
+      <a href="assets/文件编解码%20-%20编码%20pem%20格式.bat" download>文件编解码 - 编码 pem 格式.bat</a>
+      <a href="assets/文件编解码%20-%20解码%20pem%20格式.bat" download>文件编解码 - 解码 pem 格式.bat</a>
+      开源仓库：<a class="gh-link" href="https://github.com/MoonLord-LM/MyBatch" target="_blank" rel="noopener">MyBatch<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg></a>
+    </div>
+
+    <div class="tips">
+      <div>将输入的文件编码为 <code>PEM</code> 格式，或将其解码还原为原始文件。</div>
+      <div><code>PEM</code> 格式使用 <code>Base64</code> 编码，并包裹 <code>-----BEGIN CERTIFICATE-----</code> / <code>-----END CERTIFICATE-----</code> 标记，每行 64 字符，编码后体积约为原文件的 1.33 倍。</div>
+      <div>编码：输出文件名将在原文件名后追加 <code>.pem</code> 后缀。</div>
+      <div>解码：会自动去除 <code>.pem</code> 后缀，恢复原文件名。</div>
+      <div>全程在浏览器本地完成，不会上传任何数据。</div>
+    </div>
+
+    <div class="mode-tabs">
+      <button id="modeEncode" class="active" type="button">编码</button>
+      <button id="modeDecode" type="button">解码</button>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <label>选择文件</label>
+        <div class="drop" id="drop">
+          <strong>点击选择</strong> 或将文件拖拽到此处
+          <input type="file" id="fileInput">
+        </div>
+        <div class="file-info" id="fileInfo"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="runBtn" type="button">开始处理</button>
+      </div>
+
+      <div class="log hide" id="log"></div>
+    </div>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    const PEM_HEADER = '-----BEGIN CERTIFICATE-----';
+    const PEM_FOOTER = '-----END CERTIFICATE-----';
+    const LINE_WIDTH = 64;
+
+    const $ = (id) => document.getElementById(id);
+    const modeEncodeBtn = $('modeEncode');
+    const modeDecodeBtn = $('modeDecode');
+    const dropEl = $('drop');
+    const fileInput = $('fileInput');
+    const fileInfoEl = $('fileInfo');
+    const runBtn = $('runBtn');
+    const logEl = $('log');
+
+    let mode = 'encode';
+    let selectedFile = null;
+
+    function setMode(m) {
+      mode = m;
+      const enc = m === 'encode';
+      modeEncodeBtn.classList.toggle('active', enc);
+      modeDecodeBtn.classList.toggle('active', !enc);
+      clearLog();
+    }
+
+    function clearLog() { logEl.className = 'log hide'; logEl.textContent = ''; }
+    function log(msg, kind) {
+      logEl.className = kind ? ('log ' + kind) : 'log';
+      logEl.textContent = msg;
+    }
+
+    modeEncodeBtn.addEventListener('click', () => setMode('encode'));
+    modeDecodeBtn.addEventListener('click', () => setMode('decode'));
+
+    dropEl.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length) setFile(fileInput.files[0]);
+    });
+    ['dragenter', 'dragover'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.remove('dragover'); }));
+    dropEl.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) setFile(dt.files[0]);
+    });
+
+    function setFile(file) {
+      selectedFile = file;
+      fileInfoEl.textContent = '已选择：' + file.name + '（' + formatSize(file.size) + '）';
+      clearLog();
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      const units = ['KB', 'MB', 'GB', 'TB'];
+      let i = -1, n = bytes;
+      do { n /= 1024; i++; } while (n >= 1024 && i < units.length - 1);
+      return n.toFixed(2) + ' ' + units[i];
+    }
+
+    // ===== 字节 -> Base64（兼容二进制） =====
+    function bytesToBase64(bytes) {
+      let binary = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+      }
+      return btoa(binary);
+    }
+
+    function base64ToBytes(b64) {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    // ===== 编码：Base64 + CRLF 折行（64/行） + PEM 标记，与 certutil 一致 =====
+    function encodeFile(bytes) {
+      const b64 = bytesToBase64(bytes);
+      const lines = [];
+      for (let i = 0; i < b64.length; i += LINE_WIDTH) {
+        lines.push(b64.slice(i, i + LINE_WIDTH));
+      }
+      // 使用 CRLF 换行，与 Windows certutil -encode 输出完全一致，确保双向兼容
+      return PEM_HEADER + '\r\n' + lines.join('\r\n') + '\r\n' + PEM_FOOTER + '\r\n';
+    }
+
+    // ===== 解码：剥离标记与所有空白（换行/空格），还原 Base64 =====
+    function decodeFile(text) {
+      let body = text;
+      const start = body.indexOf(PEM_HEADER);
+      const end = body.indexOf(PEM_FOOTER);
+      if (start !== -1 && end !== -1 && end > start) {
+        body = body.slice(start + PEM_HEADER.length, end);
+      }
+      // 去除所有空白字符（含 \r \n 空格 制表符），保留纯 Base64
+      const b64 = body.replace(/\s+/g, '');
+      if (!/^[A-Za-z0-9+/=]+$/.test(b64)) {
+        throw new Error('文件内容不是有效的 Base64 / PEM 格式');
+      }
+      return base64ToBytes(b64);
+    }
+
+    function outName(file, m) {
+      if (m === 'encode') return file.name + '.pem';
+      if (file.name.toLowerCase().endsWith('.pem')) return file.name.slice(0, -4);
+      return file.name + '.dec';
+    }
+
+    function download(bytes, filename, isText) {
+      const blob = new Blob([bytes], { type: isText ? 'application/octet-stream' : 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function setBusy(busy) {
+      runBtn.disabled = busy;
+      runBtn.textContent = busy ? '处理中…' : '开始处理';
+    }
+
+    runBtn.addEventListener('click', async () => {
+      clearLog();
+      if (!selectedFile) { log('请先选择要处理的文件', 'err'); return; }
+      setBusy(true);
+      try {
+        let outBytes, outFile, isText = false;
+        if (mode === 'encode') {
+          const data = new Uint8Array(await selectedFile.arrayBuffer());
+          const pem = encodeFile(data);
+          // PEM 是纯 ASCII 文本，按文本写入以保证 CRLF 换行正确保存
+          outBytes = new TextEncoder().encode(pem);
+          isText = true;
+          outFile = outName(selectedFile, 'encode');
+        } else {
+          const text = await selectedFile.text();
+          outBytes = decodeFile(text);
+          outFile = outName(selectedFile, 'decode');
+        }
+        download(outBytes, outFile, isText);
+        log((mode === 'encode' ? '编码成功' : '解码成功') + '，已下载：' + outFile +
+            '\n文件大小：' + formatSize(outBytes.length), 'ok');
+      } catch (e) {
+        log('处理失败：' + (e && e.message ? e.message : e), 'err');
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    setMode('encode');
+  })();
+  </script>
+  <script>
+    document.querySelectorAll('.scripts a[download]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var href = a.getAttribute('href');
+        fetch(href).then(function (r) { return r.blob(); }).then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var tmp = document.createElement('a');
+          tmp.href = url;
+          tmp.download = a.getAttribute('download') || a.textContent.trim();
+          document.body.appendChild(tmp);
+          tmp.click();
+          document.body.removeChild(tmp);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        }).catch(function () {
+          window.location.href = href;
+        });
+      });
+    });
+  </script>
+</body>
+</html>

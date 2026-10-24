@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件加解密 - AES-256-GCM 算法</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+      color: #222; line-height: 1.6; background: #fafafa;
+    }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 32px 16px 64px; }
+    h1 { font-size: 1.9rem; color: #1e3c72; margin-bottom: 8px; }
+    /* 模式切换 */
+    .mode-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .mode-tabs button {
+      flex: 1; padding: 10px; font-size: 1rem; font-weight: 600; cursor: pointer;
+      border: 1px solid #cdd7e3; background: #fff; color: #2a5298; border-radius: 10px;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .mode-tabs button.active {
+      background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; border-color: transparent;
+    }
+
+    .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; }
+    .field input[type="password"] {
+      width: 100%; padding: 11px 14px; font-size: 1rem; border: 1px solid #ccc;
+      border-radius: 8px; outline: none;
+    }
+    .field input[type="password"]:focus { border-color: #2a5298; }
+
+    /* 拖拽区 */
+    .drop {
+      border: 2px dashed #b9c6d8; border-radius: 12px; padding: 28px; text-align: center;
+      color: #5a6b80; background: #f7faff; cursor: pointer; transition: border-color .2s, background .2s;
+    }
+    .drop.dragover { border-color: #6ba0ea; background: #eaf2fd; }
+    .drop strong { color: #2a5298; }
+    .drop input[type="file"] { display: none; }
+    .file-info { margin-top: 12px; font-size: .9rem; color: #333; word-break: break-all; }
+
+    .actions { display: flex; gap: 12px; margin-top: 20px; }
+    .btn {
+      padding: 11px 22px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+      cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+      transition: opacity .2s, transform .1s;
+    }
+    .btn:hover { opacity: .92; }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .log {
+      margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: .9rem;
+      background: #f6f8fa; border: 1px solid #e3e8ef; white-space: pre-wrap; word-break: break-all;
+      max-height: 240px; overflow: auto;
+    }
+    .log.ok { background: #eafaf0; border-color: #b7e4c7; color: #1a7f43; }
+    .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
+    .log.hide { display: none; }
+
+    /* 顶部提示（多行展示） */
+    .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: .9rem; color: #4a5b70; }
+    .tips div { line-height: 1.8; }
+    .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
+
+    /* 配套脚本下载 */
+    .scripts { margin-bottom: 16px; font-size: .9rem; color: #4a5b70; }
+    .scripts-label { display: inline-block; margin-bottom: 6px; }
+    .scripts a { display: inline-block; margin: 0 10px 6px 0; padding: 6px 14px; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
+    .scripts a:hover { border-color: #2a5298; background: #f0f5fc; }
+    .scripts .gh-link { display: inline-block; margin: 0 10px 6px 0; padding: 6px 14px; vertical-align: middle; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
+    .scripts .gh-link:hover { border-color: #2a5298; background: #f0f5fc; }
+    .scripts .gh-link svg { width: 1em; height: 1em; fill: currentColor; vertical-align: middle; }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.5);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>文件加解密 - AES-256-GCM 算法</h1>
+    <div class="scripts">
+      <span class="scripts-label">批处理脚本（与网页功能一致）：</span>
+      <a href="assets/文件加解密%20-%20加密.bat" download>文件加解密 - 加密.bat</a>
+      <a href="assets/文件加解密%20-%20解密.bat" download>文件加解密 - 解密.bat</a>
+      开源仓库：<a class="gh-link" href="https://github.com/MoonLord-LM/MyBatch" target="_blank" rel="noopener">MyBatch<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg></a>
+    </div>
+
+    <div class="tips">
+      <div>将输入的密码使用 <code>PBKDF2-HMAC-SHA512</code>（迭代 1000 万次）派生出 256 位密钥，再对文件进行 <code>AES-256-GCM</code> 加解密。</div>
+      <div>加密文件布局为 <code>pbkdf2_salt (16 字节) + aes_gcm_iv (12 字节) + aes_gcm_tag (16 字节)</code> 头部 + 文件内容密文，因此加密文件比原文件大 44 字节。</div>
+      <div>加密：输出文件名将在原文件名后追加 <code>.enc</code> 后缀。</div>
+      <div>解密：会自动去除 <code>.enc</code> 后缀，恢复原文件名。</div>
+      <div>全程在浏览器本地完成，不会上传任何数据。</div>
+    </div>
+
+    <div class="mode-tabs">
+      <button id="modeEncrypt" class="active" type="button">加密</button>
+      <button id="modeDecrypt" type="button">解密</button>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <label for="password">密码</label>
+        <input type="password" id="password" placeholder="请输入密码" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label>选择文件</label>
+        <div class="drop" id="drop">
+          <strong>点击选择</strong> 或将文件拖拽到此处
+          <input type="file" id="fileInput">
+        </div>
+        <div class="file-info" id="fileInfo"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="runBtn" type="button">开始处理</button>
+      </div>
+
+      <div class="log hide" id="log"></div>
+    </div>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ===== 与本地批处理脚本保持一致的参数 =====
+    const PBKDF2_SALT_LEN = 16;
+    const AES_GCM_IV_LEN = 12;
+    const AES_GCM_TAG_LEN = 16; // 128 位
+    const HEADER_LEN = PBKDF2_SALT_LEN + AES_GCM_IV_LEN + AES_GCM_TAG_LEN; // 44
+    const ITERATIONS = 10000000; // 1000 万，与本地批处理脚本保持一致
+    const KEY_LEN = 32; // 256 位
+
+    const $ = (id) => document.getElementById(id);
+    const modeEncryptBtn = $('modeEncrypt');
+    const modeDecryptBtn = $('modeDecrypt');
+    const passwordEl = $('password');
+    const dropEl = $('drop');
+    const fileInput = $('fileInput');
+    const fileInfoEl = $('fileInfo');
+    const runBtn = $('runBtn');
+    const logEl = $('log');
+
+    let mode = 'encrypt'; // 'encrypt' | 'decrypt'
+    let selectedFile = null;
+
+    function setMode(m) {
+      mode = m;
+      const enc = m === 'encrypt';
+      modeEncryptBtn.classList.toggle('active', enc);
+      modeDecryptBtn.classList.toggle('active', !enc);
+      clearLog();
+    }
+
+    function clearLog() {
+      logEl.className = 'log hide';
+      logEl.textContent = '';
+    }
+    function log(msg, kind) {
+      if (kind) logEl.className = 'log ' + kind;
+      else logEl.className = 'log';
+      logEl.textContent = msg;
+    }
+
+    modeEncryptBtn.addEventListener('click', () => setMode('encrypt'));
+    modeDecryptBtn.addEventListener('click', () => setMode('decrypt'));
+
+    // ===== 文件选择 =====
+    dropEl.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length) setFile(fileInput.files[0]);
+    });
+    ['dragenter', 'dragover'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.remove('dragover'); }));
+    dropEl.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) setFile(dt.files[0]);
+    });
+
+    function setFile(file) {
+      selectedFile = file;
+      fileInfoEl.textContent = '已选择：' + file.name + '（' + formatSize(file.size) + '）';
+      clearLog();
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      const units = ['KB', 'MB', 'GB', 'TB'];
+      let i = -1, n = bytes;
+      do { n /= 1024; i++; } while (n >= 1024 && i < units.length - 1);
+      return n.toFixed(2) + ' ' + units[i];
+    }
+    function formatDuration(ms) {
+      if (ms < 1000) return ms.toFixed(0) + ' 毫秒';
+      if (ms < 60000) return (ms / 1000).toFixed(2) + ' 秒';
+      return (ms / 60000).toFixed(2) + ' 分钟';
+    }
+
+    // ===== 密钥派生：PBKDF2-HMAC-SHA512 =====
+    async function deriveKey(password, salt) {
+      const enc = new TextEncoder();
+      const pwKey = await crypto.subtle.importKey(
+        'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: salt, iterations: ITERATIONS, hash: 'SHA-512' },
+        pwKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']);
+    }
+
+    function randomBytes(len) {
+      const b = new Uint8Array(len);
+      crypto.getRandomValues(b);
+      return b;
+    }
+
+    // ===== 加密：salt(16) + iv(12) + tag(16) + ciphertext =====
+    async function encryptFile(file, password) {
+      const data = new Uint8Array(await file.arrayBuffer());
+      const salt = randomBytes(PBKDF2_SALT_LEN);
+      const iv = randomBytes(AES_GCM_IV_LEN);
+      const key = await deriveKey(password, salt);
+      // Web Crypto 的 encrypt 输出为 密文 + 16 字节 tag（tag 在末尾），需拆出 tag 放到固定头部
+      const encOut = new Uint8Array(await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv, tagLength: AES_GCM_TAG_LEN * 8 }, key, data));
+      const ctLen = encOut.length - AES_GCM_TAG_LEN;
+      const ciphertext = encOut.subarray(0, ctLen);
+      const tag = encOut.subarray(ctLen);
+      const out = new Uint8Array(HEADER_LEN + ctLen);
+      out.set(salt, 0);
+      out.set(iv, PBKDF2_SALT_LEN);
+      out.set(tag, PBKDF2_SALT_LEN + AES_GCM_IV_LEN);
+      out.set(ciphertext, HEADER_LEN);
+      return out;
+    }
+
+    // ===== 解密：读取头部后重构 密文 + tag 交回 Web Crypto 校验 =====
+    async function decryptFile(file, password) {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      if (buf.length < HEADER_LEN) throw new Error('文件太短，不是有效的加密文件');
+      const salt = buf.subarray(0, PBKDF2_SALT_LEN);
+      const iv = buf.subarray(PBKDF2_SALT_LEN, PBKDF2_SALT_LEN + AES_GCM_IV_LEN);
+      const tag = buf.subarray(PBKDF2_SALT_LEN + AES_GCM_IV_LEN, HEADER_LEN);
+      const ciphertext = buf.subarray(HEADER_LEN);
+      // Web Crypto 要求输入为 密文 + tag
+      const combined = new Uint8Array(ciphertext.length + AES_GCM_TAG_LEN);
+      combined.set(ciphertext, 0);
+      combined.set(tag, ciphertext.length);
+      const key = await deriveKey(password, salt);
+      let plain;
+      try {
+        plain = await crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv: iv, tagLength: AES_GCM_TAG_LEN * 8 }, key, combined);
+      } catch (e) {
+        throw new Error('认证失败：密码错误，或文件已损坏');
+      }
+      return new Uint8Array(plain);
+    }
+
+    function outName(file, m) {
+      if (m === 'encrypt') return file.name + '.enc';
+      if (file.name.toLowerCase().endsWith('.enc')) return file.name.slice(0, -4);
+      return file.name + '.dec';
+    }
+
+    function download(bytes, filename) {
+      const blob = new Blob([bytes], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function setBusy(busy) {
+      runBtn.disabled = busy;
+      if (busy) {
+        runBtn.innerHTML = '<span class="spinner"></span>处理中…';
+      } else {
+        runBtn.textContent = '开始处理';
+      }
+    }
+
+    runBtn.addEventListener('click', async () => {
+      clearLog();
+      const password = passwordEl.value;
+      if (!selectedFile) { log('请先选择要处理的文件', 'err'); return; }
+      if (!password) { log('密码不能为空', 'err'); return; }
+
+      setBusy(true);
+      const t0 = performance.now();
+      try {
+        let outBytes, outFile;
+        if (mode === 'encrypt') {
+          log('正在加密，请稍候（PBKDF2 派生密钥迭代 1000 万次，可能耗时十几秒）…');
+          outBytes = await encryptFile(selectedFile, password);
+          outFile = outName(selectedFile, 'encrypt');
+        } else {
+          log('正在解密，请稍候…');
+          outBytes = await decryptFile(selectedFile, password);
+          outFile = outName(selectedFile, 'decrypt');
+        }
+        const cost = performance.now() - t0;
+        download(outBytes, outFile);
+        log((mode === 'encrypt' ? '加密成功' : '解密成功') + '，已下载：' + outFile +
+            '\n文件大小：' + formatSize(outBytes.length) +
+            '\n耗时：' + formatDuration(cost), 'ok');
+      } catch (e) {
+        log('处理失败：' + (e && e.message ? e.message : e), 'err');
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    setMode('encrypt');
+  })();
+  </script>
+  <script>
+    document.querySelectorAll('.scripts a[download]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var href = a.getAttribute('href');
+        fetch(href).then(function (r) { return r.blob(); }).then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var tmp = document.createElement('a');
+          tmp.href = url;
+          tmp.download = a.getAttribute('download') || a.textContent.trim();
+          document.body.appendChild(tmp);
+          tmp.click();
+          document.body.removeChild(tmp);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        }).catch(function () {
+          window.location.href = href;
+        });
+      });
+    });
+  </script>
+</body>
+</html>

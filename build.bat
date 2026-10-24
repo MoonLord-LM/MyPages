@@ -199,6 +199,7 @@ function navActiveSection(outPath) {
     if (rel === 'index.html') return 'index';
     if (rel.startsWith('github/')) return 'github';
     if (rel.startsWith('admin/')) return 'admin';
+    if (rel.startsWith('tools/')) return 'tools';
     if (rel.startsWith('about/')) return 'about';
     return '';
 }
@@ -215,7 +216,7 @@ function markActiveNav(hdr, outPath, depth) {
     const section = navActiveSection(outPath);
     if (!section) return hdr;
     const prefix = depth === 0 ? './' : '../'.repeat(depth);
-    const target = prefix + ({ index: 'index.html', github: 'github/index.html', admin: 'admin/index.html', about: 'about/index.html' })[section];
+    const target = prefix + ({ index: 'index.html', github: 'github/index.html', admin: 'admin/index.html', tools: 'tools/index.html', about: 'about/index.html' })[section];
     const re = new RegExp('(<a class="nav-link" href=")' + target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"');
     return hdr.replace(re, '<a class="nav-link active" href="' + target + '"');
 }
