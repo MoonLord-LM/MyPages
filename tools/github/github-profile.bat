@@ -421,7 +421,7 @@ $html = @"
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.ico">
-<title>MoonLord-LM - GitHub Profile</title>
+<title>$(Html-Encode $userName) - GitHub Profile</title>
 <style>
 :root{ --bg:#f6f8fa; --bg-secondary:#ffffff; --bg-tertiary:#f6f8fa; --border:#d1d9e0; --text-primary:#1f2328; --text-secondary:#59636e; --text-tertiary:#59636e; --accent:#0969da; }
 *{box-sizing:border-box;margin:0;padding:0}
