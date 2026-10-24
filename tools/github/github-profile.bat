@@ -324,13 +324,6 @@ Write-Host "共采集 $readmeCount 个 README，另保存 $emptyCount 个含头�
 
 $topLangs = $langBytes.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 9
 
-# 语言标签
-$langTagsHtml = ''
-foreach ($l in $topLangs) {
-    $c = Get-Lang-Color $l.Key
-    $langTagsHtml += "<span class='lang-tag' style='background-color:$c;color:$(Get-Contrast-Text $c)'>$(Html-Encode $l.Key)</span>"
-}
-
 # 环形图 + 图例
 $radius = 64
 $stroke = 28
@@ -453,8 +446,6 @@ a.stat{text-decoration:none;}
 a.stat:hover{color:var(--accent);}
 .section{margin-top:20px;}
 .section h2{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--text-primary);}
-.lang-tags{display:flex;flex-wrap:wrap;gap:8px;}
-.lang-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border:1px solid transparent;border-radius:999px;padding:3px 10px;}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .lang-flex{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
 .donut{flex-shrink:0;}

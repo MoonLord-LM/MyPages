@@ -169,7 +169,6 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import http from 'http';
-import child_process from 'child_process';
 import { marked } from 'marked';
 
 const RESERVED = new Set(['header.html', 'footer.html']);
@@ -486,53 +485,6 @@ const AUTOLIST_CSS = `
 }
 `;
 
-function formatSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    const units = ['KB', 'MB', 'GB', 'TB'];
-    let i = -1, n = bytes;
-    do { n /= 1024; i++; } while (n >= 1024 && i < units.length - 1);
-    return n.toFixed(2) + ' ' + units[i];
-}
-
-function formatTime(date) {
-    const pad = (x) => String(x).padStart(2, '0');
-    // 统一按中国时区（Asia/Shanghai / UTC+8，中国不实行夏令时）显示，并附带时区标识
-    // 不再依赖构建机本地时区，保证 git 提交时间、文件修改时间在全球任何机器构建都一致
-    const parts = new Intl.DateTimeFormat('zh-CN', {
-        timeZone: 'Asia/Shanghai',
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        hour12: false
-    }).formatToParts(date);
-    const get = (type) => { const p = parts.find((x) => x.type === type); return p ? p.value : ''; };
-    return get('year') + '-' + get('month') + '-' + get('day') + ' ' +
-        get('hour') + ':' + get('minute') + ':' + get('second') + ' (UTC+8)';
-}
-
-const REPO_ROOT = (() => {
-    try {
-        const out = child_process.execFileSync('git', ['-C', PAGES, 'rev-parse', '--show-toplevel'],
-            { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
-        if (out) return out;
-    } catch (e) {}
-    return path.dirname(PAGES);
-})();
-
-function gitCommitTime(srcFile) {
-    try {
-        const rel = path.relative(REPO_ROOT, srcFile).split(path.sep).join('/');
-        const out = child_process.execFileSync('git',
-            ['-C', REPO_ROOT, 'log', '-1', '--format=%ct', '--', rel],
-            { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
-        if (/^\d+$/.test(out)) return new Date(parseInt(out, 10) * 1000);
-    } catch (e) {}
-    return null;
-}
-
-function entryTime(srcFile, fallback) {
-    return gitCommitTime(srcFile) || fallback;
-}
-
 function fetchBuffer(url) {
     return new Promise((resolve, reject) => {
         const doRequest = (u, redirects) => {
@@ -736,18 +688,17 @@ function collect(dir) {
         if (entry.isDirectory()) { collect(full); continue; }
         if (RESERVED.has(entry.name)) continue;
         const ext = path.extname(entry.name).toLowerCase();
-        const stats = fs.statSync(full);
         if (ext === '.html' || ext === '.md') {
             const base = path.basename(entry.name, ext);
             if (!pageFilesByDir.has(dir)) pageFilesByDir.set(dir, new Map());
             const m = pageFilesByDir.get(dir);
             if (!m.has(base)) {
-                m.set(base, { base, ext, srcFile: full, name: entry.name, stats });
+                m.set(base, { base, ext, srcFile: full, name: entry.name });
             } else if (m.get(base).ext === '.md' && ext === '.html') {
-                m.set(base, { base, ext, srcFile: full, name: entry.name, stats });
+                m.set(base, { base, ext, srcFile: full, name: entry.name });
             }
         } else {
-            staticFiles.push({ full, stats });
+            staticFiles.push({ full });
         }
     }
 }
@@ -844,14 +795,12 @@ for (const [dir, baseMap] of pageFilesByDir) {
     const dirLabel = '/' + path.relative(PAGES, dir).split(path.sep).join('/');
     const fileEntries = [];
     for (const d of descriptors) {
-        let size = d.stats.size;
-        try { size = fs.statSync(d.outPath).size; } catch (e) {}
-        fileEntries.push({ label: d.base, link: d.outPath, size: size, mtime: entryTime(d.srcFile, d.stats.mtime), desc: fileDescription(d.srcFile, d.ext) });
+        fileEntries.push({ label: d.base, link: d.outPath, desc: fileDescription(d.srcFile, d.ext) });
     }
     for (const sf of staticFiles) {
         if (path.dirname(sf.full) === dir) {
             const dest = path.join(DIST, path.relative(PAGES, sf.full));
-            fileEntries.push({ label: path.basename(sf.full), link: dest, size: sf.stats.size, mtime: entryTime(sf.full, sf.stats.mtime), desc: '' });
+            fileEntries.push({ label: path.basename(sf.full), link: dest, desc: '' });
         }
     }
     fileEntries.sort((a, b) => a.label.localeCompare(b.label));
