@@ -331,7 +331,7 @@ body {
   box-sizing: border-box;
   max-width: 920px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 40px 24px 64px;
   color: var(--color-fg-default);
   font-size: 16px;
   line-height: 1.6;
