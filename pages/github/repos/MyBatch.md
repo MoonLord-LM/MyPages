@@ -1,4 +1,4 @@
-2026-10-25 12:19:08 +08:00  
+2026-10-26 22:41:34 +08:00  
 https://github.com/MoonLord-LM/MyBatch  
 
 ---
@@ -14,7 +14,7 @@ A collection of commonly used Windows Batch scripts
 | 目录 | 功能分类 | 说明 |
 | --- | --- | --- |
 | [gui](https://github.com/MoonLord-LM/MyBatch/tree/master/gui) | [窗体程序](#窗体程序) | 任务批量管理 |
-| [console/file](https://github.com/MoonLord-LM/MyBatch/tree/master/console/file) | [文件处理](#文件处理) | 压缩解压、加密解密、打包加壳、文件去重、文件夹生成列表等 |
+| [console/file](https://github.com/MoonLord-LM/MyBatch/tree/master/console/file) | [文件处理](#文件处理) | 压缩解压、加密解密、打包加壳、文件去重、生成文件列表等 |
 | [console/git](https://github.com/MoonLord-LM/MyBatch/tree/master/console/git) | [代码管理](#代码管理) | Git 设置优化、命令行批量操作等 |
 | [console/media](https://github.com/MoonLord-LM/MyBatch/tree/master/console/media) | [多媒体工具](#多媒体工具) | 视频合并、切片、转码、AI 放大插帧、封面管理、字幕管理、批量重命名等 |
 | [console/server](https://github.com/MoonLord-LM/MyBatch/tree/master/console/server) | [网络服务](#网络服务) | 内网穿透、本地文件服务器等 |
@@ -57,7 +57,8 @@ A collection of commonly used Windows Batch scripts
 | [文件名列表生成 - csv 格式.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件名列表生成%20-%20csv%20格式.bat) | 导出指定目录下的文件名清单 |
 | [文件名列表生成 - json 格式.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件名列表生成%20-%20json%20格式.bat) | 导出指定目录下的文件名清单 |
 | [文件名列表生成 - txt 格式.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件名列表生成%20-%20txt%20格式.bat) | 导出指定目录下的文件名清单 |
-| [文件名删除重复前后缀.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件名删除重复前后缀.bat) | 批量删除文件名中重复的前后缀部分 |
+| [文件名整理 - 后缀名转小写.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件名整理%20-%20后缀名转小写.bat) | 把文件名后缀中的大写字母，统一转换为小写字母 |
+| [文件名整理 - 删除前后重复部分.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件名整理%20-%20删除前后重复部分.bat) | 批量删除文件名中重复的前后缀部分 |
 | [文件压缩 - 7z 存储.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件压缩%20-%207z%20存储.bat) | 压缩为 7z（最快读取速度） |
 | [文件压缩 - 7z 最佳.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件压缩%20-%207z%20最佳.bat) | 压缩为 7z（最佳压缩比率） |
 | [文件压缩 - exe 存储.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/文件压缩%20-%20exe%20存储.bat) | 压缩为自解压 exe（最快读取速度） |
@@ -73,10 +74,11 @@ A collection of commonly used Windows Batch scripts
 
 | 脚本 | 说明 |
 | --- | --- |
-| [Git 差异文件导出.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20%E5%B7%AE%E5%BC%82%E6%96%87%E4%BB%B6%E5%AF%BC%E5%87%BA.bat) | 导出 Git 仓库中未提交的改动，保存为补丁文件 |
-| [Git 差异文件导入.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20%E5%B7%AE%E5%BC%82%E6%96%87%E4%BB%B6%E5%AF%BC%E5%85%A5.bat) | 把补丁文件中的改动，导入到 Git 仓库 |
+| [Git 差异文件导出.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20%E5%B7%AE%E5%BC%82%E6%96%87%E4%BB%B6%E5%AF%BC%E5%87%BA.bat) | 批量导出 Git 仓库中未提交的改动，保存为补丁文件 |
+| [Git 差异文件导入.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20%E5%B7%AE%E5%BC%82%E6%96%87%E4%BB%B6%E5%AF%BC%E5%85%A5.bat) | 批量把补丁文件中的改动，导入到 Git 仓库 |
 | [Git 设置优化 - 二进制仓库.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20设置优化%20-%20二进制仓库.bat) | 优化 Git 的二进制仓库设置 |
 | [Git 设置优化 - 全局默认.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20设置优化%20-%20全局默认.bat) | 优化 Git 的全局默认设置 |
+| [Git 提交本地代码.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20提交本地代码.bat) | 批量提交 Git 仓库的本地代码 |
 | [Git 同步远端代码.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/git/Git%20同步远端代码.bat) | 批量同步 Git 仓库的远端代码 |
 
 ### 多媒体工具
