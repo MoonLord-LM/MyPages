@@ -47,6 +47,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           ref: master
+          # 站点地图按源文件的 Git 提交时间生成 lastmod，需要完整历史
+          fetch-depth: 0
 
       - name: Run build.bat
         shell: cmd
