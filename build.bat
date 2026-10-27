@@ -169,12 +169,17 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import http from 'http';
+import { execFileSync } from 'child_process';
 import { marked } from 'marked';
 
 const RESERVED = new Set(['header.html', 'footer.html']);
 const PAGES = '-----PROJECT PAGES DIR-----';
 const DIST = '-----PROJECT DIST DIR-----';
 const SITE_URL = '-----PROJECT SITE URL-----';
+const REPO_ROOT = path.dirname(PAGES);
+
+// 站点地图用的「最后修改时间」，优先使用 pages 中对应源文件在 Git 里的最后一次提交时间。
+const lastmodMap = new Map();
 
 // 按页面源文件目录，向同级 / 上级逐级查找最临近的公共模板（header.html / footer.html）
 // 两者独立处理；缺失则视为无模板。模板内容按路径缓存，避免重复读盘。
@@ -397,6 +402,35 @@ function escapeHtml(s) {
     return String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 }
 
+// 属性值上下文专用：在 escapeHtml 之外额外转义双引号。
+// 生成器输出的标签统一使用双引号包裹属性，转义双引号即可防止内容提前闭合属性。
+function escapeAttr(s) {
+    return escapeHtml(s).replace(/"/g, '&quot;');
+}
+
+// 源文件最后一次提交的时间；非 Git 环境或文件未入库时，回退到文件修改时间
+const commitTimeCache = new Map();
+function fileLastModified(srcFile) {
+    if (commitTimeCache.has(srcFile)) return commitTimeCache.get(srcFile);
+    let time = null;
+    try {
+        const rel = path.relative(REPO_ROOT, srcFile).split(path.sep).join('/');
+        const iso = execFileSync('git', ['log', '-1', '--format=%cI', '--', rel], {
+            cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim().split(/\r?\n/)[0];
+        const parsed = iso ? new Date(iso) : null;
+        if (parsed && !isNaN(parsed.getTime())) time = parsed;
+    } catch (e) { }
+    if (!time) {
+        try {
+            const st = fs.statSync(srcFile);
+            if (st && !isNaN(st.mtime.getTime())) time = st.mtime;
+        } catch (e) { }
+    }
+    commitTimeCache.set(srcFile, time);
+    return time;
+}
+
 function renderMarkdownPage(title, bodyHtml, outPath, srcDir) {
     const head = [
         '<!DOCTYPE html>',
@@ -433,6 +467,7 @@ let pageCount = 0;
 function processPage(srcFile, bodyHtml, navHtml) {
     const outPath = outPathFor(srcFile);
     const srcDir = path.dirname(srcFile);
+    lastmodMap.set(outPath, fileLastModified(srcFile));
 
     if (path.extname(srcFile).toLowerCase() === '.md') {
         const titleMatch = bodyHtml.match(/<h1[ >][\s\S]*?<\/h1>/i);
@@ -548,6 +583,9 @@ async function localizeImages(html, outPath, baseName) {
             }
         }
         if (fileName) {
+            const assetPath = path.join(assetsDir, fileName);
+            // 图片本身不在 pages 中，沿用所属页面的最后修改时间
+            if (!lastmodMap.has(assetPath)) lastmodMap.set(assetPath, lastmodMap.get(outPath));
             const rel = 'assets/' + fileName;
             // 用函数形式替换，避免 URL/文件名/标签文本中的 $& $` $' $n 被当作特殊模式误处理
             html = html.replace(m[0], () => m[1] + rel + m[2] + m[4]);
@@ -562,6 +600,8 @@ async function localizeImages(html, outPath, baseName) {
 async function mdBody(srcFile, outPath) {
     const markdown = fs.readFileSync(srcFile, 'utf8');
     const baseName = path.basename(srcFile, path.extname(srcFile));
+    // 先登记页面自身的最后修改时间，供下面下载到本地的图片沿用
+    lastmodMap.set(outPath, fileLastModified(srcFile));
     let html = marked(markdown);
     html = await localizeImages(html, outPath, baseName);
     return html;
@@ -584,13 +624,13 @@ function buildNav(currentOutPath, descriptors) {
     let indexRel = path.relative(dir, path.join(dir, 'index.html')).split(path.sep).join('/');
     if (indexRel === '') indexRel = './index.html';
     if (!/^(\.\.?\/|\/)/.test(indexRel)) indexRel = './' + indexRel;
-    const homeItem = '    <li class="home"><a href="' + indexRel + '" title="返回目录首页" aria-label="返回目录首页">' + HOME_ICON + '</a></li>';
+    const homeItem = '    <li class="home"><a href="' + escapeAttr(indexRel) + '" title="返回目录首页" aria-label="返回目录首页">' + HOME_ICON + '</a></li>';
     const items = descriptors.map((d) => {
         let rel = path.relative(path.dirname(currentOutPath), d.outPath).split(path.sep).join('/');
         if (rel === '') rel = './' + path.basename(d.outPath);
         if (!/^(\.\.?\/|\/)/.test(rel)) rel = './' + rel;
         const active = (d.outPath === currentOutPath) ? ' class="active"' : '';
-        return '    <li><a' + active + ' href="' + rel + '">' + escapeHtml(d.displayName) + '</a></li>';
+        return '    <li><a' + active + ' href="' + escapeAttr(rel) + '">' + escapeHtml(d.displayName) + '</a></li>';
     }).join('\n');
     return '<nav class="auto-list">\n  <ul>\n' + homeItem + '\n' + items + '\n  </ul>\n</nav>';
 }
@@ -645,9 +685,9 @@ function buildTable(indexOutPath, fileEntries) {
         if (rel === '') rel = './' + path.basename(e.link);
         if (!/^(\.\.?\/|\/)/.test(rel)) rel = './' + rel;
         const desc = e.desc
-            ? '<td class="desc" title="' + escapeHtml(e.desc) + '">' + escapeHtml(e.desc) + '</td>'
+            ? '<td class="desc" title="' + escapeAttr(e.desc) + '">' + escapeHtml(e.desc) + '</td>'
             : '<td class="desc desc-empty">—</td>';
-        return '    <tr><td class="name"><a href="' + rel + '">' + escapeHtml(e.label) + '</a></td>' +
+        return '    <tr><td class="name"><a href="' + escapeAttr(rel) + '">' + escapeHtml(e.label) + '</a></td>' +
             desc + '</tr>';
     }).join('\n');
     return '<table>\n  <thead>\n    <tr><th>文件名</th><th>说明</th></tr>\n  </thead>\n  <tbody>\n' + rows + '\n  </tbody>\n</table>';
@@ -709,6 +749,7 @@ for (const sf of staticFiles) {
     const dest = path.join(DIST, relPath);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(sf.full, dest);
+    lastmodMap.set(dest, fileLastModified(sf.full));
     console.log('已复制: ' + relPath);
 }
 
@@ -732,8 +773,11 @@ function buildSitemap() {
             const ext = path.extname(entry.name).toLowerCase();
             if (ext !== '.html' && ext !== '.php') continue;
             const rel = path.relative(DIST, full).split(path.sep).join('/');
-            let mtime;
-            try { mtime = fs.statSync(full).mtime; } catch (e) { mtime = new Date(); }
+            // 优先取 pages 源文件的最后提交时间；取不到时回退到产物文件时间
+            let mtime = lastmodMap.get(full) || null;
+            if (!mtime) {
+                try { mtime = fs.statSync(full).mtime; } catch (e) { mtime = new Date(); }
+            }
             urls.push({ loc: toSiteUrl(rel), mtime });
         }
     }
@@ -804,6 +848,12 @@ for (const [dir, baseMap] of pageFilesByDir) {
         }
     }
     fileEntries.sort((a, b) => a.label.localeCompare(b.label));
+    // 自动列表页没有源文件，取该目录下所有页面中最新的提交时间
+    const newest = descriptors
+        .map((d) => lastmodMap.get(d.outPath))
+        .filter((t) => t && !isNaN(t.getTime()))
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+    if (newest) lastmodMap.set(indexOutPath, newest);
     fs.writeFileSync(indexOutPath, renderListPage(dirLabel, indexOutPath, fileEntries, navHtmlIndex, dir), 'utf8');
     pageCount++;
     console.log('已生成列表: ' + path.relative(DIST, indexOutPath));
