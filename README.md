@@ -63,12 +63,14 @@ Static Site Generator
 
 ```
 MyPages/
-├── build.bat                             # 构建脚本
-├── tools/
-│   ├── tools.bat                         # 工具脚本
-│   └── github/
-│       ├── github-profile.bat            # 采集 GitHub 用户资料
-│       ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
+├── dist/                                 # 站点构建产物
 ├── pages/                                # 站点源文件
-└── dist/                                 # 站点构建产物
+├── tools/                                # 辅助工具
+│   ├── tools.bat                         # 工具脚本
+│   └── github/                           # GitHub 相关工具
+│       ├── github-profile.bat            # 采集 GitHub 用户资料
+│       └── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
+├── build.bat                             # 构建脚本
+├── LLM.md                                # 提示信息
+└── README.md                             # 工程说明
 ```
