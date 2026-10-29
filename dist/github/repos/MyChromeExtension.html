@@ -294,10 +294,70 @@ body {
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-10-28 08:33:37 +08:00<br><a href="https://github.com/MoonLord-LM/MyChromeExtension">https://github.com/MoonLord-LM/MyChromeExtension</a>  </p>
+<p>2026-10-29 21:23:16 +08:00<br><a href="https://github.com/MoonLord-LM/MyChromeExtension">https://github.com/MoonLord-LM/MyChromeExtension</a>  </p>
 <hr>
 <h1>MyChromeExtension</h1>
-<p>A Chrome browser extension for web page optimizations<br>一个 Chrome 浏览器插件，提供网页优化  </p>
+<p>A Chrome extension for improving the web browsing experience<br>一个优化网页浏览体验的谷歌浏览器插件  </p>
+<h2>[功能清单]</h2>
+<table>
+<thead>
+<tr>
+<th>适用范围</th>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>所有网站</td>
+<td>始终允许右键菜单和复制文本</td>
+<td>允许右键菜单，允许文字的选中、复制和拖拽</td>
+</tr>
+<tr>
+<td>所有网站</td>
+<td>始终保持页面活跃焦点状态</td>
+<td>保持页面活跃状态，屏蔽失去焦点、页面隐藏等事件</td>
+</tr>
+<tr>
+<td>所有网站</td>
+<td>密码框显示明文密码</td>
+<td>将密码框的密码内容以明文显示</td>
+</tr>
+<tr>
+<td>所有网站</td>
+<td>统一字体大小</td>
+<td>统一整个网页的字体大小，可以设定为 8-20px 的指定值</td>
+</tr>
+<tr>
+<td>所有网站</td>
+<td>无图模式</td>
+<td>隐藏图片、背景图、边框图</td>
+</tr>
+<tr>
+<td><a href="http://www.bilibili.com">www.bilibili.com</a></td>
+<td>复制视频链接按钮</td>
+<td>在页面右下角显示按钮，一键复制当前页面所有视频链接</td>
+</tr>
+<tr>
+<td><a href="http://www.youtube.com">www.youtube.com</a></td>
+<td>复制视频链接按钮</td>
+<td>在页面右下角显示按钮，一键复制当前页面所有视频链接</td>
+</tr>
+<tr>
+<td><a href="http://www.v2ex.com">www.v2ex.com</a></td>
+<td>隐藏 Logo</td>
+<td>隐藏页面顶部 Logo</td>
+</tr>
+</tbody></table>
+<h2>[工程结构]</h2>
+<pre><code>MyChromeExtension/
+├── source/                             # 插件源代码
+│   ├── assets/                         # 图标文件
+│   ├── page/                           # 插件展示页面
+│   ├── site/                           # 插件功能脚本
+│   └── manifest.json                   # 插件基本配置
+├── LLM.md                              # 提示信息
+└── README.md                           # 工程说明
+</code></pre>
 
 </div>
 </article>
