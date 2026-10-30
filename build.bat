@@ -248,6 +248,22 @@ function injectFooter(html, outPath, srcDir) {
     return html.replace(/<\/body>/i, ftr + '\n</body>');
 }
 
+// 向 <head> 注入规范链接（canonical）
+// 地址始终使用站点根地址 SITE_URL 加页面自身路径，与部署域名无关
+// 因此镜像站部署同一份产物时，收录权重会集中到主域
+function injectCanonical(html, outPath) {
+    const rel = path.relative(DIST, outPath).split(path.sep).join('/');
+    const link = '  <link rel="canonical" href="' + escapeAttr(toSiteUrl(rel)) + '">';
+    // 源文件若已自带 canonical，先移除，避免与目标地址冲突
+    const cleaned = html.replace(/^[ \t]*<link\b[^>]*\brel\s*=\s*("|')?canonical\1[^>]*>[ \t]*\r?\n?/gim, '');
+    if (/<\/head>/i.test(cleaned)) return cleaned.replace(/<\/head>/i, link + '\n</head>');
+    if (/<head\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<head\b([^>]*)>/i, '<head$1>\n' + link);
+    // 源文件缺少 head：有 <body> 时插在它前面，否则插在 <html> 后面，保证标签一定存在
+    if (/<body\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<body\b([^>]*)>/i, '<head>\n' + link + '\n</head>\n<body$1>');
+    if (/<html\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<html\b([^>]*)>/i, '<html$1>\n<head>\n' + link + '\n</head>');
+    return cleaned;
+}
+
 console.log('源文件目录: ' + PAGES);
 console.log('输出目录: ' + DIST);
 
@@ -452,7 +468,8 @@ function renderMarkdownPage(title, bodyHtml, outPath, srcDir) {
         '</body>',
         '</html>'
     ].join('\n');
-    return injectFooter(injectHeader(head + '\n' + bodyHtml + '\n' + tail, outPath, srcDir), outPath, srcDir);
+    const html = injectFooter(injectHeader(head + '\n' + bodyHtml + '\n' + tail, outPath, srcDir), outPath, srcDir);
+    return injectCanonical(html, outPath);
 }
 
 function outPathFor(srcFile) {
@@ -482,7 +499,10 @@ function processPage(srcFile, bodyHtml, navHtml) {
         return;
     }
 
-    const finalHtml = injectFooter(injectHeader(wrapWithNav(bodyHtml, navHtml), outPath, srcDir), outPath, srcDir);
+    const finalHtml = injectCanonical(
+        injectFooter(injectHeader(wrapWithNav(bodyHtml, navHtml), outPath, srcDir), outPath, srcDir),
+        outPath
+    );
     fs.writeFileSync(outPath, finalHtml, 'utf8');
     pageCount++;
     console.log('已处理: ' + path.relative(DIST, outPath));
@@ -713,7 +733,8 @@ function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
         '<h1>' + escapeHtml(dirLabel) + '</h1>\n' +
         listHtml + '\n' +
         '</article>\n</div>';
-    return injectFooter(injectHeader(head + '\n' + body + '\n</body>\n</html>', indexOutPath, srcDir), indexOutPath, srcDir);
+    const html = injectFooter(injectHeader(head + '\n' + body + '\n</body>\n</html>', indexOutPath, srcDir), indexOutPath, srcDir);
+    return injectCanonical(html, indexOutPath);
 }
 
 const staticFiles = [];
