@@ -295,7 +295,7 @@ body {
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-10-29 03:10:43 +08:00<br><a href="https://github.com/MoonLord-LM/MyPages">https://github.com/MoonLord-LM/MyPages</a>  </p>
+<p>2026-10-30 17:39:59 +08:00<br><a href="https://github.com/MoonLord-LM/MyPages">https://github.com/MoonLord-LM/MyPages</a>  </p>
 <hr>
 <h1>MyPages</h1>
 <p><a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml"><img src="assets/MyPages-001.svg" alt="build"></a>
@@ -319,14 +319,16 @@ body {
 <p>自动列举 <code>/dist</code> 中所有的 html、php 文件，生成站点地图，存放到 <code>/dist/sitemap.xml</code> 中<br>站点地图需要精确到文件名，例如 <code>index.html</code> 和 <code>index.php</code> 是两个不同的文件，都列举出来  </p>
 <h2>[工程结构]</h2>
 <pre><code>MyPages/
-├── build.bat                             # 构建脚本
-├── tools/
-│   ├── tools.bat                         # 工具脚本
-│   └── github/
-│       ├── github-profile.bat            # 采集 GitHub 用户资料
-│       ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
+├── dist/                                 # 站点构建产物
 ├── pages/                                # 站点源文件
-└── dist/                                 # 站点构建产物
+├── tools/                                # 辅助工具
+│   ├── tools.bat                         # 工具脚本
+│   └── github/                           # GitHub 相关工具
+│       ├── github-profile.bat            # 采集 GitHub 用户资料
+│       └── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
+├── build.bat                             # 构建脚本
+├── LLM.md                                # 提示信息
+└── README.md                             # 工程说明
 </code></pre>
 
 </div>
