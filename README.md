@@ -54,10 +54,27 @@ Static Site Generator
 对于 md 文件，摘要信息是第一行文本内容，对于 html 文件，摘要信息优先取 title，或者取 body 的第一行文本内容  
 然后，对此文件夹下的每个页面的 html 增加内容，在页面左侧展示一个简单的竖向列表菜单，可以在列表间跳转以及返回 index 页面  
 
+### 密码保护
+
+以 `.enc.md` 后缀结尾的文件，视为需要做密码保护的页面  
+在 `.gitignore` 中忽略 `.enc.md` 文件，避免提交到远程仓库中，导致泄密  
+页面内容第一行必须是 `<!-- { "password" : "xxxxxx" } -->` 的形式，在注释中内嵌一个配置 JSON，保存密码  
+本地执行构建时，将 md 渲染为 html，然后用密码加密处理，保存为 `.html.enc` 后缀  
+页面 md 同名的 html 只包含一个密码输入框，用户输入正确密码后，对 `.html.enc` 做解密，然后再显示出实际内容  
+加密算法参考 `/pages/tools/file-encrypt-aes-256-gcm.html` 的实现  
+最终生成的 `.html` 和 `.html.enc` 文件，在 `/pages` 和 `/dist` 目录中都进行保存  
+
 ### 站点地图
 
 自动列举 `/dist` 中所有的 html、php 文件，生成站点地图，存放到 `/dist/sitemap.xml` 中  
 站点地图需要精确到文件名，例如 `index.html` 和 `index.php` 是两个不同的文件，都列举出来  
+去除重复，对链接按字母做排序  
+
+### 外链清单
+
+尝试扫描 `/dist` 中所有的 html、php 文件，将引用的外部站点的链接清单，存放到 `/dist/external-url.json` 中  
+需要包含完整的 URL 链接和参数，例如 `index.html?q=1` 和 `index.html?q=2` 是两个不同的链接，都列举出来  
+去除重复，对链接按字母做排序  
 
 ## [工程结构]
 
