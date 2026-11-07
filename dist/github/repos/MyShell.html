@@ -301,17 +301,20 @@ body { overflow-x: clip; }
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-10-28 02:04:19 +08:00<br><a href="https://github.com/MoonLord-LM/MyShell" target="_blank" rel="noopener">https://github.com/MoonLord-LM/MyShell</a>  </p>
+<p>2026-10-28 02:04:19 +08:00<br>
+https://github.com/MoonLord-LM/MyShell</p>
 <hr>
 <h1>MyShell</h1>
 <p><a href="https://github.com/MoonLord-LM/MyShell/actions/workflows/self-check.yml" target="_blank" rel="noopener"><img src="assets/MyShell-001.svg" alt="self-check"></a></p>
-<p>Common Linux Shell scripts and function library<br>Provides some practical utility functions on Ubuntu / Debian servers, and one-click installation, configuration and tuning scripts for common software  </p>
-<p>常用 Linux Shell 脚本和函数库<br>提供在 Ubuntu / Debian 服务器上的一些实用的功能函数，以及一些常用软件的一键安装配置调优脚本  </p>
+<p>Common Linux Shell scripts and function library<br>
+Provides some practical utility functions on Ubuntu / Debian servers, and one-click installation, configuration and tuning scripts for common software</p>
+<p>常用 Linux Shell 脚本和函数库<br>
+提供在 Ubuntu / Debian 服务器上的一些实用的功能函数，以及一些常用软件的一键安装配置调优脚本</p>
 <h2>[使用说明]</h2>
 <h3>功能函数</h3>
-<p>需要先执行 source 命令，加载 My.sh 之后，才可以执行函数  </p>
+<p>需要先执行 source 命令，加载 My.sh 之后，才可以执行函数</p>
 <pre><code class="language-bash">source &lt;( wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/My.sh&#39; )
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/My.sh' )
 </code></pre>
 <table>
 <thead>
@@ -321,7 +324,8 @@ body { overflow-x: clip; }
 <th>说明</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td>设置</td>
 <td><code>prepare_common_command</code></td>
 <td>安装常用命令（curl、openssl 等）</td>
@@ -416,68 +420,70 @@ body { overflow-x: clip; }
 <td><code>show_disk_usage</code></td>
 <td>展示物理磁盘使用</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
 <h3>部署脚本</h3>
-<p>脚本可重复执行，已安装时直接退出<br>优先使用 export 的环境参数，无参数时，使用高强度的随机数，并在日志中显示  </p>
+<p>脚本可重复执行，已安装时直接退出<br>
+优先使用 export 的环境参数，无参数时，使用高强度的随机数，并在日志中显示</p>
 <h4>安装 MySQL（监听端口 13306，开启 SSL）</h4>
-<pre><code class="language-bash"># export MYSQL_PASSWORD=&#39;&lt;预设密码&gt;&#39;
+<pre><code class="language-bash"># export MYSQL_PASSWORD='&lt;预设密码&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/mysql.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/mysql.sh' | bash
 </code></pre>
 <h4>安装 Redis（监听端口 16379，开启 SSL）</h4>
-<pre><code class="language-bash"># export REDIS_PASSWORD=&#39;&lt;预设密码&gt;&#39;
+<pre><code class="language-bash"># export REDIS_PASSWORD='&lt;预设密码&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/redis.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/redis.sh' | bash
 </code></pre>
 <h4>安装 Nginx（监听端口 80、443，开启 Http 强制跳转 Https，开启 HTTP/2）</h4>
 <pre><code class="language-bash">wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/nginx.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/nginx.sh' | bash
 </code></pre>
 <h4>安装 PHP</h4>
 <pre><code class="language-bash">wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/php.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/php.sh' | bash
 </code></pre>
 <h4>安装 Cockpit（面板端口 19190，开启 Https）</h4>
 <pre><code class="language-bash">wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/cockpit.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/cockpit.sh' | bash
 </code></pre>
 <h4>安装 Shadowsocks（监听端口 10000，加密算法 2022-blake3-aes-256-gcm）</h4>
-<pre><code class="language-bash"># export SS_PASSWORD=&#39;&lt;预设密码&gt;&#39;
+<pre><code class="language-bash"># export SS_PASSWORD='&lt;预设密码&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/shadowsocks.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/shadowsocks.sh' | bash
 </code></pre>
 <h4>安装 V2Ray（监听端口 10010）</h4>
-<pre><code class="language-bash"># export V2RAY_CLIENT_ID=&#39;&lt;预设客户端ID&gt;&#39;
-# export V2RAY_WS_PATH=&#39;&lt;预设路径&gt;&#39;
+<pre><code class="language-bash"># export V2RAY_CLIENT_ID='&lt;预设客户端ID&gt;'
+# export V2RAY_WS_PATH='&lt;预设路径&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/v2ray.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/v2ray.sh' | bash
 </code></pre>
 <h4>安装 Docker</h4>
 <pre><code class="language-bash">wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/docker.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/install/docker.sh' | bash
 </code></pre>
 <h4>安装 Frp 服务端（依赖 Docker 部署，监听端口 17000，Https 服务端口 17443，面板端口 17500，开启 SSL/Https）</h4>
-<pre><code class="language-bash"># export FRP_TOKEN=&#39;&lt;预设连接Token&gt;&#39;
-# export FRP_DASHBOARD_PASSWORD=&#39;&lt;预设密码&gt;&#39;
+<pre><code class="language-bash"># export FRP_TOKEN='&lt;预设连接Token&gt;'
+# export FRP_DASHBOARD_PASSWORD='&lt;预设密码&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/frp.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/frp.sh' | bash
 </code></pre>
 <h4>安装 Grafana（依赖 Docker 部署，面板端口 13000，开启 Https）</h4>
-<pre><code class="language-bash"># export GRAFANA_PASSWORD=&#39;&lt;预设密码&gt;&#39;
+<pre><code class="language-bash"># export GRAFANA_PASSWORD='&lt;预设密码&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/grafana.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/grafana.sh' | bash
 </code></pre>
 <h4>安装 Portainer CE（依赖 Docker 部署，面板端口 19443，开启 Https）</h4>
-<pre><code class="language-bash"># export PORTAINER_PASSWORD=&#39;&lt;预设密码&gt;&#39;
+<pre><code class="language-bash"># export PORTAINER_PASSWORD='&lt;预设密码&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/portainer.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/portainer.sh' | bash
 </code></pre>
 <h4>安装 Prometheus（依赖 Docker 部署，面板端口 19090，开启 Https）</h4>
-<pre><code class="language-bash"># export MYSQL_PASSWORD=&#39;&lt;预设密码&gt;&#39;
-# export REDIS_PASSWORD=&#39;&lt;预设密码&gt;&#39;
-# export PROMETHEUS_PASSWORD=&#39;&lt;预设密码&gt;&#39;
+<pre><code class="language-bash"># export MYSQL_PASSWORD='&lt;预设密码&gt;'
+# export REDIS_PASSWORD='&lt;预设密码&gt;'
+# export PROMETHEUS_PASSWORD='&lt;预设密码&gt;'
 wget -O- --timeout=10 --no-cache \
-&#39;https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/prometheus.sh&#39; | bash
+'https://raw.githubusercontent.com/MoonLord-LM/MyShell/master/bash/docker/prometheus.sh' | bash
 </code></pre>
 <h2>[工程结构]</h2>
 <pre><code>MyShell/
