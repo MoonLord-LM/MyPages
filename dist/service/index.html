@@ -65,6 +65,24 @@ body {
   overflow-x: auto; white-space: pre;
 }
 .markdown-body pre code.hljs { background: transparent; padding: 0; }
+.markdown-body .code-block { position: relative; margin: 0 0 16px; }
+.markdown-body .code-block > pre { margin: 0; }
+.copy-code-btn {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  padding: 4px 8px; font-size: 12px; line-height: 18px;
+  color: var(--color-fg-muted); background: var(--color-canvas-default);
+  border: 1px solid var(--color-border-default); border-radius: 6px;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .15s, color .15s, border-color .15s;
+}
+.code-block:hover .copy-code-btn,
+.copy-code-btn:focus-visible,
+.copy-code-btn.copied,
+.copy-code-btn.failed { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .copy-code-btn { opacity: 1; pointer-events: auto; } }
+.copy-code-btn:hover { color: var(--color-accent-fg); border-color: var(--color-accent-fg); }
+.copy-code-btn.copied { color: #1a7f37; border-color: #1a7f37; }
+.copy-code-btn.failed { color: #b3261e; border-color: #b3261e; }
 .markdown-body table {
   border-collapse: collapse; display: block; width: max-content;
   max-width: 100%; margin: 0 0 16px; overflow: auto;
