@@ -43,6 +43,9 @@
       border: 1px solid transparent; border-radius: 8px; cursor: pointer;
       transition: opacity .2s, transform .1s, border-color .2s, background .2s, color .2s;
     }
+    .mode-tabs.big button {
+      min-width: 132px; padding: 11px 22px; font-size: 16px; font-weight: 600; line-height: 1.5;
+    }
     .btn-mini, .mode-tabs button { color: #2a5298; background: #fff; border-color: #cdd7e3; }
     .btn, .mode-tabs button.active {
       color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0); border-color: transparent;
@@ -91,7 +94,7 @@
     </div>
 
     <div class="tips">
-      <div>将输入的文件编码为 <code>PEM</code> 格式，或将其解码还原为原始文件。</div>
+      <div>将输入的二进制文件编码为 PEM 文本格式，或将其解码还原为原始文件。</div>
       <div><code>PEM</code> 格式使用 <code>Base64</code> 编码，并包裹 <code>-----BEGIN CERTIFICATE-----</code> / <code>-----END CERTIFICATE-----</code> 标记，每行 64 字符，编码后体积约为原文件的 1.33 倍。</div>
       <div>编码：输出文件名将在原文件名后追加 <code>.pem</code> 后缀。</div>
       <div>解码：会自动去除 <code>.pem</code> 后缀，恢复原文件名。</div>
@@ -108,7 +111,7 @@
         <div class="file-info" id="fileInfo"></div>
       </div>
 
-      <div class="mode-tabs">
+      <div class="mode-tabs big">
         <button id="modeEncode" class="active" type="button">编码</button>
         <button id="modeDecode" type="button">解码</button>
       </div>

@@ -117,6 +117,17 @@
         </div>
       </div>
 
+      <div class="field">
+        <label>静区（边缘留白的模块数，越多越好）</label>
+        <div class="mode-tabs" id="quietTabs">
+          <button type="button" data-quiet="0">0</button>
+          <button type="button" data-quiet="2">2</button>
+          <button type="button" data-quiet="4" class="active">4</button>
+          <button type="button" data-quiet="6">6</button>
+          <button type="button" data-quiet="8">8</button>
+        </div>
+      </div>
+
       <div class="actions">
         <button class="btn" id="genBtn" type="button">生成二维码</button>
       </div>
@@ -569,6 +580,7 @@
     const textEl = $('text');
     const eccTabs = $('eccTabs');
     const scaleTabs = $('scaleTabs');
+    const quietTabs = $('quietTabs');
     const genBtn = $('genBtn');
     const outputEl = $('output');
     const svgOut = $('svgOut');
@@ -579,7 +591,7 @@
     const downloadJpgBtn = $('downloadJpg');
     const logEl = $('log');
 
-    const QUIET = 4;   // 静区宽度（模块数）
+    let quiet = 4;     // 静区宽度（模块数，可调，默认 4）
     let scale = 8;     // PNG 每模块像素（可调，默认 8）
     let ecc = 'M';
     let lastSvg = '';
@@ -604,12 +616,19 @@
       scaleTabs.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b === btn));
     });
 
+    quietTabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-quiet]');
+      if (!btn) return;
+      quiet = parseInt(btn.getAttribute('data-quiet'), 10);
+      quietTabs.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b === btn));
+    });
+
     function buildSvg(qr) {
-      const dim = qr.size + QUIET * 2;
+      const dim = qr.size + quiet * 2;
       let path = '';
       for (let y = 0; y < qr.size; y++) {
         for (let x = 0; x < qr.size; x++) {
-          if (qr.modules[y][x]) path += 'M' + (x + QUIET) + ' ' + (y + QUIET) + 'h1v1h-1z';
+          if (qr.modules[y][x]) path += 'M' + (x + quiet) + ' ' + (y + quiet) + 'h1v1h-1z';
         }
       }
       return '<svg xmlns="http://www.w3.org/2000/svg" width="' + dim + '" height="' + dim +
@@ -619,7 +638,7 @@
     }
 
     function buildPng(qr) {
-      const dim = qr.size + QUIET * 2;
+      const dim = qr.size + quiet * 2;
       const canvas = document.createElement('canvas');
       canvas.width = dim * scale;
       canvas.height = dim * scale;
@@ -629,7 +648,7 @@
       ctx.fillStyle = '#000000';
       for (let y = 0; y < qr.size; y++) {
         for (let x = 0; x < qr.size; x++) {
-          if (qr.modules[y][x]) ctx.fillRect((x + QUIET) * scale, (y + QUIET) * scale, scale, scale);
+          if (qr.modules[y][x]) ctx.fillRect((x + quiet) * scale, (y + quiet) * scale, scale, scale);
         }
       }
       return canvas;
