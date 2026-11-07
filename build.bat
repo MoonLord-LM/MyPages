@@ -693,6 +693,8 @@ const UNLOCK_CSS = `
 .unlock-row input {
   flex: 1; min-width: 0; padding: 11px 14px; font-size: 16px;
   border: 1px solid #ccc; border-radius: 8px; outline: none;
+  /* 非密码字段：避免浏览器弹出「记住密码」，同时保留圆点遮盖 */
+  -webkit-text-security: disc;
 }
 .unlock-row input:focus { border-color: #2a5298; }
 .unlock-row button {
@@ -791,7 +793,7 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle) {
         '  <h1>' + escapeHtml(ENC_PAGE_TITLE) + '</h1>',
         '  <p class="unlock-tip">本页内容已加密，请输入密码查看。</p>',
         '  <div class="unlock-row">',
-        '    <input type="password" id="unlockPassword" placeholder="请输入密码" autocomplete="off">',
+        '    <input type="text" id="unlockPassword" placeholder="请输入密码" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">',
         '    <button type="button" id="unlockBtn">解密</button>',
         '  </div>',
         '  <p class="unlock-status" id="unlockStatus"></p>',
