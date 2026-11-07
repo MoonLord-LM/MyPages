@@ -109,16 +109,16 @@ if not exist "!temp_js!" (
     exit /b 1
 )
 
-if not exist "!temp_dir!\node_modules\marked" (
-    echo 正在安装 marked 依赖
+if not exist "!temp_dir!\node_modules\markdown-it" (
+    echo 正在安装 markdown-it 依赖
     if exist "!temp_dir!\package.json" ( del /f /q "!temp_dir!\package.json" )
     if exist "!temp_dir!\package-lock.json" ( del /f /q "!temp_dir!\package-lock.json" )
     pushd "!temp_dir!"
-        call npm install marked --no-audit --no-fund
+        call npm install markdown-it --no-audit --no-fund
         set "npm_error=!errorlevel!"
     popd
     if !npm_error! neq 0 (
-        echo 错误：安装 marked 失败
+        echo 错误：安装 markdown-it 失败
         echo.
         if exist "!temp_js!" ( del /f /q "!temp_js!" )
         pause
@@ -171,7 +171,7 @@ import https from 'https';
 import http from 'http';
 import crypto from 'crypto';
 import { execFileSync } from 'child_process';
-import { marked } from 'marked';
+import MarkdownIt from 'markdown-it';
 
 const RESERVED = new Set(['header.html', 'footer.html']);
 const PAGES = '-----PROJECT PAGES DIR-----';
@@ -312,13 +312,7 @@ function injectCanonical(html, outPath) {
 console.log('源文件目录: ' + PAGES);
 console.log('输出目录: ' + DIST);
 
-if (typeof marked !== 'function' && !(marked && typeof marked.parse === 'function')) {
-    console.error('错误：未找到 marked 组件，需要执行 npm install marked');
-    process.exit(1);
-}
-if (typeof marked === 'function' && marked.setOptions) {
-    marked.setOptions({ gfm: true, breaks: false });
-}
+const md = new MarkdownIt({ html: true, linkify: false, typographer: false });
 
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST, { recursive: true });
@@ -664,7 +658,7 @@ async function localizeImages(html, outPath, baseName, mirrorAssetsDir) {
 }
 
 async function markdownToHtml(markdown, outPath, baseName, mirrorAssetsDir) {
-    let html = marked(markdown);
+    let html = md.render(markdown);
     html = await localizeImages(html, outPath, baseName, mirrorAssetsDir);
     return html;
 }
@@ -892,8 +886,11 @@ async function processEncryptedPage(srcFile) {
     const cfg = parseEncSource(fs.readFileSync(srcFile, 'utf8'), srcRel);
     // 远程图片同时落到 /pages，保证下一轮（CI，无 .enc.md）仍能复制这些资源
     const bodyHtml = await markdownToHtml(cfg.markdown, distShell, baseName, path.join(srcDir, 'assets'));
+    // 链接规范化（相对路径本页打开、完整路径新页打开）必须在加密前作用于正文，
+    // 否则 decrypt 后注入的 HTML 不会经过 injectCanonical 的 normalizeLinkTargets，导致与普通页面行为不一致
+    const normalizedBody = normalizeLinkTargets(bodyHtml);
     console.log('正在加密: ' + srcRel);
-    const encBytes = encryptHtml(bodyHtml, cfg.password, cfg.iterations);
+    const encBytes = encryptHtml(normalizedBody, cfg.password, cfg.iterations);
     const shellHtml = renderUnlockPage(encName, cfg.iterations, baseName, buildUnlockNav(srcDir, baseName));
 
     fs.mkdirSync(path.dirname(distShell), { recursive: true });
