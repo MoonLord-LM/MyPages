@@ -44,6 +44,12 @@
     .btn:active { transform: translateY(1px); }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
 
+    .spinner {
+      display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.5);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .log {
       margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
       background: #f6f8fa; border: 1px solid #e3e8ef; white-space: pre-wrap; word-break: break-all;
@@ -248,11 +254,6 @@ body { overflow-x: clip; }
       <div>全程在浏览器本地完成，不会上传任何数据。</div>
     </div>
 
-    <div class="mode-tabs">
-      <button id="modeEncode" class="active" type="button">编码</button>
-      <button id="modeDecode" type="button">解码</button>
-    </div>
-
     <div class="panel">
       <div class="field">
         <label>选择文件</label>
@@ -263,8 +264,9 @@ body { overflow-x: clip; }
         <div class="file-info" id="fileInfo"></div>
       </div>
 
-      <div class="actions">
-        <button class="btn" id="runBtn" type="button">开始处理</button>
+      <div class="mode-tabs">
+        <button id="modeEncode" class="active" type="button">编码</button>
+        <button id="modeDecode" type="button">解码</button>
       </div>
 
       <div class="log hide" id="log"></div>
@@ -285,7 +287,6 @@ body { overflow-x: clip; }
     const dropEl = $('drop');
     const fileInput = $('fileInput');
     const fileInfoEl = $('fileInfo');
-    const runBtn = $('runBtn');
     const logEl = $('log');
 
     let mode = 'encode';
@@ -305,8 +306,8 @@ body { overflow-x: clip; }
       logEl.textContent = msg;
     }
 
-    modeEncodeBtn.addEventListener('click', () => setMode('encode'));
-    modeDecodeBtn.addEventListener('click', () => setMode('decode'));
+    modeEncodeBtn.addEventListener('click', () => { setMode('encode'); run(); });
+    modeDecodeBtn.addEventListener('click', () => { setMode('decode'); run(); });
 
     dropEl.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
@@ -394,11 +395,18 @@ body { overflow-x: clip; }
     }
 
     function setBusy(busy) {
-      runBtn.disabled = busy;
-      runBtn.textContent = busy ? '处理中…' : '开始处理';
+      const active = mode === 'encode' ? modeEncodeBtn : modeDecodeBtn;
+      modeEncodeBtn.disabled = busy;
+      modeDecodeBtn.disabled = busy;
+      if (busy) {
+        active.innerHTML = '<span class="spinner"></span>处理中…';
+      } else {
+        modeEncodeBtn.textContent = '编码';
+        modeDecodeBtn.textContent = '解码';
+      }
     }
 
-    runBtn.addEventListener('click', async () => {
+    async function run() {
       clearLog();
       if (!selectedFile) { log('请先选择要处理的文件', 'err'); return; }
       setBusy(true);
@@ -423,7 +431,7 @@ body { overflow-x: clip; }
       } finally {
         setBusy(false);
       }
-    });
+    }
 
     setMode('encode');
   })();

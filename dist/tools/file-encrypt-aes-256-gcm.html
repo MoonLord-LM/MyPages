@@ -258,11 +258,6 @@ body { overflow-x: clip; }
       <div>全程在浏览器本地完成，不会上传任何数据。</div>
     </div>
 
-    <div class="mode-tabs">
-      <button id="modeEncrypt" class="active" type="button">加密</button>
-      <button id="modeDecrypt" type="button">解密</button>
-    </div>
-
     <div class="panel">
       <div class="field">
         <label for="password">密码</label>
@@ -278,8 +273,9 @@ body { overflow-x: clip; }
         <div class="file-info" id="fileInfo"></div>
       </div>
 
-      <div class="actions">
-        <button class="btn" id="runBtn" type="button">开始处理</button>
+      <div class="mode-tabs">
+        <button id="modeEncrypt" class="active" type="button">加密</button>
+        <button id="modeDecrypt" type="button">解密</button>
       </div>
 
       <div class="log hide" id="log"></div>
@@ -305,7 +301,6 @@ body { overflow-x: clip; }
     const dropEl = $('drop');
     const fileInput = $('fileInput');
     const fileInfoEl = $('fileInfo');
-    const runBtn = $('runBtn');
     const logEl = $('log');
 
     let mode = 'encrypt';
@@ -329,8 +324,8 @@ body { overflow-x: clip; }
       logEl.textContent = msg;
     }
 
-    modeEncryptBtn.addEventListener('click', () => setMode('encrypt'));
-    modeDecryptBtn.addEventListener('click', () => setMode('decrypt'));
+    modeEncryptBtn.addEventListener('click', () => { setMode('encrypt'); run(); });
+    modeDecryptBtn.addEventListener('click', () => { setMode('decrypt'); run(); });
 
     dropEl.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
@@ -443,15 +438,18 @@ body { overflow-x: clip; }
     }
 
     function setBusy(busy) {
-      runBtn.disabled = busy;
+      const active = mode === 'encrypt' ? modeEncryptBtn : modeDecryptBtn;
+      modeEncryptBtn.disabled = busy;
+      modeDecryptBtn.disabled = busy;
       if (busy) {
-        runBtn.innerHTML = '<span class="spinner"></span>处理中…';
+        active.innerHTML = '<span class="spinner"></span>处理中…';
       } else {
-        runBtn.textContent = '开始处理';
+        modeEncryptBtn.textContent = '加密';
+        modeDecryptBtn.textContent = '解密';
       }
     }
 
-    runBtn.addEventListener('click', async () => {
+    async function run() {
       clearLog();
       const password = passwordEl.value;
       if (!selectedFile) { log('请先选择要处理的文件', 'err'); return; }
@@ -480,7 +478,7 @@ body { overflow-x: clip; }
       } finally {
         setBusy(false);
       }
-    });
+    }
 
     setMode('encrypt');
   })();
