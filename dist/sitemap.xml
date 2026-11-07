@@ -18,7 +18,7 @@
   </url>
   <url>
     <loc>https://www.moonlord.cc/github/repos/index.html</loc>
-    <lastmod>2026-11-07T18:35:38Z</lastmod>
+    <lastmod>2026-11-07T21:56:31Z</lastmod>
   </url>
   <url>
     <loc>https://www.moonlord.cc/github/repos/LolAutoPlay.html</loc>
@@ -54,7 +54,7 @@
   </url>
   <url>
     <loc>https://www.moonlord.cc/github/repos/MyPages.html</loc>
-    <lastmod>2026-11-07T18:35:38Z</lastmod>
+    <lastmod>2026-11-07T21:56:31Z</lastmod>
   </url>
   <url>
     <loc>https://www.moonlord.cc/github/repos/MyPHP.html</loc>
@@ -82,11 +82,11 @@
   </url>
   <url>
     <loc>https://www.moonlord.cc/service/index.html</loc>
-    <lastmod>2026-11-07T20:33:28Z</lastmod>
+    <lastmod>2026-11-07T21:56:31Z</lastmod>
   </url>
   <url>
     <loc>https://www.moonlord.cc/service/network-proxy.html</loc>
-    <lastmod>2026-11-07T20:33:28Z</lastmod>
+    <lastmod>2026-11-07T21:56:31Z</lastmod>
   </url>
   <url>
     <loc>https://www.moonlord.cc/tools/file-encode-pem.html</loc>
@@ -98,7 +98,15 @@
   </url>
   <url>
     <loc>https://www.moonlord.cc/tools/index.html</loc>
-    <lastmod>2026-11-07T17:56:43Z</lastmod>
+    <lastmod>2026-11-07T21:56:31Z</lastmod>
+  </url>
+  <url>
+    <loc>https://www.moonlord.cc/tools/qrcode-decode.html</loc>
+    <lastmod>2026-11-07T21:56:31Z</lastmod>
+  </url>
+  <url>
+    <loc>https://www.moonlord.cc/tools/qrcode-encode.html</loc>
+    <lastmod>2026-11-07T21:56:31Z</lastmod>
   </url>
   <url>
     <loc>https://www.moonlord.cc/webhook/deploy.php</loc>

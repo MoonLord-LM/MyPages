@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二维码解码 - 图片转文本</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      color: #1f2328; line-height: 1.6; background: #fafafa;
+    }
+    /* .wrap 统一由公共模板 header.html 定义 */
+    h1 { font-size: 28px; color: #1f2328; margin-bottom: 8px; line-height: 1.25; }
+    .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-weight: 600; color: #1f2328; margin-bottom: 6px; }
+
+    .drop {
+      border: 2px dashed #b9c6d8; border-radius: 12px; padding: 28px; text-align: center;
+      color: #59636e; background: #f7faff; cursor: pointer; transition: border-color .2s, background .2s;
+    }
+    .drop.dragover { border-color: #6ba0ea; background: #eaf2fd; }
+    .drop strong { color: #2a5298; }
+    .drop input[type="file"] { display: none; }
+    .file-info { margin-top: 12px; font-size: 14px; color: #1f2328; word-break: break-all; }
+
+    .qr-preview {
+      display: inline-block; padding: 12px; background: #fff; border: 1px solid #e3e8ef;
+      border-radius: 10px; line-height: 0;
+    }
+    .qr-preview img { display: block; max-width: 100%; max-height: 300px; object-fit: contain; }
+    .hide { display: none; }
+
+    .text-out {
+      width: 100%; padding: 11px 14px; font-size: 14px; border: 1px solid #ccc;
+      border-radius: 8px; outline: none; resize: vertical; font-family: inherit;
+      color: #1f2328; background: #f6f8fa; word-break: break-all;
+    }
+    .text-out:focus { border-color: #2a5298; }
+
+    .actions { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+    .btn {
+      padding: 11px 22px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+      cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+      transition: opacity .2s, transform .1s;
+    }
+    .btn:hover { opacity: .92; }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-mini {
+      padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+      background: #fff; color: #2a5298; border: 1px solid #cdd7e3; border-radius: 8px;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-mini:hover { border-color: #2a5298; background: #f0f5fc; }
+
+    .log {
+      margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
+      background: #f6f8fa; border: 1px solid #e3e8ef; white-space: pre-wrap; word-break: break-all;
+      max-height: 240px; overflow: auto;
+    }
+    .log.ok { background: #eafaf0; border-color: #b7e4c7; color: #1a7f43; }
+    .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
+
+    .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
+    .tips div { line-height: 1.8; }
+    .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
+  </style>
+<link rel="canonical" href="https://www.moonlord.cc/tools/qrcode-decode.html">
+</head>
+<body>
+<style>
+:root { --nav-h: 54px; }
+/* 字号只用 px 常用档位 10/12/14/16/18/20/24/28/32/40px；普通文本 14px，控件文字 16px */
+html, body, *, *::before, *::after { font-family: "Microsoft YaHei UI", sans-serif; }
+pre, code, kbd, samp, tt {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-ligatures: none;
+}
+/* 表单控件带 UA 默认字号，需显式声明才能与普通文本一起统一到 14px */
+body, input, button, textarea, select { font-size: 14px; }
+h1 { font-size: 28px; } h2 { font-size: 24px; } h3 { font-size: 20px; }
+h4 { font-size: 16px; } h5 { font-size: 14px; } h6 { font-size: 12px; }
+/* 显式 content-box，避免各页面全局 border-box 让容器宽度不一致：内容区 900px */
+.wrap { box-sizing: content-box; max-width: 900px; margin: 0 auto; padding: 30px 24px 48px; }
+/* 固定滚动条槽位：避免长短页面切换时 50vw 出血计算让顶栏左右跳动 */
+html { scrollbar-gutter: stable; }
+/* 旧版浏览器（不支持 scrollbar-gutter）退化为常驻竖向滚动条，效果相同 */
+@supports not (scrollbar-gutter: stable) {
+  html { overflow-y: scroll; }
+}
+/* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
+#site-nav, #site-nav * { box-sizing: border-box; }
+#site-nav ul, #site-nav ol, #site-nav li { margin: 0; padding: 0; list-style: none; }
+#site-nav a { text-decoration: none; }
+#site-nav {
+  position: sticky; top: 0; height: var(--nav-h, 54px); z-index: 1000;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  display: flex; align-items: stretch;
+  background: linear-gradient(135deg, #d8e9fb 0%, #e6f0fc 50%, #f1e9fb 100%);
+  box-shadow: 0 4px 18px rgba(31, 60, 114, 0.12);
+}
+#site-nav .nav-container {
+  width: 100%; max-width: 960px; margin: 0 auto; padding: 0;
+  display: flex; align-items: center;
+}
+#site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; }
+#site-nav .nav-menu li { display: flex; align-items: stretch; }
+#site-nav .nav-menu .nav-link {
+  color: rgba(30, 60, 114, 0.78); font-weight: 600; font-size: 16px;
+  display: flex; align-items: center; height: 100%; padding: 0 18px; position: relative;
+  transition: color .25s, background .25s;
+}
+#site-nav .nav-menu .nav-link::after {
+  content: ""; position: absolute; left: 18px; right: 18px; bottom: 8px;
+  height: 2px; background: #00e0ff; transform: scaleX(0); transform-origin: center;
+  transition: transform .25s ease;
+}
+#site-nav .nav-menu .nav-link:hover { color: #1e3c72; background: rgba(30, 60, 114, 0.08); }
+#site-nav .nav-menu .nav-link:hover::after { transform: scaleX(1); }
+#site-nav .nav-menu .nav-link.active {
+  color: #fff; font-weight: 700; border-radius: 0;
+  background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+}
+
+#site-nav .nav-search-btn {
+  margin-left: auto; width: 40px; height: 40px;
+  border: 1px solid rgba(30, 60, 114, .25); border-radius: 50%;
+  background: linear-gradient(135deg, #cfe1f7, #e4d8f6); color: #1e3c72; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(31, 60, 114, .12);
+  transition: background .25s, transform .25s;
+}
+#site-nav .nav-search-btn:hover {
+  background: linear-gradient(135deg, #bcd6f5, #d8c8f0); transform: translateY(-1px);
+}
+#site-nav .nav-search-btn svg { width: 15px; height: 15px; }
+
+#searchOverlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, .45);
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 120px; z-index: 2000;
+}
+#searchOverlay.open { display: flex; }
+#searchOverlay .search-box {
+  width: min(560px, 90vw); background: #fff; border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3); padding: 20px;
+}
+#searchOverlay .search-box h3 { font-size: 20px; margin-bottom: 12px; color: #222; }
+#searchOverlay .search-row { display: flex; gap: 10px; }
+#searchOverlay .search-input {
+  flex: 1; padding: 11px 14px; font-size: 16px;
+  border: 1px solid #ccc; border-radius: 8px; outline: none;
+}
+#searchOverlay .search-input:focus { border-color: #2a5298; }
+#searchOverlay .search-submit {
+  padding: 11px 20px; border: none; border-radius: 8px;
+  background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff;
+  font-weight: 600; font-size: 16px; cursor: pointer;
+}
+#searchOverlay .search-submit:hover { opacity: .92; }
+#searchOverlay .search-hint { margin-top: 10px; font-size: 14px; color: #888; }
+
+/* 防止满宽出血（100vw）在存在竖向滚动条时产生横向滚动；
+   用 clip 而非 hidden：不会把 body 变成滚动容器，因而不会破坏 sticky 吸顶 */
+body { overflow-x: clip; }
+
+.auto-list { top: var(--nav-h, 54px) !important; }
+</style>
+
+<nav id="site-nav">
+  <div class="nav-container">
+    <ul class="nav-menu">
+      <li><a class="nav-link" href="../index.html">首页</a></li>
+      <li><a class="nav-link" href="../service/index.html">服务</a></li>
+      <li><a class="nav-link active" href="../tools/index.html">工具</a></li>
+      <li><a class="nav-link" href="../github/index.html">开源</a></li>
+      <li><a class="nav-link" href="../admin/index.html">监控</a></li>
+      <li><a class="nav-link" href="../about/index.html">关于</a></li>
+    </ul>
+    <button class="nav-search-btn" id="searchToggle" aria-label="搜索">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div id="searchOverlay">
+  <div class="search-box">
+    <h3>全网搜索</h3>
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="输入关键词…" autocomplete="off">
+      <button class="search-submit" id="searchSubmit">搜索</button>
+    </div>
+    <p class="search-hint">使用 Google 搜索 “site:moonlord.cc + 关键词”</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const toggle  = document.getElementById('searchToggle');
+    const overlay = document.getElementById('searchOverlay');
+    const input   = document.getElementById('searchInput');
+    const submit  = document.getElementById('searchSubmit');
+
+    function openSearch() { overlay.classList.add('open'); input.focus(); }
+    function closeSearch() { overlay.classList.remove('open'); }
+    function doSearch() {
+      const q = input.value.trim();
+      const site = 'site:moonlord.cc';
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(q ? site + ' ' + q : site);
+      window.open(url, '_blank');
+      closeSearch();
+    }
+
+    toggle.addEventListener('click', openSearch);
+    submit.addEventListener('click', doSearch);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeSearch(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
+    });
+  })();
+</script>
+
+<!-- Google Analytics Tag -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3WLVV25DZ0"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
+<!-- End Google Analytics Tag -->
+
+  <main class="wrap">
+    <h1>二维码解码 - 图片转文本</h1>
+
+    <div class="tips">
+      <div>从图片中识别二维码并还原为原始文本，支持中文等 <code>UTF-8</code> 内容。</div>
+      <div>支持点击选择、拖拽或 <code>Ctrl+V</code> 粘贴图片，常见 <code>PNG</code> / <code>JPG</code> / <code>WEBP</code> 格式均可。</div>
+      <div>大图会自动缩小后识别，透明背景按白底处理，并尝试识别反色二维码。</div>
+      <div>每次识别一个二维码；解码库已随页面本地提供，全程在浏览器本地完成，不会上传任何数据。</div>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <label>选择二维码图片</label>
+        <div class="drop" id="drop">
+          <strong>点击选择</strong> 或将图片拖拽 / 粘贴到此处
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <div class="file-info" id="fileInfo"></div>
+      </div>
+
+      <div class="field hide" id="previewWrap">
+        <label>图片预览</label>
+        <div class="qr-preview"><img id="preview" alt="所选图片预览"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="decodeBtn" type="button">识别二维码</button>
+        <button class="btn-mini" id="copyBtn" type="button">复制结果</button>
+      </div>
+
+      <div class="field" style="margin-top:20px">
+        <label for="textOut">识别结果</label>
+        <textarea id="textOut" class="text-out" rows="5" readonly placeholder="识别结果将显示在这里"></textarea>
+      </div>
+
+      <div class="log hide" id="log"></div>
+    </div>
+  </main>
+
+  <script src="assets/jsQR.min.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const MAX_SIDE = 1600;
+
+    const $ = (id) => document.getElementById(id);
+    const dropEl = $('drop');
+    const fileInput = $('fileInput');
+    const fileInfoEl = $('fileInfo');
+    const previewWrap = $('previewWrap');
+    const preview = $('preview');
+    const decodeBtn = $('decodeBtn');
+    const copyBtn = $('copyBtn');
+    const textOut = $('textOut');
+    const logEl = $('log');
+
+    let selectedFile = null;
+    let previewUrl = null;
+
+    function clearLog() { logEl.className = 'log hide'; logEl.textContent = ''; }
+    function log(msg, kind) {
+      logEl.className = 'log' + (kind ? ' ' + kind : '');
+      logEl.textContent = msg;
+    }
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      const units = ['KB', 'MB', 'GB', 'TB'];
+      let i = -1, n = bytes;
+      do { n /= 1024; i++; } while (n >= 1024 && i < units.length - 1);
+      return n.toFixed(2) + ' ' + units[i];
+    }
+
+    dropEl.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length) setFile(fileInput.files[0]);
+    });
+    ['dragenter', 'dragover'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.remove('dragover'); }));
+    dropEl.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) setFile(dt.files[0]);
+    });
+    document.addEventListener('paste', (e) => {
+      const files = e.clipboardData && e.clipboardData.files;
+      if (files && files.length) setFile(files[0]);
+    });
+
+    function setFile(file) {
+      if (!file || !/^image\//.test(file.type)) { log('请选择图片文件', 'err'); return; }
+      selectedFile = file;
+      fileInfoEl.textContent = '已选择：' + (file.name || '粘贴的图片') + '（' + formatSize(file.size) + '）';
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = URL.createObjectURL(file);
+      preview.src = previewUrl;
+      previewWrap.classList.remove('hide');
+      textOut.value = '';
+      clearLog();
+    }
+
+    function loadImage(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片无法读取或格式不受支持')); };
+        img.src = url;
+      });
+    }
+
+    function setBusy(busy) {
+      decodeBtn.disabled = busy;
+      decodeBtn.textContent = busy ? '识别中…' : '识别二维码';
+    }
+
+    async function decode() {
+      clearLog();
+      if (!selectedFile) { log('请先选择二维码图片', 'err'); return; }
+      if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
+      setBusy(true);
+      try {
+        const img = await loadImage(selectedFile);
+        const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const res = window.jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+        if (!res) {
+          textOut.value = '';
+          log('未识别到二维码，请确认图片清晰、二维码完整且未被过度缩小', 'err');
+          return;
+        }
+        textOut.value = res.data;
+        log('识别成功，共 ' + Array.from(res.data).length + ' 个字符\n图像尺寸：' + w + '×' + h, 'ok');
+      } catch (e) {
+        log('识别失败：' + (e && e.message ? e.message : e), 'err');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    copyBtn.addEventListener('click', () => {
+      if (!textOut.value) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textOut.value).then(
+          () => log('识别结果已复制到剪贴板', 'ok'),
+          () => textOut.select()
+        );
+      } else {
+        textOut.select();
+        log('已选中结果，请按 Ctrl+C 复制');
+      }
+    });
+
+    decodeBtn.addEventListener('click', decode);
+  })();
+  </script>
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "28204d87bcf54906b3651e8f84588b48"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+</body>
+</html>
