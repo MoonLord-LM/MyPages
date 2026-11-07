@@ -180,7 +180,7 @@ const DIST = '-----PROJECT DIST DIR-----';
 const SITE_URL = '-----PROJECT SITE URL-----';
 const REPO_ROOT = path.dirname(PAGES);
 
-// ===== 密码保护页面（*.enc.md）：加密参数与 /pages/tools/file-encrypt-aes-256-gcm.html 一致，正文先 gzip 压缩 =====
+// ===== 密码保护页面（*.enc.md）：加密参数与 /pages/tools/file-encrypt-aes.html 一致，正文先 gzip 压缩 =====
 const ENC_MD_SUFFIX = '.enc.md';
 const ENC_FILE_SUFFIX = '.html.zip.enc';
 const ENC_SALT_LEN = 16;
