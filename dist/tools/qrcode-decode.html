@@ -38,12 +38,21 @@
     }
     .text-out:focus { border-color: #2a5298; }
 
-    .actions, .mode-tabs {
+    .actions {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start;
+      gap: 12px; margin: 28px 0;
+    }
+    .mode-tabs {
       display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start;
       gap: 12px; margin: 20px 0;
     }
-    .btn, .btn-mini, .mode-tabs button {
+    .btn, .btn-mini {
       min-width: 132px; padding: 11px 22px; font-size: 16px; font-weight: 600; line-height: 1.5;
+      border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+      transition: opacity .2s, transform .1s, border-color .2s, background .2s, color .2s;
+    }
+    .mode-tabs button {
+      min-width: 84px; padding: 7px 14px; font-size: 13px; font-weight: 600; line-height: 1.4;
       border: 1px solid transparent; border-radius: 8px; cursor: pointer;
       transition: opacity .2s, transform .1s, border-color .2s, background .2s, color .2s;
     }
@@ -238,7 +247,7 @@ body { overflow-x: clip; }
     <h1>二维码识别 - 图片转文本</h1>
 
     <div class="tips">
-      <div>从图片中识别二维码并还原为原始文本，支持中文等 <code>UTF-8</code> 内容。</div>
+      <div>从图片中识别二维码并解码为文本，支持中文等 <code>UTF-8</code> 内容。</div>
       <div>支持点击选择、拖拽或 <code>Ctrl+V</code> 粘贴图片，也可用「截屏识别」抓取屏幕画面、「摄像识别」打开摄像头自动扫描，常见 <code>PNG</code> / <code>JPG</code> / <code>WEBP</code> 格式均可。</div>
       <div>屏幕捕获与摄像头需要浏览器授权，且仅在 <code>HTTPS</code> / <code>localhost</code> 下可用；不支持时可用系统截屏后粘贴。</div>
       <div>大图会自动缩小后识别，透明背景按白底处理，并尝试识别反色二维码。</div>
@@ -247,12 +256,16 @@ body { overflow-x: clip; }
 
     <div class="panel">
       <div class="field">
-        <label>选择二维码图片</label>
+        <label>输入图片</label>
         <div class="drop" id="drop">
           <strong>点击选择</strong> 或将图片拖拽 / 粘贴到此处
           <input type="file" id="fileInput" accept="image/*">
         </div>
         <div class="file-info" id="fileInfo"></div>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:12px">
+          <button class="btn-mini" id="captureBtn" type="button">截屏识别</button>
+          <button class="btn-mini" id="cameraBtn" type="button">摄像识别</button>
+        </div>
       </div>
 
       <div class="field hide" id="previewWrap">
@@ -268,8 +281,6 @@ body { overflow-x: clip; }
       <div class="actions">
         <button class="btn" id="decodeBtn" type="button">识别二维码</button>
         <button class="btn-mini" id="copyBtn" type="button">复制结果</button>
-        <button class="btn-mini" id="captureBtn" type="button">截屏识别</button>
-        <button class="btn-mini" id="cameraBtn" type="button">摄像识别</button>
       </div>
 
       <div class="field">
