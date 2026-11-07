@@ -50,6 +50,9 @@
       border: 1px solid transparent; border-radius: 8px; cursor: pointer;
       transition: opacity .2s, transform .1s, border-color .2s, background .2s, color .2s;
     }
+    .mode-tabs.big button {
+      min-width: 132px; padding: 11px 22px; font-size: 16px; font-weight: 600; line-height: 1.5;
+    }
     .btn-mini, .mode-tabs button { color: #2a5298; background: #fff; border-color: #cdd7e3; }
     .btn, .mode-tabs button.active {
       color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0); border-color: transparent;
@@ -284,7 +287,7 @@ body { overflow-x: clip; }
         <div class="file-info" id="fileInfo"></div>
       </div>
 
-      <div class="mode-tabs">
+      <div class="mode-tabs big">
         <button id="modeEncrypt" class="active" type="button">加密</button>
         <button id="modeDecrypt" type="button">解密</button>
       </div>
