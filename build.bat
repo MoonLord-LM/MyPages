@@ -258,7 +258,8 @@ function injectCanonical(html, outPath) {
     const rel = path.relative(DIST, outPath).split(path.sep).join('/');
     const link = '<link rel="canonical" href="' + escapeAttr(toSiteUrl(rel)) + '">';
     // 源文件若已自带 canonical，先移除，避免与目标地址冲突
-    const cleaned = html.replace(/^[ \t]*<link\b[^>]*\brel\s*=\s*("|')?canonical\1[^>]*>[ \t]*\r?\n?/gim, '');
+    // 不能加行首锚点：非行首书写（如挤在单行 head 内）的 canonical 删不掉，会留下重复标签
+    const cleaned = html.replace(/<link\b[^>]*\brel\s*=\s*("|')?canonical\1[^>]*>\s*/gi, '');
     if (/<\/head>/i.test(cleaned)) return cleaned.replace(/<\/head>/i, link + '\n</head>');
     if (/<head\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<head\b([^>]*)>/i, '<head$1>\n' + link);
     if (/<body\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<body\b([^>]*)>/i, '<head>\n' + link + '\n</head>\n<body$1>');
@@ -294,6 +295,8 @@ function findTemplate(dir, name) {
 function adjustRelativeRefs(content, templateAssetBase, pageOutDir) {
     function rewritePath(ref) {
         if (!ref) return ref;
+        // 任意 scheme:（tel: / javascript: / blob: / file: / data: / mailto: 等）一律原样保留，避免被当成相对路径解析损坏
+        if (/^[a-z][a-z0-9+.-]*:/i.test(ref)) return ref;
         if (/^(https?:)?\/\//i.test(ref)) return ref;
         if (/^[#?]/.test(ref)) return ref;
         if (/^(data|mailto):/i.test(ref)) return ref;
