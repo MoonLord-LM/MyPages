@@ -24,11 +24,13 @@
     .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
     .field { margin-bottom: 18px; }
     .field label { display: block; font-weight: 600; color: #1f2328; margin-bottom: 6px; }
-    .field input[type="password"] {
+    .field .pw-input {
       width: 100%; padding: 11px 14px; font-size: 16px; border: 1px solid #ccc;
       border-radius: 8px; outline: none;
+      /* 用 text 而非 password：避免浏览器弹出「记住密码」，同时用圆点遮盖字符 */
+      -webkit-text-security: disc;
     }
-    .field input[type="password"]:focus { border-color: #2a5298; }
+    .field .pw-input:focus { border-color: #2a5298; }
 
     .drop {
       border: 2px dashed #b9c6d8; border-radius: 12px; padding: 28px; text-align: center;
@@ -97,7 +99,8 @@
     <div class="panel">
       <div class="field">
         <label for="password">密码</label>
-        <input type="password" id="password" placeholder="请输入密码" autocomplete="off">
+        <input type="text" id="password" class="pw-input" placeholder="请输入密码"
+               autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
       </div>
 
       <div class="field">
