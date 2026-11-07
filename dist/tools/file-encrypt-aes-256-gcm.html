@@ -11,15 +11,6 @@
     }
     /* .wrap 统一由公共模板 header.html 定义 */
     h1 { font-size: 28px; color: #1f2328; margin-bottom: 8px; line-height: 1.25; }
-    .mode-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .mode-tabs button {
-      flex: 1; padding: 10px; font-size: 16px; font-weight: 600; cursor: pointer;
-      border: 1px solid #cdd7e3; background: #fff; color: #2a5298; border-radius: 10px;
-      transition: background .2s, color .2s, border-color .2s;
-    }
-    .mode-tabs button.active {
-      background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; border-color: transparent;
-    }
 
     .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
     .field { margin-bottom: 18px; }
@@ -41,15 +32,24 @@
     .drop input[type="file"] { display: none; }
     .file-info { margin-top: 12px; font-size: 14px; color: #1f2328; word-break: break-all; }
 
-    .actions { display: flex; gap: 12px; margin-top: 20px; }
-    .btn {
-      padding: 11px 22px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
-      cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
-      transition: opacity .2s, transform .1s;
+    .actions, .mode-tabs {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 12px;
     }
-    .btn:hover { opacity: .92; }
-    .btn:active { transform: translateY(1px); }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .actions { margin-top: 20px; }
+    .mode-tabs { gap: 8px; margin-bottom: 20px; }
+    .btn, .btn-mini, .mode-tabs button {
+      min-width: 132px; padding: 11px 22px; font-size: 16px; font-weight: 600; line-height: 1.5;
+      border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+      transition: opacity .2s, transform .1s, border-color .2s, background .2s, color .2s;
+    }
+    .btn-mini, .mode-tabs button { color: #2a5298; background: #fff; border-color: #cdd7e3; }
+    .btn, .mode-tabs button.active {
+      color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0); border-color: transparent;
+    }
+    .btn:hover, .mode-tabs button.active:hover { opacity: .92; }
+    .btn-mini:hover, .mode-tabs button:not(.active):hover { border-color: #2a5298; background: #f0f5fc; }
+    .btn:active, .btn-mini:active, .mode-tabs button:active { transform: translateY(1px); }
+    .btn:disabled, .btn-mini:disabled, .mode-tabs button:disabled { opacity: .5; cursor: not-allowed; }
 
     .log {
       margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
