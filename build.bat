@@ -493,18 +493,10 @@ function outPathFor(srcFile) {
 
 let pageCount = 0;
 
-function processPage(srcFile, bodyHtml, navHtml, generatedEnc) {
+function processPage(srcFile, bodyHtml, navHtml) {
     const outPath = outPathFor(srcFile);
     const srcDir = path.dirname(srcFile);
     lastmodMap.set(outPath, fileLastModified(srcFile));
-
-    // 上一轮由 .enc.md 生成的密码框页面：已拼好模板与解密脚本，必须原样复制，不可二次注入
-    if (generatedEnc) {
-        fs.writeFileSync(outPath, bodyHtml, 'utf8');
-        pageCount++;
-        console.log('已复制(密码保护页): ' + path.relative(DIST, outPath));
-        return;
-    }
 
     if (path.extname(srcFile).toLowerCase() === '.md') {
         const titleMatch = bodyHtml.match(/<h1[ >][\s\S]*?<\/h1>/i);
@@ -699,24 +691,24 @@ const UNLOCK_CSS = `
   max-width: 560px; margin: 0 auto; padding: 80px 24px 64px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
 }
-.unlock h1 { font-size: 1.6rem; margin-bottom: 8px; color: #1f2328; }
-.unlock-tip { color: #59636e; margin-bottom: 20px; font-size: .95rem; }
+.unlock h1 { font-size: 1.75rem; margin-bottom: 8px; color: #1f2328; }
+.unlock-tip { color: #59636e; margin-bottom: 20px; font-size: 1.05rem; }
 .unlock-row { display: flex; gap: 10px; }
 .unlock-row input {
-  flex: 1; min-width: 0; padding: 11px 14px; font-size: 1rem;
+  flex: 1; min-width: 0; padding: 11px 14px; font-size: 1.1rem;
   border: 1px solid #ccc; border-radius: 8px; outline: none;
 }
 .unlock-row input:focus { border-color: #2a5298; }
 .unlock-row button {
-  padding: 11px 22px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+  padding: 11px 22px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600;
   cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
 }
 .unlock-row button:disabled { opacity: .5; cursor: not-allowed; }
-.unlock-status { margin-top: 12px; font-size: .9rem; color: #59636e; min-height: 1.4em; }
+.unlock-status { margin-top: 12px; font-size: 1rem; color: #59636e; min-height: 1.4em; }
 .unlock-status.err { color: #b3261e; }
 `;
 
-function unlockScript(encFileName, iterations) {
+function unlockScript(encFileName, iterations, unlockedTitle) {
     // 该脚本在浏览器运行：密码由用户输入，页面里不含任何密钥信息
     return [
         "(function () {",
@@ -725,6 +717,8 @@ function unlockScript(encFileName, iterations) {
         "  var SALT_LEN = " + ENC_SALT_LEN + ", IV_LEN = " + ENC_IV_LEN +
             ", TAG_LEN = " + ENC_TAG_LEN + ", HEADER_LEN = " + ENC_HEADER_LEN + ";",
         "  var ENC_FILE = " + JSON.stringify(encFileName) + ";",
+        // 解密成功后把标签页标题换成中性文件名，避免一直停留在「需要密码」
+        "  var UNLOCKED_TITLE = " + JSON.stringify(unlockedTitle) + ";",
         "  var $ = function (id) { return document.getElementById(id); };",
         "  var input = $('unlockPassword'), btn = $('unlockBtn'),",
         "      statusEl = $('unlockStatus'), panel = $('unlockPanel'), content = $('unlockContent');",
@@ -767,6 +761,7 @@ function unlockScript(encFileName, iterations) {
         "      } catch (e) { throw new Error('密码错误，或内容已损坏'); }",
         "      content.innerHTML = new TextDecoder().decode(plain);",
         "      content.style.display = '';",
+        "      document.title = UNLOCKED_TITLE;",
         "      panel.style.display = 'none';",
         "      setStatus('');",
         "      if (window.hljs) {",
@@ -784,7 +779,7 @@ function unlockScript(encFileName, iterations) {
     ].join('\n');
 }
 
-function renderUnlockPage(encFileName, iterations, outPath, srcDir) {
+function renderUnlockPage(encFileName, iterations, unlockedTitle) {
     const html = [
         '<!DOCTYPE html>',
         '<html lang="zh-CN">',
@@ -808,12 +803,13 @@ function renderUnlockPage(encFileName, iterations, outPath, srcDir) {
         '<article class="markdown-body" id="unlockContent" style="display:none"></article>',
         '<script src="-----HIGHLIGHTJS JS URL-----"></script>',
         '<script>',
-        unlockScript(encFileName, iterations),
+        unlockScript(encFileName, iterations, unlockedTitle),
         '</script>',
         '</body>',
         '</html>'
     ].join('\n');
-    return injectCanonical(injectFooter(injectHeader(html, outPath, srcDir), outPath, srcDir), outPath);
+    // 只产出「中间显示部分」的页面骨架：公共模板、canonical 由 processPage 每次构建注入
+    return html;
 }
 
 async function processEncryptedPage(srcFile) {
@@ -832,21 +828,21 @@ async function processEncryptedPage(srcFile) {
     const bodyHtml = await markdownToHtml(cfg.markdown, distShell, baseName, path.join(srcDir, 'assets'));
     console.log('正在加密: ' + srcRel);
     const encBytes = encryptHtml(bodyHtml, cfg.password, cfg.iterations);
-    const shellHtml = renderUnlockPage(encName, cfg.iterations, distShell, srcDir);
+    // .html 只是「中间显示部分」的骨架源文件，公共模板由 processPage 每次构建注入
+    const shellHtml = renderUnlockPage(encName, cfg.iterations, baseName);
 
     fs.mkdirSync(path.dirname(distShell), { recursive: true });
     fs.writeFileSync(srcShell, shellHtml, 'utf8');
     fs.writeFileSync(srcEnc, encBytes);
-    fs.writeFileSync(distShell, shellHtml, 'utf8');
     fs.writeFileSync(distEnc, encBytes);
     const mtime = fileLastModified(srcFile);
     lastmodMap.set(distShell, mtime);
     lastmodMap.set(distEnc, mtime);
     // collect() 已在本函数之前执行，产出的 .html 需补登记，
-    // 否则本轮不会为它生成自动列表页 / 侧栏 / 站点地图条目
+    // 否则本轮不会为它生成自动列表页 / 站点地图条目
     if (!pageFilesByDir.has(srcDir)) pageFilesByDir.set(srcDir, new Map());
     pageFilesByDir.get(srcDir).set(baseName, {
-        base: baseName, ext: '.html', srcFile: srcShell, name: shellName, generatedEnc: true
+        base: baseName, ext: '.html', srcFile: srcShell, name: shellName, lockedPage: true
     });
     console.log('已加密: ' + srcRel);
 }
@@ -981,14 +977,14 @@ function collect(dir) {
         const ext = path.extname(entry.name).toLowerCase();
         if (ext === '.html' || ext === '.md') {
             const base = path.basename(entry.name, ext);
-            // 同名 .html.enc 存在，说明这个 html 是本地生成的密码框页面
-            const generatedEnc = ext === '.html' && fs.existsSync(path.join(dir, base + '.html.enc'));
+            // 同名 .html.enc 存在，说明这是密码保护页面；页面本身仍是普通源页面，照常注入模板
+            const lockedPage = ext === '.html' && fs.existsSync(path.join(dir, base + '.html.enc'));
             if (!pageFilesByDir.has(dir)) pageFilesByDir.set(dir, new Map());
             const m = pageFilesByDir.get(dir);
             if (!m.has(base)) {
-                m.set(base, { base, ext, srcFile: full, name: entry.name, generatedEnc });
+                m.set(base, { base, ext, srcFile: full, name: entry.name, lockedPage });
             } else if (m.get(base).ext === '.md' && ext === '.html') {
-                m.set(base, { base, ext, srcFile: full, name: entry.name, generatedEnc });
+                m.set(base, { base, ext, srcFile: full, name: entry.name, lockedPage });
             }
         } else {
             staticFiles.push({ full });
@@ -1134,15 +1130,15 @@ for (const [dir, baseMap] of pageFilesByDir) {
     });
 
     const hasIndex = descriptors.some((d) => d.base.toLowerCase() === 'index');
-    const hasGeneratedEnc = descriptors.some((d) => d.generatedEnc);
+    const hasLockedPage = descriptors.some((d) => d.lockedPage);
 
     // 含密码保护页面的目录即使只有一个页面，也生成列表页作为入口
-    if (hasIndex || (descriptors.length < 2 && !hasGeneratedEnc)) {
+    if (hasIndex || (descriptors.length < 2 && !hasLockedPage)) {
         for (const d of descriptors) {
             const bodyHtml = d.ext === '.md'
                 ? await mdBody(d.srcFile, d.outPath)
                 : fs.readFileSync(d.srcFile, 'utf8');
-            processPage(d.srcFile, bodyHtml, '', d.generatedEnc);
+            processPage(d.srcFile, bodyHtml, '');
         }
         continue;
     }
@@ -1151,11 +1147,12 @@ for (const [dir, baseMap] of pageFilesByDir) {
     fs.mkdirSync(path.dirname(indexOutPath), { recursive: true });
 
     for (const d of descriptors) {
-        const navHtml = buildNav(d.outPath, descriptors);
+        // 密码保护页面的骨架是完整 HTML 文档，不套侧栏，避免把整篇文档塞进 div
+        const navHtml = d.lockedPage ? '' : buildNav(d.outPath, descriptors);
         const bodyHtml = d.ext === '.md'
             ? await mdBody(d.srcFile, d.outPath)
             : fs.readFileSync(d.srcFile, 'utf8');
-        processPage(d.srcFile, bodyHtml, navHtml, d.generatedEnc);
+        processPage(d.srcFile, bodyHtml, navHtml);
     }
 
     const navHtmlIndex = buildNav(indexOutPath, descriptors);
@@ -1165,7 +1162,7 @@ for (const [dir, baseMap] of pageFilesByDir) {
         // 密码保护页面不取摘要，只标注受密码保护
         fileEntries.push({
             label: d.base, link: d.outPath,
-            desc: d.generatedEnc ? '页面受密码保护' : fileDescription(d.srcFile, d.ext)
+            desc: d.lockedPage ? '页面受密码保护' : fileDescription(d.srcFile, d.ext)
         });
     }
     for (const sf of staticFiles) {
