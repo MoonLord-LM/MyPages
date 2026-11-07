@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>二维码解码 - 图片转文本</title>
+  <title>二维码识别 - 图片转文本</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -38,21 +38,24 @@
     }
     .text-out:focus { border-color: #2a5298; }
 
-    .actions { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
-    .btn {
-      padding: 11px 22px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
-      cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
-      transition: opacity .2s, transform .1s;
+    .actions, .mode-tabs {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 12px;
     }
-    .btn:hover { opacity: .92; }
-    .btn:active { transform: translateY(1px); }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-mini {
-      padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
-      background: #fff; color: #2a5298; border: 1px solid #cdd7e3; border-radius: 8px;
-      transition: border-color .2s, background .2s;
+    .actions { margin-top: 20px; }
+    .mode-tabs { gap: 8px; margin-bottom: 20px; }
+    .btn, .btn-mini, .mode-tabs button {
+      min-width: 132px; padding: 11px 22px; font-size: 16px; font-weight: 600; line-height: 1.5;
+      border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+      transition: opacity .2s, transform .1s, border-color .2s, background .2s, color .2s;
     }
-    .btn-mini:hover { border-color: #2a5298; background: #f0f5fc; }
+    .btn-mini, .mode-tabs button { color: #2a5298; background: #fff; border-color: #cdd7e3; }
+    .btn, .mode-tabs button.active {
+      color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0); border-color: transparent;
+    }
+    .btn:hover, .mode-tabs button.active:hover { opacity: .92; }
+    .btn-mini:hover, .mode-tabs button:not(.active):hover { border-color: #2a5298; background: #f0f5fc; }
+    .btn:active, .btn-mini:active, .mode-tabs button:active { transform: translateY(1px); }
+    .btn:disabled, .btn-mini:disabled, .mode-tabs button:disabled { opacity: .5; cursor: not-allowed; }
 
     .log {
       margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
@@ -69,7 +72,7 @@
 </head>
 <body>
   <main class="wrap">
-    <h1>二维码解码 - 图片转文本</h1>
+    <h1>二维码识别 - 图片转文本</h1>
 
     <div class="tips">
       <div>从图片中识别二维码并还原为原始文本，支持中文等 <code>UTF-8</code> 内容。</div>
