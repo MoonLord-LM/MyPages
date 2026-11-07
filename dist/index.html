@@ -17,13 +17,13 @@
 
     /* ===== 首页落地区（顶部导航栏由 header.html 注入） ===== */
     .hero {
-      min-height: calc(100vh - 54px);
+      min-height: calc(100vh - 54px - 78px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem 1.5rem;
+      padding: 0;
     }
-    .hero-inner { max-width: 880px; width: 100%; text-align: center; }
+    .hero-inner { max-width: 100%; width: 100%; text-align: center; }
     .hero h1 {
       font-size: 28px;
       font-weight: 800;
@@ -69,6 +69,9 @@
   /* 标题统一档位：h1-h6 = 28/24/20/16/14/12px（页面内更具体的规则可覆盖） */
   h1 { font-size: 28px; } h2 { font-size: 24px; } h3 { font-size: 20px; }
   h4 { font-size: 16px; } h5 { font-size: 14px; } h6 { font-size: 12px; }
+  /* ===== 全站主体容器：所有页面正文统一放进这个居中区域 ===== */
+  /* 显式 content-box，避免各页面全局 border-box 让容器宽度不一致：内容区 900px */
+  .wrap { box-sizing: content-box; max-width: 900px; margin: 0 auto; padding: 30px 24px 48px; }
   /* 固定滚动条槽位：避免长短页面切换时 50vw 出血计算让顶栏左右跳动 */
   html { scrollbar-gutter: stable; }
   /* 旧版浏览器（不支持 scrollbar-gutter）退化为常驻竖向滚动条，效果相同 */
@@ -91,7 +94,8 @@
     box-shadow: 0 4px 18px rgba(31, 60, 114, 0.12);
   }
   #site-nav .nav-container {
-    width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+    /* 与 .wrap 内容区同为 900px：960px = 30 + 900 + 30，菜单靠左、搜索靠右 */
+    width: 100%; max-width: 960px; margin: 0 auto; padding: 0 30px;
     display: flex; align-items: center;
   }
   #site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; margin-left: 4rem; }
@@ -227,7 +231,7 @@
 
 
   <!-- 首页落地区 -->
-  <main>
+  <main class="wrap">
     <section class="hero">
       <div class="hero-inner">
         <h1>欢迎</h1>
