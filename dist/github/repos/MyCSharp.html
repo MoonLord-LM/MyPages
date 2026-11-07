@@ -25,7 +25,7 @@ body {
   margin: 0 auto;
   padding: 40px 24px 64px;
   color: var(--color-fg-default);
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.6;
   word-wrap: break-word;
 }
@@ -89,8 +89,20 @@ body {
 <body>
 <style>
   :root { --nav-h: 54px; }
-  /* ===== 全局默认字体：所有页面统一，各页面不再单独声明字体 ===== */
-  * { font-family: "Microsoft YaHei UI", sans-serif; }
+  /* ===== 全局字体与字号规范：所有页面统一，各页面不再单独声明字体 ===== */
+  /* 字号只用 px 常用档位 10/12/14/16/18/20/24/28/32/40px；普通文本 14px，控件文字 16px */
+  html, body, *, *::before, *::after { font-family: "Microsoft YaHei UI", sans-serif; }
+  /* 表单控件带 UA 默认字号，需显式声明才能与普通文本一起统一到 14px */
+  body, input, button, textarea, select { font-size: 14px; }
+  /* 标题统一档位：h1-h6 = 28/24/20/16/14/12px（页面内更具体的规则可覆盖） */
+  h1 { font-size: 28px; } h2 { font-size: 24px; } h3 { font-size: 20px; }
+  h4 { font-size: 16px; } h5 { font-size: 14px; } h6 { font-size: 12px; }
+  /* 固定滚动条槽位：避免长短页面切换时 50vw 出血计算让顶栏左右跳动 */
+  html { scrollbar-gutter: stable; }
+  /* 旧版浏览器（不支持 scrollbar-gutter）退化为常驻竖向滚动条，效果相同 */
+  @supports not (scrollbar-gutter: stable) {
+    html { overflow-y: scroll; }
+  }
   /* ===== 顶部导航（全部收在 #site-nav 命名空间，避免与页面 CSS 冲突） ===== */
   /* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
   #site-nav, #site-nav * { box-sizing: border-box; }
@@ -155,7 +167,7 @@ body {
     width: min(560px, 90vw); background: #fff; border-radius: 14px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, .3); padding: 20px;
   }
-  #searchOverlay .search-box h3 { font-size: 18px; margin-bottom: 12px; color: #222; }
+  #searchOverlay .search-box h3 { font-size: 20px; margin-bottom: 12px; color: #222; }
   #searchOverlay .search-row { display: flex; gap: 10px; }
   #searchOverlay .search-input {
     flex: 1; padding: 11px 14px; font-size: 16px;
