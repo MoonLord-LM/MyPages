@@ -262,9 +262,9 @@ body { overflow-x: clip; }
           <input type="file" id="fileInput" accept="image/*">
         </div>
         <div class="file-info" id="fileInfo"></div>
-        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:12px">
-          <button class="btn-mini" id="captureBtn" type="button">截屏识别</button>
-          <button class="btn-mini" id="cameraBtn" type="button">摄像识别</button>
+        <div class="mode-tabs">
+          <button id="captureBtn" type="button">截屏识别</button>
+          <button id="cameraBtn" type="button">摄像识别</button>
         </div>
       </div>
 
@@ -520,7 +520,9 @@ body { overflow-x: clip; }
       setBusy(true);
       try {
         const img = await loadImage(selectedFile);
-        const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+        const MIN_SIDE = 300;   // 最小边不足则放大到至少该值
+        const minSide = Math.min(img.width, img.height);
+        const scale = minSide >= MIN_SIDE ? 1 : MIN_SIDE / minSide;
         const w = Math.max(1, Math.round(img.width * scale));
         const h = Math.max(1, Math.round(img.height * scale));
         const canvas = document.createElement('canvas');
