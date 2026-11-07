@@ -87,6 +87,10 @@
   /* ===== 全局字体与字号规范：所有页面统一，各页面不再单独声明字体 ===== */
   /* 字号只用 px 常用档位 10/12/14/16/18/20/24/28/32/40px；普通文本 14px，控件文字 16px */
   html, body, *, *::before, *::after { font-family: "Microsoft YaHei UI", sans-serif; }
+  pre, code, kbd, samp, tt {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-variant-ligatures: none;
+  }
   /* 表单控件带 UA 默认字号，需显式声明才能与普通文本一起统一到 14px */
   body, input, button, textarea, select { font-size: 14px; }
   /* 标题统一档位：h1-h6 = 28/24/20/16/14/12px（页面内更具体的规则可覆盖） */
