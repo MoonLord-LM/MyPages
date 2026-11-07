@@ -301,21 +301,30 @@ body { overflow-x: clip; }
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-10-28 03:09:03 +08:00<br><a href="https://github.com/MoonLord-LM/GameSaveBackup" target="_blank" rel="noopener">https://github.com/MoonLord-LM/GameSaveBackup</a>  </p>
+<p>2026-10-28 03:09:03 +08:00<br>
+https://github.com/MoonLord-LM/GameSaveBackup</p>
 <hr>
 <h1>GameSaveBackup</h1>
 <p><a href="https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/self-check.yml" target="_blank" rel="noopener"><img src="assets/GameSaveBackup-001.svg" alt="self-check"></a>
 <a href="https://github.com/MoonLord-LM/GameSaveBackup/actions/workflows/build.yml" target="_blank" rel="noopener"><img src="assets/GameSaveBackup-002.svg" alt="build"></a></p>
-<p>一个简单的基于 Git 的文件备份工具，可用于游戏存档等资料文件的备份、还原、同步等  </p>
-<p>A simple Git-based file backup tool for backing up, restoring and synchronizing game saves and other data files  </p>
+<p>一个简单的基于 Git 的文件备份工具，可用于游戏存档等资料文件的备份、还原、同步等</p>
+<p>A simple Git-based file backup tool for backing up, restoring and synchronizing game saves and other data files</p>
 <h2>[使用说明]</h2>
-<p>依赖 Git 运行，需要先安装 <a href="https://git-scm.com/downloads" target="_blank" rel="noopener"><code>git</code></a>  </p>
-<p>以下文件，任选其一，下载运行即可：<br>命令行中文版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/%E5%A4%87%E4%BB%BD.bat" target="_blank" rel="noopener"><code>备份.bat</code></a><br>命令行英文版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/Backup.bat" target="_blank" rel="noopener"><code>Backup.bat</code></a><br>图形界面 ps1 版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/GameSaveBackup.ps1" target="_blank" rel="noopener"><code>GameSaveBackup.ps1</code></a><br>图形界面 exe 版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/build/GameSaveBackup.exe" target="_blank" rel="noopener"><code>GameSaveBackup.exe</code></a>  </p>
+<p>依赖 Git 运行，需要先安装 <a href="https://git-scm.com/downloads" target="_blank" rel="noopener"><code>git</code></a></p>
+<p>以下文件，任选其一，下载运行即可：<br>
+命令行中文版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/%E5%A4%87%E4%BB%BD.bat" target="_blank" rel="noopener"><code>备份.bat</code></a><br>
+命令行英文版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/Backup.bat" target="_blank" rel="noopener"><code>Backup.bat</code></a><br>
+图形界面 ps1 版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/source/GameSaveBackup.ps1" target="_blank" rel="noopener"><code>GameSaveBackup.ps1</code></a><br>
+图形界面 exe 版：<a href="https://github.com/MoonLord-LM/GameSaveBackup/blob/master/build/GameSaveBackup.exe" target="_blank" rel="noopener"><code>GameSaveBackup.exe</code></a></p>
 <h3>实现机制</h3>
-<p>备份位置：所有备份数据统一存放在程序所在文件夹的 <code>Backup</code> 子文件夹内<br>双向同步：按本地文件与备份文件的最近修改时间，自动判断执行「备份」还是「还原」<br>版本控制：每次产生备份文件变动，都会提交到本地 Git 仓库，可追溯历史<br>文件安全：覆盖本地文件时，会先将旧文件删除到回收站，支持从回收站找回  </p>
+<p>备份位置：所有备份数据统一存放在程序所在文件夹的 <code>Backup</code> 子文件夹内<br>
+双向同步：按本地文件与备份文件的最近修改时间，自动判断执行「备份」还是「还原」<br>
+版本控制：每次产生备份文件变动，都会提交到本地 Git 仓库，可追溯历史<br>
+文件安全：覆盖本地文件时，会先将旧文件删除到回收站，支持从回收站找回</p>
 <h3>配置文件</h3>
-<p>配置文件路径：程序文件夹下的 <code>Backup/配置.json</code> 或者 <code>Backup/config.json</code><br>当文件不存在时，程序会使用内嵌的默认配置，并自动创建配置文件  </p>
-<p>格式示例如下：  </p>
+<p>配置文件路径：程序文件夹下的 <code>Backup/配置.json</code> 或者 <code>Backup/config.json</code><br>
+当文件不存在时，程序会使用内嵌的默认配置，并自动创建配置文件</p>
+<p>格式示例如下：</p>
 <pre><code class="language-json">[
   {
     &quot;name&quot;: &quot;艾尔登法环&quot;,
@@ -330,9 +339,12 @@ body { overflow-x: clip; }
   }
 ]
 </code></pre>
-<p>配置说明：<br><code>name</code> 属性，备份项目名称，例如游戏名称<br><code>save</code> 属性，需要备份的路径，例如游戏存档所在路径<br><code>ignore</code> 可选属性，备份时需要排除的路径  </p>
+<p>配置说明：<br>
+<code>name</code> 属性，备份项目名称，例如游戏名称<br>
+<code>save</code> 属性，需要备份的路径，例如游戏存档所在路径<br>
+<code>ignore</code> 可选属性，备份时需要排除的路径</p>
 <h3>默认配置</h3>
-<p>默认的备份配置如下：  </p>
+<p>默认的备份配置如下：</p>
 <table>
 <thead>
 <tr>
@@ -340,7 +352,8 @@ body { overflow-x: clip; }
 <th>备份路径</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td>艾尔登法环</td>
 <td><code>%USERPROFILE%\AppData\Roaming\EldenRing</code></td>
 </tr>
@@ -394,7 +407,7 @@ body { overflow-x: clip; }
 </tr>
 <tr>
 <td>博德之门3</td>
-<td><code>%USERPROFILE%\AppData\Local\Larian Studios\Baldur&#39;s Gate 3</code></td>
+<td><code>%USERPROFILE%\AppData\Local\Larian Studios\Baldur's Gate 3</code></td>
 </tr>
 <tr>
 <td>三国志8：重制版</td>
@@ -414,7 +427,7 @@ body { overflow-x: clip; }
 </tr>
 <tr>
 <td>对马岛之魂</td>
-<td><code>%USERPROFILE%\Documents\Ghost of Tsushima DIRECTOR&#39;S CUT</code></td>
+<td><code>%USERPROFILE%\Documents\Ghost of Tsushima DIRECTOR'S CUT</code></td>
 </tr>
 <tr>
 <td>纪念碑谷</td>
@@ -428,7 +441,8 @@ body { overflow-x: clip; }
 <td>棋弈无限：围棋</td>
 <td><code>%USERPROFILE%\AppData\LocalLow\Studio Amateur\JustGo</code></td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
 <h2>[工程结构]</h2>
 <pre><code>GameSaveBackup/
 ├── source/
