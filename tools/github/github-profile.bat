@@ -383,7 +383,7 @@ foreach ($r in $topRepos) {
     $langMeta = if ($r.language) { "<span class='repo-lang'><span class='repo-lang-dot' style='background-color:$c'></span>$(Html-Encode $r.language)</span>" } else { '' }
     $cards += @"
 <a class="repo-card" href="$($r.html_url)" target="_blank" rel="noopener">
-  <div class="repo-head">$repoIcon<h3>$(Html-Encode $r.name)</h3></div>
+  <div class="repo-head">$repoIcon<h4>$(Html-Encode $r.name)</h4></div>
   <p class="repo-desc">$desc</p>
   <div class="repo-meta">$langMeta<span class="meta-item">$starIcon<span>$($r.stargazers_count)</span></span><span class="meta-item">$forkIcon<span>$($r.forks_count)</span></span></div>
 </a>
@@ -418,7 +418,7 @@ $html = @"
 <style>
 :root{ --bg:#f6f8fa; --bg-secondary:#ffffff; --bg-tertiary:#f6f8fa; --border:#d1d9e0; --text-primary:#1f2328; --text-secondary:#59636e; --text-tertiary:#59636e; --accent:#0969da; }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text-primary);line-height:1.5;}
+body{background:var(--bg);color:var(--text-primary);line-height:1.5;font-size:14px;}
 .wrap{max-width:900px;margin:0 auto;padding:40px 16px;}
 a{color:var(--accent);text-decoration:none;}
 a:hover{text-decoration:underline;}
@@ -445,7 +445,7 @@ a:hover{text-decoration:underline;}
 a.stat{text-decoration:none;}
 a.stat:hover{color:var(--accent);}
 .section{margin-top:20px;}
-.section h2{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--text-primary);}
+.section h2{font-size:24px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--text-primary);}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .lang-flex{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
 .donut{flex-shrink:0;}
@@ -458,7 +458,7 @@ a.stat:hover{color:var(--accent);}
 .repo-card{display:block;min-width:0;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:16px;transition:border-color .15s,background .15s;text-decoration:none;}
 .repo-card:hover{border-color:#8b949e;background:var(--bg-tertiary);text-decoration:none;}
 .repo-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.repo-head h3{font-size:16px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.repo-head h4{font-size:16px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .repo-desc{font-size:14px;color:var(--text-secondary);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;min-height:76px;}
 .repo-meta{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-tertiary);}
 .repo-meta span{display:inline-flex;align-items:center;gap:5px;}
