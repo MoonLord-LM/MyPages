@@ -10,8 +10,6 @@ body {
   margin: 0;
   background: #ffffff;
   color: #1f2328;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
-    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
 }
 .markdown-body {
   --color-canvas-default: #ffffff;
@@ -55,8 +53,6 @@ body {
   border-left: .25em solid var(--color-border-default);
 }
 .markdown-body code {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", "Courier New", monospace;
   font-size: 85%; padding: .2em .4em; border-radius: 6px;
   background-color: var(--color-neutral-muted);
 }
@@ -93,6 +89,8 @@ body {
 <body>
 <style>
   :root { --nav-h: 54px; }
+  /* ===== 全局默认字体：所有页面统一，各页面样式不再单独声明 font-family ===== */
+  * { font-family: "Microsoft YaHei UI", sans-serif; }
   /* ===== 顶部导航（全部收在 #site-nav 命名空间，避免与页面 CSS 冲突） ===== */
   /* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
   #site-nav, #site-nav * { box-sizing: border-box; }
@@ -296,7 +294,7 @@ body {
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-11-07 00:05:52 +08:00<br><a href="https://github.com/MoonLord-LM/MyBatch">https://github.com/MoonLord-LM/MyBatch</a>  </p>
+<p>2026-11-07 21:54:06 +08:00<br><a href="https://github.com/MoonLord-LM/MyBatch">https://github.com/MoonLord-LM/MyBatch</a>  </p>
 <hr>
 <h1>MyBatch</h1>
 <p><a href="https://github.com/MoonLord-LM/MyBatch/actions/workflows/self-check.yml"><img src="assets/MyBatch-001.svg" alt="self-check"></a></p>
@@ -507,6 +505,10 @@ body {
 <tr>
 <td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E9%87%8D%E5%A4%8D%E6%B8%85%E7%90%86.bat">文件重复清理.bat</a></td>
 <td>清理重复文件</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E9%87%8D%E5%91%BD%E5%90%8D%20-%20%E6%B7%BB%E5%8A%A0%20txt%20%E5%90%8E%E7%BC%80.bat">文件重命名 - 添加 txt 后缀.bat</a></td>
+<td>在原始文件名和文件后缀的后面，统一添加 txt 后缀</td>
 </tr>
 <tr>
 <td><a href="https://github.com/MoonLord-LM/MyBatch/blob/master/console/file/%E6%96%87%E4%BB%B6%E8%87%AA%E5%8A%A8%E8%A7%A3%E5%8E%8B.bat">文件自动解压.bat</a></td>

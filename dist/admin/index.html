@@ -10,8 +10,6 @@ body {
   margin: 0;
   background: #ffffff;
   color: #1f2328;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
-    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
 }
 .wrap { max-width: 920px; margin: 0 auto; padding: 40px 24px 64px; }
 .wrap > h1 {
@@ -49,6 +47,8 @@ body {
 <body>
 <style>
   :root { --nav-h: 54px; }
+  /* ===== 全局默认字体：所有页面统一，各页面样式不再单独声明 font-family ===== */
+  * { font-family: "Microsoft YaHei UI", sans-serif; }
   /* ===== 顶部导航（全部收在 #site-nav 命名空间，避免与页面 CSS 冲突） ===== */
   /* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
   #site-nav, #site-nav * { box-sizing: border-box; }
