@@ -212,6 +212,7 @@ function pageDepth(outPath) {
 function navActiveSection(outPath) {
     const rel = path.relative(DIST, outPath).split(path.sep).join('/');
     if (rel === 'index.html') return 'index';
+    if (rel.startsWith('service/')) return 'service';
     if (rel.startsWith('github/')) return 'github';
     if (rel.startsWith('admin/')) return 'admin';
     if (rel.startsWith('tools/')) return 'tools';
@@ -231,7 +232,7 @@ function markActiveNav(hdr, outPath, depth) {
     const section = navActiveSection(outPath);
     if (!section) return hdr;
     const prefix = depth === 0 ? './' : '../'.repeat(depth);
-    const target = prefix + ({ index: 'index.html', github: 'github/index.html', admin: 'admin/index.html', tools: 'tools/index.html', about: 'about/index.html' })[section];
+    const target = prefix + ({ index: 'index.html', service: 'service/index.html', github: 'github/index.html', admin: 'admin/index.html', tools: 'tools/index.html', about: 'about/index.html' })[section];
     const re = new RegExp('(<a class="nav-link" href=")' + target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"');
     return hdr.replace(re, '<a class="nav-link active" href="' + target + '"');
 }
@@ -747,7 +748,7 @@ function unlockScript(encFileName, iterations) {
         "    if (!password) { setStatus('请输入密码', true); return; }",
         "    if (!window.crypto || !crypto.subtle) { setStatus('请在 HTTPS 或 localhost 下打开本页', true); return; }",
         "    setBusy(true);",
-        "    setStatus('正在解密，请稍候（密钥派生可能需要十几秒）…');",
+        "    setStatus('正在解密，请稍候…');",
         "    try {",
         "      var res = await fetch(ENC_FILE, { cache: 'no-store' });",
         "      if (!res.ok) throw new Error('HTTP ' + res.status);",
@@ -841,7 +842,12 @@ async function processEncryptedPage(srcFile) {
     const mtime = fileLastModified(srcFile);
     lastmodMap.set(distShell, mtime);
     lastmodMap.set(distEnc, mtime);
-    pageCount++;
+    // collect() 已在本函数之前执行，产出的 .html 需补登记，
+    // 否则本轮不会为它生成自动列表页 / 侧栏 / 站点地图条目
+    if (!pageFilesByDir.has(srcDir)) pageFilesByDir.set(srcDir, new Map());
+    pageFilesByDir.get(srcDir).set(baseName, {
+        base: baseName, ext: '.html', srcFile: srcShell, name: shellName, generatedEnc: true
+    });
     console.log('已加密: ' + srcRel);
 }
 
@@ -1048,6 +1054,70 @@ function buildSitemap() {
     console.log('已生成站点地图: ' + path.relative(DIST, out) + ' (共 ' + urls.length + ' 个地址)');
 }
 
+// 外链清单：扫描 /dist 下所有 html、php 文件引用的外部站点链接，输出到 /dist/external-url.json
+function buildExternalUrlList() {
+    const siteHost = new URL(SITE_URL).hostname.toLowerCase();
+    const siteRoot = siteHost.replace(/^www\./, '');
+    const found = new Set();
+
+    function add(raw) {
+        let s = String(raw).trim();
+        if (!s) return;
+        // 还原 HTML 实体，保证 query 参数完整（例如 &amp; -> &）
+        s = s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'");
+        s = s.trim().split(/\s+/)[0].replace(/[.,;:!?]+$/, '');
+        // 站内相对链接、锚点、mailto 等不属于外部站点
+        if (!/^(?:https?:)?\/\//i.test(s)) return;
+        const url = s.startsWith('//') ? 'https:' + s : s;
+        let parsed;
+        try { parsed = new URL(url); } catch (e) { return; }
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return;
+        const host = parsed.hostname.toLowerCase();
+        // 本站域名（含 www 变体）不算外部站点
+        if (host === siteHost || host === siteRoot || host === 'www.' + siteRoot) return;
+        found.add(url);
+    }
+
+    function collectUrls(html) {
+        // HTML 属性中的引用；srcset 可能是 "a.png 1x, b.png 2x"，需按逗号逐个拆出
+        const attrRe = /\b(href|src|srcset|action|poster|formaction|cite|content|longdesc)\s*=\s*("([^"]*)"|'([^']*)')/gi;
+        for (const m of html.matchAll(attrRe)) {
+            const name = m[1].toLowerCase();
+            const val = (m[3] !== undefined ? m[3] : m[4]) || '';
+            if (name === 'srcset') {
+                for (const piece of val.split(',')) add(piece.trim().split(/\s+/)[0]);
+            } else {
+                add(val);
+            }
+        }
+        // CSS 中的 url(...)
+        const cssRe = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi;
+        for (const m of html.matchAll(cssRe)) {
+            const val = (m[1] !== undefined ? m[1] : (m[2] !== undefined ? m[2] : m[3])) || '';
+            add(val);
+        }
+    }
+
+    function walk(dir) {
+        let entries;
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+        catch (e) { return; }
+        for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) { walk(full); continue; }
+            const ext = path.extname(entry.name).toLowerCase();
+            if (ext !== '.html' && ext !== '.php') continue;
+            collectUrls(fs.readFileSync(full, 'utf8'));
+        }
+    }
+    walk(DIST);
+
+    const urls = [...found].sort((a, b) => a.localeCompare(b));
+    const out = path.join(DIST, 'external-url.json');
+    fs.writeFileSync(out, JSON.stringify(urls, null, 2) + '\n', 'utf8');
+    console.log('已生成外链清单: ' + path.relative(DIST, out) + ' (共 ' + urls.length + ' 个地址)');
+}
+
 (async () => {
 try {
 // 先生成密码保护页面：产物会写回 /pages，但 collect() 已结束，本轮不会重复处理
@@ -1064,8 +1134,10 @@ for (const [dir, baseMap] of pageFilesByDir) {
     });
 
     const hasIndex = descriptors.some((d) => d.base.toLowerCase() === 'index');
+    const hasGeneratedEnc = descriptors.some((d) => d.generatedEnc);
 
-    if (hasIndex || descriptors.length < 2) {
+    // 含密码保护页面的目录即使只有一个页面，也生成列表页作为入口
+    if (hasIndex || (descriptors.length < 2 && !hasGeneratedEnc)) {
         for (const d of descriptors) {
             const bodyHtml = d.ext === '.md'
                 ? await mdBody(d.srcFile, d.outPath)
@@ -1090,7 +1162,11 @@ for (const [dir, baseMap] of pageFilesByDir) {
     const dirLabel = '/' + path.relative(PAGES, dir).split(path.sep).join('/');
     const fileEntries = [];
     for (const d of descriptors) {
-        fileEntries.push({ label: d.base, link: d.outPath, desc: fileDescription(d.srcFile, d.ext) });
+        // 密码保护页面不取摘要，只标注受密码保护
+        fileEntries.push({
+            label: d.base, link: d.outPath,
+            desc: d.generatedEnc ? '页面受密码保护' : fileDescription(d.srcFile, d.ext)
+        });
     }
     for (const sf of staticFiles) {
         if (path.dirname(sf.full) === dir) {
@@ -1115,6 +1191,7 @@ for (const [dir, baseMap] of pageFilesByDir) {
 console.log('处理完成：共处理 ' + pageCount + ' 个页面');
 
 buildSitemap();
+buildExternalUrlList();
 } catch (e) {
     console.error('');
     console.error('错误：构建中止 - ' + e.message);
