@@ -361,6 +361,142 @@ body { overflow-x: clip; }
       });
     }
 
+    function recognizeCanvas(canvas) {
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      return window.jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+    }
+
+    function showResult(res, w, h, source) {
+      textOut.value = res.data;
+      log((source || '识别成功') + '，共 ' + Array.from(res.data).length +
+          ' 个字符\n图像尺寸：' + w + '×' + h, 'ok');
+    }
+
+    function mediaError(e) {
+      const name = (e && e.name) || '';
+      if (name === 'NotAllowedError' || name === 'SecurityError') return '权限被拒绝或已取消';
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') return '未找到摄像头';
+      if (name === 'NotReadableError' || name === 'TrackStartError') return '设备被其它程序占用';
+      if (name === 'OverconstrainedError') return '不支持所请求的摄像头模式';
+      return (e && e.message) || '未知错误';
+    }
+
+    function stopCapture() {
+      cancelAnimationFrame(scanId);
+      scanId = 0;
+      if (captureStream) {
+        captureStream.getTracks().forEach((t) => t.stop());
+        captureStream = null;
+      }
+      captureVideo.pause();
+      captureVideo.srcObject = null;
+      captureWrap.classList.add('hide');
+      cameraBtn.textContent = '摄像识别';
+      captureBtn.disabled = false;
+      cameraBtn.disabled = false;
+    }
+
+    async function openStream(method, constraints) {
+      if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices[method]) {
+        throw new Error('当前浏览器不支持该功能，或页面不是安全上下文（需要 HTTPS / localhost）');
+      }
+      const stream = await navigator.mediaDevices[method](constraints);
+      captureStream = stream;
+      captureVideo.srcObject = stream;
+      await captureVideo.play();
+      const track = stream.getVideoTracks()[0];
+      if (track) track.addEventListener('ended', stopCapture, { once: true });
+      for (let i = 0; i < 20 && !captureVideo.videoWidth; i++) {
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      if (!captureVideo.videoWidth) throw new Error('未获取到视频画面');
+    }
+
+    function frameToBlob() {
+      const scale = Math.min(1, MAX_SIDE / Math.max(captureVideo.videoWidth, captureVideo.videoHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(captureVideo.videoWidth * scale));
+      canvas.height = Math.max(1, Math.round(captureVideo.videoHeight * scale));
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(captureVideo, 0, 0, canvas.width, canvas.height);
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('画面截取失败')), 'image/png');
+      });
+    }
+
+    async function captureScreen() {
+      stopCapture();
+      clearLog();
+      if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
+      captureBtn.disabled = true;
+      try {
+        captureWrap.classList.remove('hide');
+        await openStream('getDisplayMedia', { video: true, audio: false });
+        await new Promise((r) => setTimeout(r, 200));
+        const blob = await frameToBlob();
+        stopCapture();
+        setFile(new File([blob], '截屏.png', { type: 'image/png' }));
+        await decode();
+      } catch (e) {
+        stopCapture();
+        log('截屏失败：' + mediaError(e), 'err');
+      } finally {
+        captureBtn.disabled = false;
+      }
+    }
+
+    function scanFrame(ts) {
+      if (!captureStream) return;
+      if (ts - lastScan >= 200) {
+        lastScan = ts;
+        const vw = captureVideo.videoWidth, vh = captureVideo.videoHeight;
+        if (vw && vh) {
+          const scale = Math.min(1, 800 / Math.max(vw, vh));
+          const w = Math.max(1, Math.round(vw * scale));
+          const h = Math.max(1, Math.round(vh * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(captureVideo, 0, 0, w, h);
+          const res = recognizeCanvas(canvas);
+          if (res) {
+            preview.src = canvas.toDataURL('image/png');
+            previewWrap.classList.remove('hide');
+            showResult(res, w, h, '摄像头识别成功');
+            stopCapture();
+            return;
+          }
+        }
+      }
+      scanId = requestAnimationFrame(scanFrame);
+    }
+
+    async function toggleCamera() {
+      if (captureStream) { stopCapture(); clearLog(); log('已停止摄像', 'ok'); return; }
+      clearLog();
+      if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
+      cameraBtn.disabled = true;
+      try {
+        captureWrap.classList.remove('hide');
+        await openStream('getUserMedia', { video: { facingMode: { ideal: 'environment' } }, audio: false });
+        cameraBtn.textContent = '停止摄像';
+        lastScan = 0;
+        scanId = requestAnimationFrame(scanFrame);
+        log('摄像头已开启，请将二维码对准取景框', 'ok');
+      } catch (e) {
+        stopCapture();
+        log('无法打开摄像头：' + mediaError(e), 'err');
+      } finally {
+        cameraBtn.disabled = false;
+      }
+    }
+
     function setBusy(busy) {
       decodeBtn.disabled = busy;
       decodeBtn.textContent = busy ? '识别中…' : '识别二维码';
@@ -383,15 +519,13 @@ body { overflow-x: clip; }
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const res = window.jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+        const res = recognizeCanvas(canvas);
         if (!res) {
           textOut.value = '';
           log('未识别到二维码，请确认图片清晰、二维码完整且未被过度缩小', 'err');
           return;
         }
-        textOut.value = res.data;
-        log('识别成功，共 ' + Array.from(res.data).length + ' 个字符\n图像尺寸：' + w + '×' + h, 'ok');
+        showResult(res, w, h);
       } catch (e) {
         log('识别失败：' + (e && e.message ? e.message : e), 'err');
       } finally {
@@ -413,6 +547,9 @@ body { overflow-x: clip; }
     });
 
     decodeBtn.addEventListener('click', decode);
+    captureBtn.addEventListener('click', captureScreen);
+    cameraBtn.addEventListener('click', toggleCamera);
+    window.addEventListener('pagehide', stopCapture);
   })();
   </script>
 <!-- Cloudflare Web Analytics -->
