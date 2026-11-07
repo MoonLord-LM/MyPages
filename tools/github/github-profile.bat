@@ -419,7 +419,7 @@ $html = @"
 :root{ --bg:#f6f8fa; --bg-secondary:#ffffff; --bg-tertiary:#f6f8fa; --border:#d1d9e0; --text-primary:#1f2328; --text-secondary:#59636e; --text-tertiary:#59636e; --accent:#0969da; }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text-primary);line-height:1.5;font-size:14px;}
-.wrap{max-width:900px;margin:0 auto;padding:40px 16px;}
+.wrap{box-sizing:content-box;max-width:900px;margin:0 auto;padding:30px 24px 48px;}
 a{color:var(--accent);text-decoration:none;}
 a:hover{text-decoration:underline;}
 .profile{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--border);}
