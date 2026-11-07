@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二维码解码 - 图片转文本</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      color: #1f2328; line-height: 1.6; background: #fafafa;
+    }
+    /* .wrap 统一由公共模板 header.html 定义 */
+    h1 { font-size: 28px; color: #1f2328; margin-bottom: 8px; line-height: 1.25; }
+    .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-weight: 600; color: #1f2328; margin-bottom: 6px; }
+
+    .drop {
+      border: 2px dashed #b9c6d8; border-radius: 12px; padding: 28px; text-align: center;
+      color: #59636e; background: #f7faff; cursor: pointer; transition: border-color .2s, background .2s;
+    }
+    .drop.dragover { border-color: #6ba0ea; background: #eaf2fd; }
+    .drop strong { color: #2a5298; }
+    .drop input[type="file"] { display: none; }
+    .file-info { margin-top: 12px; font-size: 14px; color: #1f2328; word-break: break-all; }
+
+    .qr-preview {
+      display: inline-block; padding: 12px; background: #fff; border: 1px solid #e3e8ef;
+      border-radius: 10px; line-height: 0;
+    }
+    .qr-preview img { display: block; max-width: 100%; max-height: 300px; object-fit: contain; }
+    .hide { display: none; }
+
+    .text-out {
+      width: 100%; padding: 11px 14px; font-size: 14px; border: 1px solid #ccc;
+      border-radius: 8px; outline: none; resize: vertical; font-family: inherit;
+      color: #1f2328; background: #f6f8fa; word-break: break-all;
+    }
+    .text-out:focus { border-color: #2a5298; }
+
+    .actions { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+    .btn {
+      padding: 11px 22px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+      cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+      transition: opacity .2s, transform .1s;
+    }
+    .btn:hover { opacity: .92; }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-mini {
+      padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+      background: #fff; color: #2a5298; border: 1px solid #cdd7e3; border-radius: 8px;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-mini:hover { border-color: #2a5298; background: #f0f5fc; }
+
+    .log {
+      margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
+      background: #f6f8fa; border: 1px solid #e3e8ef; white-space: pre-wrap; word-break: break-all;
+      max-height: 240px; overflow: auto;
+    }
+    .log.ok { background: #eafaf0; border-color: #b7e4c7; color: #1a7f43; }
+    .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
+
+    .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
+    .tips div { line-height: 1.8; }
+    .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>二维码解码 - 图片转文本</h1>
+
+    <div class="tips">
+      <div>从图片中识别二维码并还原为原始文本，支持中文等 <code>UTF-8</code> 内容。</div>
+      <div>支持点击选择、拖拽或 <code>Ctrl+V</code> 粘贴图片，常见 <code>PNG</code> / <code>JPG</code> / <code>WEBP</code> 格式均可。</div>
+      <div>大图会自动缩小后识别，透明背景按白底处理，并尝试识别反色二维码。</div>
+      <div>每次识别一个二维码；解码库已随页面本地提供，全程在浏览器本地完成，不会上传任何数据。</div>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <label>选择二维码图片</label>
+        <div class="drop" id="drop">
+          <strong>点击选择</strong> 或将图片拖拽 / 粘贴到此处
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <div class="file-info" id="fileInfo"></div>
+      </div>
+
+      <div class="field hide" id="previewWrap">
+        <label>图片预览</label>
+        <div class="qr-preview"><img id="preview" alt="所选图片预览"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="decodeBtn" type="button">识别二维码</button>
+        <button class="btn-mini" id="copyBtn" type="button">复制结果</button>
+      </div>
+
+      <div class="field" style="margin-top:20px">
+        <label for="textOut">识别结果</label>
+        <textarea id="textOut" class="text-out" rows="5" readonly placeholder="识别结果将显示在这里"></textarea>
+      </div>
+
+      <div class="log hide" id="log"></div>
+    </div>
+  </main>
+
+  <script src="assets/jsQR.min.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const MAX_SIDE = 1600;
+
+    const $ = (id) => document.getElementById(id);
+    const dropEl = $('drop');
+    const fileInput = $('fileInput');
+    const fileInfoEl = $('fileInfo');
+    const previewWrap = $('previewWrap');
+    const preview = $('preview');
+    const decodeBtn = $('decodeBtn');
+    const copyBtn = $('copyBtn');
+    const textOut = $('textOut');
+    const logEl = $('log');
+
+    let selectedFile = null;
+    let previewUrl = null;
+
+    function clearLog() { logEl.className = 'log hide'; logEl.textContent = ''; }
+    function log(msg, kind) {
+      logEl.className = 'log' + (kind ? ' ' + kind : '');
+      logEl.textContent = msg;
+    }
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      const units = ['KB', 'MB', 'GB', 'TB'];
+      let i = -1, n = bytes;
+      do { n /= 1024; i++; } while (n >= 1024 && i < units.length - 1);
+      return n.toFixed(2) + ' ' + units[i];
+    }
+
+    dropEl.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length) setFile(fileInput.files[0]);
+    });
+    ['dragenter', 'dragover'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach((ev) =>
+      dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.remove('dragover'); }));
+    dropEl.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) setFile(dt.files[0]);
+    });
+    document.addEventListener('paste', (e) => {
+      const files = e.clipboardData && e.clipboardData.files;
+      if (files && files.length) setFile(files[0]);
+    });
+
+    function setFile(file) {
+      if (!file || !/^image\//.test(file.type)) { log('请选择图片文件', 'err'); return; }
+      selectedFile = file;
+      fileInfoEl.textContent = '已选择：' + (file.name || '粘贴的图片') + '（' + formatSize(file.size) + '）';
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = URL.createObjectURL(file);
+      preview.src = previewUrl;
+      previewWrap.classList.remove('hide');
+      textOut.value = '';
+      clearLog();
+    }
+
+    function loadImage(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片无法读取或格式不受支持')); };
+        img.src = url;
+      });
+    }
+
+    function setBusy(busy) {
+      decodeBtn.disabled = busy;
+      decodeBtn.textContent = busy ? '识别中…' : '识别二维码';
+    }
+
+    async function decode() {
+      clearLog();
+      if (!selectedFile) { log('请先选择二维码图片', 'err'); return; }
+      if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
+      setBusy(true);
+      try {
+        const img = await loadImage(selectedFile);
+        const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const res = window.jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+        if (!res) {
+          textOut.value = '';
+          log('未识别到二维码，请确认图片清晰、二维码完整且未被过度缩小', 'err');
+          return;
+        }
+        textOut.value = res.data;
+        log('识别成功，共 ' + Array.from(res.data).length + ' 个字符\n图像尺寸：' + w + '×' + h, 'ok');
+      } catch (e) {
+        log('识别失败：' + (e && e.message ? e.message : e), 'err');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    copyBtn.addEventListener('click', () => {
+      if (!textOut.value) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textOut.value).then(
+          () => log('识别结果已复制到剪贴板', 'ok'),
+          () => textOut.select()
+        );
+      } else {
+        textOut.select();
+        log('已选中结果，请按 Ctrl+C 复制');
+      }
+    });
+
+    decodeBtn.addEventListener('click', decode);
+  })();
+  </script>
+</body>
+</html>

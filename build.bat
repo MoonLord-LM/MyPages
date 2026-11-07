@@ -170,6 +170,7 @@ import path from 'path';
 import https from 'https';
 import http from 'http';
 import crypto from 'crypto';
+import zlib from 'zlib';
 import { execFileSync } from 'child_process';
 import MarkdownIt from 'markdown-it';
 
@@ -179,8 +180,9 @@ const DIST = '-----PROJECT DIST DIR-----';
 const SITE_URL = '-----PROJECT SITE URL-----';
 const REPO_ROOT = path.dirname(PAGES);
 
-// ===== 密码保护页面（*.enc.md）：参数与 /pages/tools/file-encrypt-aes-256-gcm.html 一致 =====
+// ===== 密码保护页面（*.enc.md）：加密参数与 /pages/tools/file-encrypt-aes-256-gcm.html 一致，正文先 gzip 压缩 =====
 const ENC_MD_SUFFIX = '.enc.md';
+const ENC_FILE_SUFFIX = '.html.zip.enc';
 const ENC_SALT_LEN = 16;
 const ENC_IV_LEN = 12;
 const ENC_TAG_LEN = 16;
@@ -697,9 +699,12 @@ function encryptHtml(plainHtml, password, iterations) {
     const salt = crypto.randomBytes(ENC_SALT_LEN);
     const iv = crypto.randomBytes(ENC_IV_LEN);
     const key = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, iterations, ENC_KEY_LEN, 'sha512');
+    const gzip = zlib.gzipSync(Buffer.from(plainHtml, 'utf8'), {
+        level: zlib.constants.Z_BEST_COMPRESSION, memLevel: 9
+    });
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv, { authTagLength: ENC_TAG_LEN });
-    const ciphertext = Buffer.concat([cipher.update(Buffer.from(plainHtml, 'utf8')), cipher.final()]);
-    // 布局：salt(16) + iv(12) + tag(16) + ciphertext，与文件加解密工具一致
+    const ciphertext = Buffer.concat([cipher.update(gzip), cipher.final()]);
+    // 布局：salt(16) + iv(12) + tag(16) + gzip 数据的密文
     return Buffer.concat([salt, iv, cipher.getAuthTag(), ciphertext]);
 }
 
@@ -754,6 +759,15 @@ function unlockScript(encFileName, iterations, unlockedTitle) {
         "      { name: 'PBKDF2', salt: salt, iterations: ITER, hash: 'SHA-512' },",
         "      base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);",
         "  }",
+        "  async function gunzip(data) {",
+        "    if (typeof DecompressionStream === 'undefined') {",
+        "      throw new Error('当前浏览器不支持 gzip 解压，请使用最新版浏览器');",
+        "    }",
+        "    try {",
+        "      var stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'));",
+        "      return await new Response(stream).arrayBuffer();",
+        "    } catch (e) { throw new Error('解压失败，加密内容已损坏'); }",
+        "  }",
         "  async function unlock() {",
         "    var password = input.value;",
         "    if (!password) { setStatus('请输入密码', true); return; }",
@@ -776,7 +790,7 @@ function unlockScript(encFileName, iterations, unlockedTitle) {
         "      try {",
         "        plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: TAG_LEN * 8 }, key, combined);",
         "      } catch (e) { throw new Error('密码错误，解密失败'); }",
-        "      content.innerHTML = new TextDecoder().decode(plain);",
+        "      content.innerHTML = new TextDecoder().decode(await gunzip(plain));",
         "      content.style.display = '';",
         "      document.title = UNLOCKED_TITLE;",
         "      panel.style.display = 'none';",
@@ -839,11 +853,11 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle, navHtml) {
 }
 
 // 密码框骨架（*.html）不含任何密钥，只依赖当前构建的 CSS / 解密脚本模板。
-// .enc.md 只在本地存在，远程构建没有明文源；因此以随仓库提交的 *.html.enc 为凭据，
+// .enc.md 只在本地存在，远程构建没有明文源；因此以随仓库提交的 *.html.zip.enc 为凭据，
 // 每次构建都用最新模板重新渲染骨架，让它与工程其它模板 / 设置保持同步。
 function refreshUnlockShell(srcDir, baseName) {
     const shellName = baseName + '.html';
-    const encName = baseName + '.html.enc';
+    const encName = baseName + ENC_FILE_SUFFIX;
     const srcShell = path.join(srcDir, shellName);
     const srcEnc = path.join(srcDir, encName);
     if (!fs.existsSync(srcEnc)) return;
@@ -877,7 +891,7 @@ async function processEncryptedPage(srcFile) {
     const baseName = path.basename(srcFile).slice(0, -ENC_MD_SUFFIX.length);
     const srcDir = path.dirname(srcFile);
     const shellName = baseName + '.html';
-    const encName = baseName + '.html.enc';
+    const encName = baseName + ENC_FILE_SUFFIX;
     const srcShell = path.join(srcDir, shellName);
     const srcEnc = path.join(srcDir, encName);
     const distShell = path.join(DIST, path.relative(PAGES, srcShell));
@@ -1035,7 +1049,7 @@ function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
 const staticFiles = [];
 const pageFilesByDir = new Map();
 const encryptedPages = [];
-const lockedEncPages = []; // 随仓库提交的密文（*.html.enc），用于每次构建刷新密码框骨架
+const lockedEncPages = []; // 随仓库提交的密文（*.html.zip.enc），用于每次构建刷新密码框骨架
 
 function collect(dir) {
     let entries;
@@ -1053,7 +1067,7 @@ function collect(dir) {
         const ext = path.extname(entry.name).toLowerCase();
         if (ext === '.html' || ext === '.md') {
             const base = path.basename(entry.name, ext);
-            const lockedPage = ext === '.html' && fs.existsSync(path.join(dir, base + '.html.enc'));
+            const lockedPage = ext === '.html' && fs.existsSync(path.join(dir, base + ENC_FILE_SUFFIX));
             if (!pageFilesByDir.has(dir)) pageFilesByDir.set(dir, new Map());
             const m = pageFilesByDir.get(dir);
             if (!m.has(base)) {
@@ -1062,8 +1076,8 @@ function collect(dir) {
                 m.set(base, { base, ext, srcFile: full, name: entry.name, lockedPage });
             }
         } else {
-            if (entry.name.toLowerCase().endsWith('.html.enc')) {
-                lockedEncPages.push({ dir, baseName: entry.name.slice(0, -'.html.enc'.length) });
+            if (entry.name.toLowerCase().endsWith(ENC_FILE_SUFFIX)) {
+                lockedEncPages.push({ dir, baseName: entry.name.slice(0, -ENC_FILE_SUFFIX.length) });
             }
             staticFiles.push({ full });
         }
@@ -1243,7 +1257,7 @@ for (const [dir, baseMap] of pageFilesByDir) {
     for (const sf of staticFiles) {
         if (path.dirname(sf.full) === dir) {
             // 密文文件是密码框页面的内部数据，不列入自动列表
-            if (sf.full.toLowerCase().endsWith('.html.enc')) continue;
+            if (sf.full.toLowerCase().endsWith(ENC_FILE_SUFFIX)) continue;
             const dest = path.join(DIST, path.relative(PAGES, sf.full));
             fileEntries.push({ label: path.basename(sf.full), link: dest, desc: '' });
         }
