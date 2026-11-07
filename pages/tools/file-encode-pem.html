@@ -53,12 +53,10 @@
     .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
     .log.hide { display: none; }
 
-    /* 顶部提示（多行展示） */
     .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
     .tips div { line-height: 1.8; }
     .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
 
-    /* 配套脚本下载 */
     .scripts { margin-bottom: 16px; font-size: 14px; color: #59636e; }
     .scripts-label { display: inline-block; margin-bottom: 6px; }
     .scripts a { display: inline-block; margin: 0 10px 6px 0; padding: 6px 14px; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
@@ -173,7 +171,6 @@
       return n.toFixed(2) + ' ' + units[i];
     }
 
-    // ===== 字节 -> Base64（兼容二进制） =====
     function bytesToBase64(bytes) {
       let binary = '';
       const chunk = 0x8000;
@@ -190,7 +187,6 @@
       return bytes;
     }
 
-    // ===== 编码：Base64 + CRLF 折行（64/行） + PEM 标记，与 certutil 一致 =====
     function encodeFile(bytes) {
       const b64 = bytesToBase64(bytes);
       const lines = [];
@@ -201,7 +197,6 @@
       return PEM_HEADER + '\r\n' + lines.join('\r\n') + '\r\n' + PEM_FOOTER + '\r\n';
     }
 
-    // ===== 解码：剥离标记与所有空白（换行/空格），还原 Base64 =====
     function decodeFile(text) {
       let body = text;
       const start = body.indexOf(PEM_HEADER);
@@ -209,7 +204,6 @@
       if (start !== -1 && end !== -1 && end > start) {
         body = body.slice(start + PEM_HEADER.length, end);
       }
-      // 去除所有空白字符（含 \r \n 空格 制表符），保留纯 Base64
       const b64 = body.replace(/\s+/g, '');
       if (!/^[A-Za-z0-9+/=]+$/.test(b64)) {
         throw new Error('文件内容不是有效的 Base64 / PEM 格式');

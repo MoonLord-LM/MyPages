@@ -11,7 +11,6 @@
     }
     /* .wrap 统一由公共模板 header.html 定义 */
     h1 { font-size: 28px; color: #1f2328; margin-bottom: 8px; line-height: 1.25; }
-    /* 模式切换 */
     .mode-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
     .mode-tabs button {
       flex: 1; padding: 10px; font-size: 16px; font-weight: 600; cursor: pointer;
@@ -31,7 +30,6 @@
     }
     .field input[type="password"]:focus { border-color: #2a5298; }
 
-    /* 拖拽区 */
     .drop {
       border: 2px dashed #b9c6d8; border-radius: 12px; padding: 28px; text-align: center;
       color: #59636e; background: #f7faff; cursor: pointer; transition: border-color .2s, background .2s;
@@ -60,12 +58,10 @@
     .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
     .log.hide { display: none; }
 
-    /* 顶部提示（多行展示） */
     .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
     .tips div { line-height: 1.8; }
     .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
 
-    /* 配套脚本下载 */
     .scripts { margin-bottom: 16px; font-size: 14px; color: #59636e; }
     .scripts-label { display: inline-block; margin-bottom: 6px; }
     .scripts a { display: inline-block; margin: 0 10px 6px 0; padding: 6px 14px; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
@@ -133,10 +129,10 @@
     // ===== 与本地批处理脚本保持一致的参数 =====
     const PBKDF2_SALT_LEN = 16;
     const AES_GCM_IV_LEN = 12;
-    const AES_GCM_TAG_LEN = 16; // 128 位
-    const HEADER_LEN = PBKDF2_SALT_LEN + AES_GCM_IV_LEN + AES_GCM_TAG_LEN; // 44
+    const AES_GCM_TAG_LEN = 16;
+    const HEADER_LEN = PBKDF2_SALT_LEN + AES_GCM_IV_LEN + AES_GCM_TAG_LEN;
     const ITERATIONS = 10000000; // 1000 万，与本地批处理脚本保持一致
-    const KEY_LEN = 32; // 256 位
+    const KEY_LEN = 32;
 
     const $ = (id) => document.getElementById(id);
     const modeEncryptBtn = $('modeEncrypt');
@@ -148,7 +144,7 @@
     const runBtn = $('runBtn');
     const logEl = $('log');
 
-    let mode = 'encrypt'; // 'encrypt' | 'decrypt'
+    let mode = 'encrypt';
     let selectedFile = null;
 
     function setMode(m) {
@@ -172,7 +168,6 @@
     modeEncryptBtn.addEventListener('click', () => setMode('encrypt'));
     modeDecryptBtn.addEventListener('click', () => setMode('decrypt'));
 
-    // ===== 文件选择 =====
     dropEl.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
       if (fileInput.files && fileInput.files.length) setFile(fileInput.files[0]);
@@ -205,7 +200,6 @@
       return (ms / 60000).toFixed(2) + ' 分钟';
     }
 
-    // ===== 密钥派生：PBKDF2-HMAC-SHA512 =====
     async function deriveKey(password, salt) {
       const enc = new TextEncoder();
       const pwKey = await crypto.subtle.importKey(
@@ -244,7 +238,6 @@
       return out;
     }
 
-    // ===== 解密：读取头部后重构 密文 + tag 交回 Web Crypto 校验 =====
     async function decryptFile(file, password) {
       const buf = new Uint8Array(await file.arrayBuffer());
       if (buf.length < HEADER_LEN) throw new Error('文件太短，不是有效的加密文件');
