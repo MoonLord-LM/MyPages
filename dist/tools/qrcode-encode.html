@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>二维码编码 - 文本转 SVG / PNG</title>
+  <title>二维码生成 - 文本转图片</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -11,20 +11,12 @@
     }
     /* .wrap 统一由公共模板 header.html 定义 */
     h1 { font-size: 28px; color: #1f2328; margin-bottom: 8px; line-height: 1.25; }
-    .mode-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .mode-tabs button {
-      flex: 1; padding: 10px; font-size: 16px; font-weight: 600; cursor: pointer;
-      border: 1px solid #cdd7e3; background: #fff; color: #2a5298; border-radius: 10px;
-      transition: background .2s, color .2s, border-color .2s;
-    }
-    .mode-tabs button.active {
-      background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; border-color: transparent;
-    }
 
     .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
     .field { margin-bottom: 18px; }
     .field label { display: block; font-weight: 600; color: #1f2328; margin-bottom: 6px; }
-    .field .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .field .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 12px; }
+    .field .row > span { display: inline-flex; flex-wrap: wrap; gap: 12px; }
     .text-input {
       width: 100%; padding: 11px 14px; font-size: 16px; border: 1px solid #ccc;
       border-radius: 8px; outline: none; resize: vertical; font-family: inherit;
@@ -38,23 +30,24 @@
     }
     .code-out:focus { border-color: #2a5298; }
 
-    .actions { display: flex; gap: 12px; margin-top: 20px; }
-    .btn {
-      padding: 11px 22px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
-      cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
-      transition: opacity .2s, transform .1s;
+    .actions, .mode-tabs {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 12px;
     }
-    .btn:hover { opacity: .92; }
-    .btn:active { transform: translateY(1px); }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-
-    .btn-mini {
-      padding: 5px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
-      background: #fff; color: #2a5298; border: 1px solid #cdd7e3; border-radius: 8px;
-      transition: border-color .2s, background .2s;
+    .actions { margin-top: 20px; }
+    .mode-tabs { gap: 8px; margin-bottom: 20px; }
+    .btn, .btn-mini, .mode-tabs button {
+      min-width: 132px; padding: 11px 22px; font-size: 16px; font-weight: 600; line-height: 1.5;
+      border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+      transition: opacity .2s, transform .1s, border-color .2s, background .2s, color .2s;
     }
-    .btn-mini:hover { border-color: #2a5298; background: #f0f5fc; }
-    .btn-mini:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-mini, .mode-tabs button { color: #2a5298; background: #fff; border-color: #cdd7e3; }
+    .btn, .mode-tabs button.active {
+      color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0); border-color: transparent;
+    }
+    .btn:hover, .mode-tabs button.active:hover { opacity: .92; }
+    .btn-mini:hover, .mode-tabs button:not(.active):hover { border-color: #2a5298; background: #f0f5fc; }
+    .btn:active, .btn-mini:active, .mode-tabs button:active { transform: translateY(1px); }
+    .btn:disabled, .btn-mini:disabled, .mode-tabs button:disabled { opacity: .5; cursor: not-allowed; }
 
     .qr-preview {
       display: inline-block; padding: 12px; background: #fff; border: 1px solid #e3e8ef;
@@ -244,7 +237,7 @@ body { overflow-x: clip; }
 <!-- End Google Analytics Tag -->
 
   <main class="wrap">
-    <h1>二维码编码 - 文本转 SVG / PNG</h1>
+    <h1>二维码生成 - 文本转图片</h1>
 
     <div class="tips">
       <div>将输入的文本（支持中文）编码为二维码，并输出可复制的 <code>SVG</code> 矢量代码与 <code>PNG</code> 位图。</div>
