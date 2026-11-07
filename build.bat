@@ -53,7 +53,7 @@ if !errorlevel! neq 0 (
 
 
 
-REM 代码渲染 highlight.js
+REM 代码渲染使用 highlight.js
 set "hljs_css_url=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/styles/default.min.css"
 set "hljs_js_url=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"
 
@@ -184,16 +184,14 @@ const ENC_MD_SUFFIX = '.enc.md';
 const ENC_SALT_LEN = 16;
 const ENC_IV_LEN = 12;
 const ENC_TAG_LEN = 16;
-const ENC_HEADER_LEN = ENC_SALT_LEN + ENC_IV_LEN + ENC_TAG_LEN; // 44
+const ENC_HEADER_LEN = ENC_SALT_LEN + ENC_IV_LEN + ENC_TAG_LEN;
 const ENC_KEY_LEN = 32;
-const ENC_ITERATIONS = 10000000; // PBKDF2-HMAC-SHA512 默认迭代次数
+const ENC_ITERATIONS = 10000000;
 const ENC_PAGE_TITLE = '需要密码'; // 中性标题，避免出现在 title / canonical / 列表摘要中
 
 // 站点地图用的「最后修改时间」，优先使用 pages 中对应源文件在 Git 里的最后一次提交时间。
 const lastmodMap = new Map();
 
-// 按页面源文件目录，向同级 / 上级逐级查找最临近的公共模板（header.html / footer.html）
-// 两者独立处理；缺失则视为无模板。模板内容按路径缓存，避免重复读盘。
 const templateCache = new Map();
 function loadTemplateAt(p) {
     if (templateCache.has(p)) return templateCache.get(p);
@@ -202,13 +200,11 @@ function loadTemplateAt(p) {
     return c;
 }
 
-// 站点根绝对路径(/...)按页面深度转换为相对路径，使全站链接相对且可移植
 function pageDepth(outPath) {
     const rel = path.relative(DIST, path.dirname(outPath));
     return rel === '' ? 0 : rel.split(path.sep).length;
 }
 
-// 根据当前页面所在分区，返回应高亮的顶栏菜单项（与左侧菜单的 active 行为一致）
 function navActiveSection(outPath) {
     const rel = path.relative(DIST, outPath).split(path.sep).join('/');
     if (rel === 'index.html') return 'index';
@@ -219,7 +215,6 @@ function navActiveSection(outPath) {
     if (rel.startsWith('about/')) return 'about';
     return '';
 }
-// 源码 header 使用相对 HTML 路径；按当前页面深度补前缀，使各层级页面都能正确跳转
 // depth 0 用 ./ 前缀（与子目录页面的 ../ 一致），避免被 adjustRelativeRefs 当作裸相对路径重复处理
 function relativizeNav(hdr, depth) {
     const prefix = depth === 0 ? './' : '../'.repeat(depth);
@@ -227,7 +222,6 @@ function relativizeNav(hdr, depth) {
         (m, open, href, close) => open + prefix + href + close);
 }
 
-// 给当前分区对应的 .nav-link 加上 active 类
 function markActiveNav(hdr, outPath, depth) {
     const section = navActiveSection(outPath);
     if (!section) return hdr;
@@ -245,9 +239,7 @@ function injectHeader(html, outPath, srcDir) {
     let hdr = loadTemplateAt(tp);
     // 先处理顶栏导航的相对路径与 active 高亮（产出 ./ 或 ../ 前缀，避免被下面的通用重写重复处理）
     hdr = markActiveNav(relativizeNav(hdr, depth), outPath, depth);
-    // 再统一调整模板内其余静态资源引用（src / href / url()）：按模板位置解析后回退到页面目录
     hdr = adjustRelativeRefs(hdr, base, path.dirname(outPath));
-    // 根目录（depth 0）的顶栏导航去掉多余的 ./ 前缀：href="index.html" 而非 "./index.html"
     // 必须在 adjustRelativeRefs 之后执行，否则裸相对路径会被重新解析前缀
     hdr = hdr.replace(/(<a\s+class="nav-link[^"]*"\s+href=")\.\//g, '$1');
     return html.replace(/<body([^>]*)>/i, '<body$1>\n' + hdr);
@@ -260,7 +252,6 @@ function injectFooter(html, outPath, srcDir) {
     return html.replace(/<\/body>/i, ftr + '\n</body>');
 }
 
-// 向 <head> 注入规范链接（canonical）
 // 地址始终使用站点根地址 SITE_URL 加页面自身路径，与部署域名无关
 // 因此镜像站部署同一份产物时，收录权重会集中到主域
 function injectCanonical(html, outPath) {
@@ -270,7 +261,6 @@ function injectCanonical(html, outPath) {
     const cleaned = html.replace(/^[ \t]*<link\b[^>]*\brel\s*=\s*("|')?canonical\1[^>]*>[ \t]*\r?\n?/gim, '');
     if (/<\/head>/i.test(cleaned)) return cleaned.replace(/<\/head>/i, link + '\n</head>');
     if (/<head\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<head\b([^>]*)>/i, '<head$1>\n' + link);
-    // 源文件缺少 head：有 <body> 时插在它前面，否则插在 <html> 后面，保证标签一定存在
     if (/<body\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<body\b([^>]*)>/i, '<head>\n' + link + '\n</head>\n<body$1>');
     if (/<html\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<html\b([^>]*)>/i, '<html$1>\n<head>\n' + link + '\n</head>');
     return cleaned;
@@ -304,19 +294,19 @@ function findTemplate(dir, name) {
 function adjustRelativeRefs(content, templateAssetBase, pageOutDir) {
     function rewritePath(ref) {
         if (!ref) return ref;
-        if (/^(https?:)?\/\//i.test(ref)) return ref;   // 协议相对 / http(s) 外链
-        if (/^[#?]/.test(ref)) return ref;              // 锚点 / 查询
-        if (/^(data|mailto):/i.test(ref)) return ref;   // 特殊协议
-        if (ref.startsWith('/')) {                      // 站点根绝对路径：按 DIST 根解析后回退到页面目录
+        if (/^(https?:)?\/\//i.test(ref)) return ref;
+        if (/^[#?]/.test(ref)) return ref;
+        if (/^(data|mailto):/i.test(ref)) return ref;
+        if (ref.startsWith('/')) {
             const absAsset = path.resolve(DIST, ref.slice(1));
             let relPath = path.relative(pageOutDir, absAsset).split(path.sep).join('/');
             if (relPath === '') relPath = './' + path.basename(ref);
             if (!/^(\.\.?\/)/.test(relPath)) relPath = './' + relPath;
             return relPath;
         }
-        if (path.isAbsolute(ref)) return ref;           // 其它绝对路径：保持原样
-        if (/^(\.\.?\/)/.test(ref)) return ref;         // 已经是 ./ 或 ../ 的相对路径（如顶栏导航）：保持原样
-        const absAsset = path.resolve(templateAssetBase, ref);   // 模板内裸相对资源：按模板位置解析
+        if (path.isAbsolute(ref)) return ref;
+        if (/^(\.\.?\/)/.test(ref)) return ref;
+        const absAsset = path.resolve(templateAssetBase, ref);
         let relPath = path.relative(pageOutDir, absAsset).split(path.sep).join('/');
         if (relPath === '') relPath = './' + path.basename(ref);
         if (!/^(\.\.?\/)/.test(relPath)) relPath = './' + relPath;
@@ -592,7 +582,6 @@ async function localizeImages(html, outPath, baseName, mirrorAssetsDir) {
     for (const m of matches) {
         const url = m[3];
         counter++;
-        // 以 repo/页面名 + 资源序号 + 文件后缀作为安全且简短的文件名
         const prefix = baseName + '-' + String(counter).padStart(3, '0');
         // 已存在同名本地资源则跳过下载，直接复用（加快构建）
         let fileName = (fs.existsSync(assetsDir))
@@ -643,13 +632,6 @@ async function mdBody(srcFile, outPath) {
     return markdownToHtml(markdown, outPath, baseName);
 }
 
-// ===== 密码保护页面（*.enc.md） =====
-// .enc.md 只在本地存在（由 .gitignore 忽略），构建流程：
-//   1) 读首行注释里的 JSON 配置，取密码；密码绝不写入任何产物
-//   2) 去掉配置行，把正文 Markdown 渲染为 HTML 片段，用 PBKDF2 + AES-256-GCM 加密成 .html.enc
-//   3) 生成同名 .html：可见内容只有密码框，浏览器 fetch .html.enc 后本地解密再插入正文
-//   4) .html 与 .html.enc 一并写入 /pages 和 /dist 并提交；CI 无 .enc.md，不重新加密，
-//      但每次构建都会用当前模板重新渲染 .html 骨架，使密码框样式 / 解密脚本与工程同步
 function parseEncSource(markdown, srcRel) {
     const lines = String(markdown).split(/\r?\n/);
     const first = (lines[0] || '').trim();
@@ -714,7 +696,6 @@ function unlockScript(encFileName, iterations, unlockedTitle) {
         "  var SALT_LEN = " + ENC_SALT_LEN + ", IV_LEN = " + ENC_IV_LEN +
             ", TAG_LEN = " + ENC_TAG_LEN + ", HEADER_LEN = " + ENC_HEADER_LEN + ";",
         "  var ENC_FILE = " + JSON.stringify(encFileName) + ";",
-        // 解密成功后把标签页标题换成中性文件名，避免一直停留在「需要密码」
         "  var UNLOCKED_TITLE = " + JSON.stringify(unlockedTitle) + ";",
         "  var $ = function (id) { return document.getElementById(id); };",
         "  var input = $('unlockPassword'), btn = $('unlockBtn'),",
@@ -861,7 +842,6 @@ async function processEncryptedPage(srcFile) {
     const bodyHtml = await markdownToHtml(cfg.markdown, distShell, baseName, path.join(srcDir, 'assets'));
     console.log('正在加密: ' + srcRel);
     const encBytes = encryptHtml(bodyHtml, cfg.password, cfg.iterations);
-    // .html 只是「中间显示部分」的骨架源文件，公共模板由 processPage 每次构建注入
     const shellHtml = renderUnlockPage(encName, cfg.iterations, baseName);
 
     fs.mkdirSync(path.dirname(distShell), { recursive: true });
@@ -908,7 +888,6 @@ function buildNav(currentOutPath, descriptors) {
     return '<nav class="auto-list">\n  <ul>\n' + homeItem + '\n' + items + '\n  </ul>\n</nav>';
 }
 
-// 取文本中第一行非空内容（去除首尾空白）
 function firstNonEmptyLine(text) {
     const lines = String(text).split(/\r?\n/);
     for (const line of lines) {
@@ -918,7 +897,6 @@ function firstNonEmptyLine(text) {
     return '';
 }
 
-// md 文件：取首行非空文本（去除 Markdown 标题/列表标记）
 function mdFirstLine(srcFile) {
     let text = '';
     try { text = fs.readFileSync(srcFile, 'utf8'); } catch (e) { return ''; }
@@ -926,7 +904,6 @@ function mdFirstLine(srcFile) {
     return line.replace(/^#{1,6}\s+/, '').replace(/^[-*+]\s+/, '').trim();
 }
 
-// html 文件：优先取 <title> 文本；否则取 <body> 去除标签后的首行纯文本
 function htmlFirstLine(srcFile) {
     let text = '';
     try { text = fs.readFileSync(srcFile, 'utf8'); } catch (e) { return ''; }
@@ -944,7 +921,6 @@ function htmlFirstLine(srcFile) {
     return firstNonEmptyLine(bodyText);
 }
 
-// 依据扩展名返回文件的首行说明：md -> 首行非空文本；html -> title 或 body 首行纯文本
 function fileDescription(srcFile, ext) {
     const e = (ext || path.extname(srcFile)).toLowerCase();
     if (e === '.md') return mdFirstLine(srcFile);
@@ -1012,7 +988,6 @@ function collect(dir) {
         const ext = path.extname(entry.name).toLowerCase();
         if (ext === '.html' || ext === '.md') {
             const base = path.basename(entry.name, ext);
-            // 同名 .html.enc 存在，说明这是密码保护页面；页面本身仍是普通源页面，照常注入模板
             const lockedPage = ext === '.html' && fs.existsSync(path.join(dir, base + '.html.enc'));
             if (!pageFilesByDir.has(dir)) pageFilesByDir.set(dir, new Map());
             const m = pageFilesByDir.get(dir);
@@ -1022,7 +997,6 @@ function collect(dir) {
                 m.set(base, { base, ext, srcFile: full, name: entry.name, lockedPage });
             }
         } else {
-            // *.html.enc 随仓库提交；远程没有 .enc.md，以它为凭据每次重建密码框骨架
             if (entry.name.toLowerCase().endsWith('.html.enc')) {
                 lockedEncPages.push({ dir, baseName: entry.name.slice(0, -'.html.enc'.length) });
             }
@@ -1048,7 +1022,6 @@ function toSiteUrl(relPath) {
     return SITE_URL + '/' + norm;
 }
 
-// 站点地图：将 /dist 下所有 html、php 文件，自动生成到 /dist/sitemap.xml
 function buildSitemap() {
     const urls = [];
     function walk(dir) {
@@ -1089,7 +1062,6 @@ function buildSitemap() {
     console.log('已生成站点地图: ' + path.relative(DIST, out) + ' (共 ' + urls.length + ' 个地址)');
 }
 
-// 外链清单：扫描 /dist 下所有 html、php 文件引用的外部站点链接，输出到 /dist/external-url.json
 function buildExternalUrlList() {
     const siteHost = new URL(SITE_URL).hostname.toLowerCase();
     const siteRoot = siteHost.replace(/^www\./, '');
@@ -1101,14 +1073,12 @@ function buildExternalUrlList() {
         // 还原 HTML 实体，保证 query 参数完整（例如 &amp; -> &）
         s = s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'");
         s = s.trim().split(/\s+/)[0].replace(/[.,;:!?]+$/, '');
-        // 站内相对链接、锚点、mailto 等不属于外部站点
         if (!/^(?:https?:)?\/\//i.test(s)) return;
         const url = s.startsWith('//') ? 'https:' + s : s;
         let parsed;
         try { parsed = new URL(url); } catch (e) { return; }
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return;
         const host = parsed.hostname.toLowerCase();
-        // 本站域名（含 www 变体）不算外部站点
         if (host === siteHost || host === siteRoot || host === 'www.' + siteRoot) return;
         found.add(url);
     }
@@ -1125,7 +1095,6 @@ function buildExternalUrlList() {
                 add(val);
             }
         }
-        // CSS 中的 url(...)
         const cssRe = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi;
         for (const m of html.matchAll(cssRe)) {
             const val = (m[1] !== undefined ? m[1] : (m[2] !== undefined ? m[2] : m[3])) || '';
@@ -1159,7 +1128,6 @@ try {
 for (const srcFile of encryptedPages) {
     await processEncryptedPage(srcFile);
 }
-// 密码框骨架不含密钥，每次构建都按当前模板刷新；远程没有 .enc.md 也能同步 CSS / 解密脚本
 for (const p of lockedEncPages) {
     refreshUnlockShell(p.dir, p.baseName);
 }
@@ -1202,7 +1170,6 @@ for (const [dir, baseMap] of pageFilesByDir) {
     const dirLabel = '/' + path.relative(PAGES, dir).split(path.sep).join('/');
     const fileEntries = [];
     for (const d of descriptors) {
-        // 密码保护页面不取摘要，只标注受密码保护
         fileEntries.push({
             label: d.base, link: d.outPath,
             desc: d.lockedPage ? '<页面受密码保护>' : fileDescription(d.srcFile, d.ext)
