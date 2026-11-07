@@ -7,4 +7,5 @@
 ## 内容索引
 
 [站点地图](../sitemap.xml)  
+[外链清单](../external-url.json)  
 [GitHub Repo 清单](../github/repos/index.html)  
