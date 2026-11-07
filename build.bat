@@ -434,6 +434,24 @@ body {
   overflow-x: auto; white-space: pre;
 }
 .markdown-body pre code.hljs { background: transparent; padding: 0; }
+.markdown-body .code-block { position: relative; margin: 0 0 16px; }
+.markdown-body .code-block > pre { margin: 0; }
+.copy-code-btn {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  padding: 4px 8px; font-size: 12px; line-height: 18px;
+  color: var(--color-fg-muted); background: var(--color-canvas-default);
+  border: 1px solid var(--color-border-default); border-radius: 6px;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .15s, color .15s, border-color .15s;
+}
+.code-block:hover .copy-code-btn,
+.copy-code-btn:focus-visible,
+.copy-code-btn.copied,
+.copy-code-btn.failed { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .copy-code-btn { opacity: 1; pointer-events: auto; } }
+.copy-code-btn:hover { color: var(--color-accent-fg); border-color: var(--color-accent-fg); }
+.copy-code-btn.copied { color: #1a7f37; border-color: #1a7f37; }
+.copy-code-btn.failed { color: #b3261e; border-color: #b3261e; }
 .markdown-body table {
   border-collapse: collapse; display: block; width: max-content;
   max-width: 100%; margin: 0 0 16px; overflow: auto;
@@ -448,6 +466,75 @@ body {
 .markdown-body table td.desc.desc-empty { color: #8893a0; }
 .markdown-body img { max-width: 100%; }
 .markdown-body hr { height: 1px; border: 0; background: var(--color-border-muted); margin: 24px 0; }
+`;
+
+const CODE_COPY_JS = `
+(function () {
+  'use strict';
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { }
+    document.body.removeChild(ta);
+    return ok ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function () { return legacyCopy(text); });
+    }
+    return legacyCopy(text);
+  }
+  function attach(pre) {
+    if (pre.dataset.copyCodeReady) return;
+    var target = pre.querySelector('code') || pre;
+    var wrap = document.createElement('div');
+    wrap.className = 'code-block';
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(pre);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-code-btn';
+    btn.textContent = '复制';
+    btn.title = '复制代码到剪贴板';
+    btn.setAttribute('aria-label', '复制代码到剪贴板');
+    var timer;
+    btn.addEventListener('click', function () {
+      copyText(target.textContent).then(function () {
+        btn.textContent = '已复制';
+        btn.className = 'copy-code-btn copied';
+      }, function () {
+        btn.textContent = '复制失败';
+        btn.className = 'copy-code-btn failed';
+      }).then(function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          btn.textContent = '复制';
+          btn.className = 'copy-code-btn';
+        }, 1600);
+      });
+    });
+    wrap.appendChild(btn);
+    pre.dataset.copyCodeReady = '1';
+  }
+  window.initCodeCopy = function (root) {
+    var pres = (root || document).querySelectorAll('pre');
+    for (var i = 0; i < pres.length; i++) {
+      if (pres[i].closest('.markdown-body')) attach(pres[i]);
+    }
+  };
+  function init() { window.initCodeCopy(); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 `;
 
 function escapeHtml(s) {
@@ -503,6 +590,7 @@ function renderMarkdownPage(title, bodyHtml, outPath, srcDir) {
         '</div>',
         '<script src="-----HIGHLIGHTJS JS URL-----"><\/script>',
         '<script>document.addEventListener("DOMContentLoaded",function(){if(window.hljs){document.querySelectorAll(".markdown-body pre code").forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});}});<\/script>',
+        '<script>' + CODE_COPY_JS + '<\/script>',
         '</body>',
         '</html>'
     ].join('\n');
@@ -791,6 +879,7 @@ function unlockScript(encFileName, iterations, unlockedTitle) {
         "        plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: TAG_LEN * 8 }, key, combined);",
         "      } catch (e) { throw new Error('密码错误，解密失败'); }",
         "      content.innerHTML = new TextDecoder().decode(await gunzip(plain));",
+        "      if (window.initCodeCopy) { window.initCodeCopy(content); }",
         "      content.style.display = '';",
         "      document.title = UNLOCKED_TITLE;",
         "      panel.style.display = 'none';",
@@ -842,6 +931,7 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle, navHtml) {
         '</div>',
         navClose,
         '<script src="-----HIGHLIGHTJS JS URL-----"></script>',
+        '<script>' + CODE_COPY_JS + '</script>',
         '<script>',
         unlockScript(encFileName, iterations, unlockedTitle),
         '</script>',

@@ -13,7 +13,7 @@
     h1 { font-size: 28px; color: #1f2328; margin-bottom: 8px; line-height: 1.25; }
 
     .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.05); }
-    .field { margin-bottom: 18px; }
+    .field { margin-bottom: 20px; }
     .field label { display: block; font-weight: 600; color: #1f2328; margin-bottom: 6px; }
     .field .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 12px; }
     .field .row > span { display: inline-flex; flex-wrap: wrap; gap: 12px; }
@@ -31,10 +31,9 @@
     .code-out:focus { border-color: #2a5298; }
 
     .actions, .mode-tabs {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 12px;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start;
+      gap: 12px; margin: 20px 0;
     }
-    .actions { margin-top: 20px; }
-    .mode-tabs { gap: 8px; margin-bottom: 20px; }
     .btn, .btn-mini, .mode-tabs button {
       min-width: 132px; padding: 11px 22px; font-size: 16px; font-weight: 600; line-height: 1.5;
       border: 1px solid transparent; border-radius: 8px; cursor: pointer;
@@ -111,7 +110,7 @@
               <button class="btn-mini" id="downloadSvg" type="button">下载 SVG</button>
             </span>
           </div>
-          <textarea id="svgOut" class="code-out" readonly rows="6" style="margin-top:8px"></textarea>
+          <textarea id="svgOut" class="code-out" readonly rows="6" style="margin-top:20px"></textarea>
         </div>
 
         <div class="field">
@@ -119,7 +118,7 @@
             <label style="margin-bottom:0">PNG 图片</label>
             <button class="btn-mini" id="downloadPng" type="button">下载 PNG</button>
           </div>
-          <div class="qr-preview" style="margin-top:8px"><img id="pngOut" alt="二维码 PNG 预览"></div>
+          <div class="qr-preview" style="margin-top:20px"><img id="pngOut" alt="二维码 PNG 预览"></div>
         </div>
       </div>
 
