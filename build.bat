@@ -169,6 +169,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import http from 'http';
+import crypto from 'crypto';
 import { execFileSync } from 'child_process';
 import { marked } from 'marked';
 
@@ -177,6 +178,16 @@ const PAGES = '-----PROJECT PAGES DIR-----';
 const DIST = '-----PROJECT DIST DIR-----';
 const SITE_URL = '-----PROJECT SITE URL-----';
 const REPO_ROOT = path.dirname(PAGES);
+
+// ===== 密码保护页面（*.enc.md）：参数与 /pages/tools/file-encrypt-aes-256-gcm.html 一致 =====
+const ENC_MD_SUFFIX = '.enc.md';
+const ENC_SALT_LEN = 16;
+const ENC_IV_LEN = 12;
+const ENC_TAG_LEN = 16;
+const ENC_HEADER_LEN = ENC_SALT_LEN + ENC_IV_LEN + ENC_TAG_LEN; // 44
+const ENC_KEY_LEN = 32;
+const ENC_ITERATIONS = 10000000; // PBKDF2-HMAC-SHA512 默认迭代次数
+const ENC_PAGE_TITLE = '需要密码'; // 中性标题，避免出现在 title / canonical / 列表摘要中
 
 // 站点地图用的「最后修改时间」，优先使用 pages 中对应源文件在 Git 里的最后一次提交时间。
 const lastmodMap = new Map();
@@ -481,10 +492,18 @@ function outPathFor(srcFile) {
 
 let pageCount = 0;
 
-function processPage(srcFile, bodyHtml, navHtml) {
+function processPage(srcFile, bodyHtml, navHtml, generatedEnc) {
     const outPath = outPathFor(srcFile);
     const srcDir = path.dirname(srcFile);
     lastmodMap.set(outPath, fileLastModified(srcFile));
+
+    // 上一轮由 .enc.md 生成的密码框页面：已拼好模板与解密脚本，必须原样复制，不可二次注入
+    if (generatedEnc) {
+        fs.writeFileSync(outPath, bodyHtml, 'utf8');
+        pageCount++;
+        console.log('已复制(密码保护页): ' + path.relative(DIST, outPath));
+        return;
+    }
 
     if (path.extname(srcFile).toLowerCase() === '.md') {
         const titleMatch = bodyHtml.match(/<h1[ >][\s\S]*?<\/h1>/i);
@@ -574,7 +593,8 @@ function extFromUrlAndType(url, contentType) {
     return 'img';
 }
 
-async function localizeImages(html, outPath, baseName) {
+// mirrorAssetsDir 可选：把远程图片同时写一份到 /pages，供下一轮（CI）构建作为静态资源复制
+async function localizeImages(html, outPath, baseName, mirrorAssetsDir) {
     const assetsDir = path.join(path.dirname(outPath), 'assets');
     const re = /(<img\b[^>]*?\bsrc=(["']))(https?:\/\/[^"']+)\2([^>]*?>)/gi;
     const matches = [...html.matchAll(re)];
@@ -597,6 +617,10 @@ async function localizeImages(html, outPath, baseName) {
                 fileName = prefix + '.' + ext;
                 fs.mkdirSync(assetsDir, { recursive: true });
                 fs.writeFileSync(path.join(assetsDir, fileName), result.buf);
+                if (mirrorAssetsDir) {
+                    fs.mkdirSync(mirrorAssetsDir, { recursive: true });
+                    fs.writeFileSync(path.join(mirrorAssetsDir, fileName), result.buf);
+                }
                 console.log('已下载图片: ' + path.relative(DIST, path.join(assetsDir, fileName)));
             } catch (e) {
                 failed.push(url + ' (' + e.message + ')');
@@ -617,14 +641,208 @@ async function localizeImages(html, outPath, baseName) {
     return html;
 }
 
+async function markdownToHtml(markdown, outPath, baseName, mirrorAssetsDir) {
+    let html = marked(markdown);
+    html = await localizeImages(html, outPath, baseName, mirrorAssetsDir);
+    return html;
+}
+
 async function mdBody(srcFile, outPath) {
     const markdown = fs.readFileSync(srcFile, 'utf8');
     const baseName = path.basename(srcFile, path.extname(srcFile));
     // 先登记页面自身的最后修改时间，供下面下载到本地的图片沿用
     lastmodMap.set(outPath, fileLastModified(srcFile));
-    let html = marked(markdown);
-    html = await localizeImages(html, outPath, baseName);
-    return html;
+    return markdownToHtml(markdown, outPath, baseName);
+}
+
+// ===== 密码保护页面（*.enc.md） =====
+// .enc.md 只在本地存在（由 .gitignore 忽略），构建流程：
+//   1) 读首行注释里的 JSON 配置，取密码；密码绝不写入任何产物
+//   2) 去掉配置行，把正文 Markdown 渲染为 HTML 片段，用 PBKDF2 + AES-256-GCM 加密成 .html.enc
+//   3) 生成同名 .html：可见内容只有密码框，浏览器 fetch .html.enc 后本地解密再插入正文
+//   4) .html 与 .html.enc 同时写入 /pages 和 /dist，提交后 CI 只需原样复制，不需要密码
+function parseEncSource(markdown, srcRel) {
+    const lines = String(markdown).split(/\r?\n/);
+    const first = (lines[0] || '').trim();
+    if (!first.startsWith('<!--') || !first.endsWith('-->')) {
+        throw new Error('密码保护页面首行缺少配置注释：' + srcRel);
+    }
+    let cfg;
+    try { cfg = JSON.parse(first.slice(4, -3).trim()); }
+    catch (e) { throw new Error('密码保护页面首行配置 JSON 无效：' + srcRel); }
+    if (!cfg || typeof cfg.password !== 'string' || cfg.password.length === 0) {
+        throw new Error('密码保护页面缺少 password 配置：' + srcRel);
+    }
+    let iterations = ENC_ITERATIONS;
+    if (cfg.iterations !== undefined) {
+        iterations = Number(cfg.iterations);
+        if (!Number.isInteger(iterations) || iterations < 1) {
+            throw new Error('密码保护页面 iterations 配置无效：' + srcRel);
+        }
+    }
+    return { password: cfg.password, iterations: iterations, markdown: lines.slice(1).join('\n') };
+}
+
+function encryptHtml(plainHtml, password, iterations) {
+    const salt = crypto.randomBytes(ENC_SALT_LEN);
+    const iv = crypto.randomBytes(ENC_IV_LEN);
+    const key = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, iterations, ENC_KEY_LEN, 'sha512');
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv, { authTagLength: ENC_TAG_LEN });
+    const ciphertext = Buffer.concat([cipher.update(Buffer.from(plainHtml, 'utf8')), cipher.final()]);
+    // 布局：salt(16) + iv(12) + tag(16) + ciphertext，与文件加解密工具一致
+    return Buffer.concat([salt, iv, cipher.getAuthTag(), ciphertext]);
+}
+
+const UNLOCK_CSS = `
+.unlock {
+  max-width: 560px; margin: 0 auto; padding: 80px 24px 64px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+.unlock h1 { font-size: 1.6rem; margin-bottom: 8px; color: #1f2328; }
+.unlock-tip { color: #59636e; margin-bottom: 20px; font-size: .95rem; }
+.unlock-row { display: flex; gap: 10px; }
+.unlock-row input {
+  flex: 1; min-width: 0; padding: 11px 14px; font-size: 1rem;
+  border: 1px solid #ccc; border-radius: 8px; outline: none;
+}
+.unlock-row input:focus { border-color: #2a5298; }
+.unlock-row button {
+  padding: 11px 22px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+  cursor: pointer; color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+}
+.unlock-row button:disabled { opacity: .5; cursor: not-allowed; }
+.unlock-status { margin-top: 12px; font-size: .9rem; color: #59636e; min-height: 1.4em; }
+.unlock-status.err { color: #b3261e; }
+`;
+
+function unlockScript(encFileName, iterations) {
+    // 该脚本在浏览器运行：密码由用户输入，页面里不含任何密钥信息
+    return [
+        "(function () {",
+        "  'use strict';",
+        "  var ITER = " + iterations + ";",
+        "  var SALT_LEN = " + ENC_SALT_LEN + ", IV_LEN = " + ENC_IV_LEN +
+            ", TAG_LEN = " + ENC_TAG_LEN + ", HEADER_LEN = " + ENC_HEADER_LEN + ";",
+        "  var ENC_FILE = " + JSON.stringify(encFileName) + ";",
+        "  var $ = function (id) { return document.getElementById(id); };",
+        "  var input = $('unlockPassword'), btn = $('unlockBtn'),",
+        "      statusEl = $('unlockStatus'), panel = $('unlockPanel'), content = $('unlockContent');",
+        "  function setStatus(text, isErr) {",
+        "    statusEl.textContent = text || '';",
+        "    statusEl.className = 'unlock-status' + (isErr ? ' err' : '');",
+        "  }",
+        "  function setBusy(busy) {",
+        "    btn.disabled = busy; input.disabled = busy;",
+        "    btn.textContent = busy ? '解密中…' : '解密';",
+        "  }",
+        "  async function deriveKey(password, salt) {",
+        "    var enc = new TextEncoder();",
+        "    var base = await crypto.subtle.importKey('raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);",
+        "    return crypto.subtle.deriveKey(",
+        "      { name: 'PBKDF2', salt: salt, iterations: ITER, hash: 'SHA-512' },",
+        "      base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);",
+        "  }",
+        "  async function unlock() {",
+        "    var password = input.value;",
+        "    if (!password) { setStatus('请输入密码', true); return; }",
+        "    if (!window.crypto || !crypto.subtle) { setStatus('请在 HTTPS 或 localhost 下打开本页', true); return; }",
+        "    setBusy(true);",
+        "    setStatus('正在解密，请稍候（密钥派生可能需要十几秒）…');",
+        "    try {",
+        "      var res = await fetch(ENC_FILE, { cache: 'no-store' });",
+        "      if (!res.ok) throw new Error('HTTP ' + res.status);",
+        "      var buf = new Uint8Array(await res.arrayBuffer());",
+        "      if (buf.length < HEADER_LEN) throw new Error('加密内容损坏');",
+        "      var salt = buf.subarray(0, SALT_LEN);",
+        "      var iv = buf.subarray(SALT_LEN, SALT_LEN + IV_LEN);",
+        "      var tag = buf.subarray(SALT_LEN + IV_LEN, HEADER_LEN);",
+        "      var ct = buf.subarray(HEADER_LEN);",
+        "      var combined = new Uint8Array(ct.length + TAG_LEN);",
+        "      combined.set(ct, 0); combined.set(tag, ct.length);",
+        "      var key = await deriveKey(password, salt);",
+        "      var plain;",
+        "      try {",
+        "        plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: TAG_LEN * 8 }, key, combined);",
+        "      } catch (e) { throw new Error('密码错误，或内容已损坏'); }",
+        "      content.innerHTML = new TextDecoder().decode(plain);",
+        "      content.style.display = '';",
+        "      panel.style.display = 'none';",
+        "      setStatus('');",
+        "      if (window.hljs) {",
+        "        content.querySelectorAll('pre code').forEach(function (el) {",
+        "          try { hljs.highlightElement(el); } catch (e) {}",
+        "        });",
+        "      }",
+        "    } catch (e) {",
+        "      setStatus(e && e.message ? e.message : String(e), true);",
+        "    } finally { setBusy(false); }",
+        "  }",
+        "  btn.addEventListener('click', unlock);",
+        "  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') unlock(); });",
+        "})();"
+    ].join('\n');
+}
+
+function renderUnlockPage(encFileName, iterations, outPath, srcDir) {
+    const html = [
+        '<!DOCTYPE html>',
+        '<html lang="zh-CN">',
+        '<head>',
+        '<meta charset="UTF-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        '<title>' + escapeHtml(ENC_PAGE_TITLE) + '</title>',
+        '<style>' + MARKDOWN_CSS + UNLOCK_CSS + '</style>',
+        '<link rel="stylesheet" href="-----HIGHLIGHTJS CSS URL-----">',
+        '</head>',
+        '<body>',
+        '<div class="unlock" id="unlockPanel">',
+        '  <h1>' + escapeHtml(ENC_PAGE_TITLE) + '</h1>',
+        '  <p class="unlock-tip">本页内容已加密，请输入密码查看。</p>',
+        '  <div class="unlock-row">',
+        '    <input type="password" id="unlockPassword" placeholder="请输入密码" autocomplete="off">',
+        '    <button type="button" id="unlockBtn">解密</button>',
+        '  </div>',
+        '  <p class="unlock-status" id="unlockStatus"></p>',
+        '</div>',
+        '<article class="markdown-body" id="unlockContent" style="display:none"></article>',
+        '<script src="-----HIGHLIGHTJS JS URL-----"></script>',
+        '<script>',
+        unlockScript(encFileName, iterations),
+        '</script>',
+        '</body>',
+        '</html>'
+    ].join('\n');
+    return injectCanonical(injectFooter(injectHeader(html, outPath, srcDir), outPath, srcDir), outPath);
+}
+
+async function processEncryptedPage(srcFile) {
+    const srcRel = path.relative(PAGES, srcFile);
+    const baseName = path.basename(srcFile).slice(0, -ENC_MD_SUFFIX.length);
+    const srcDir = path.dirname(srcFile);
+    const shellName = baseName + '.html';
+    const encName = baseName + '.html.enc';
+    const srcShell = path.join(srcDir, shellName);
+    const srcEnc = path.join(srcDir, encName);
+    const distShell = path.join(DIST, path.relative(PAGES, srcShell));
+    const distEnc = path.join(DIST, path.relative(PAGES, srcEnc));
+
+    const cfg = parseEncSource(fs.readFileSync(srcFile, 'utf8'), srcRel);
+    // 远程图片同时落到 /pages，保证下一轮（CI，无 .enc.md）仍能复制这些资源
+    const bodyHtml = await markdownToHtml(cfg.markdown, distShell, baseName, path.join(srcDir, 'assets'));
+    console.log('正在加密: ' + srcRel);
+    const encBytes = encryptHtml(bodyHtml, cfg.password, cfg.iterations);
+    const shellHtml = renderUnlockPage(encName, cfg.iterations, distShell, srcDir);
+
+    fs.mkdirSync(path.dirname(distShell), { recursive: true });
+    fs.writeFileSync(srcShell, shellHtml, 'utf8');
+    fs.writeFileSync(srcEnc, encBytes);
+    fs.writeFileSync(distShell, shellHtml, 'utf8');
+    fs.writeFileSync(distEnc, encBytes);
+    const mtime = fileLastModified(srcFile);
+    lastmodMap.set(distShell, mtime);
+    lastmodMap.set(distEnc, mtime);
+    pageCount++;
+    console.log('已加密: ' + srcRel);
 }
 
 function wrapWithNav(bodyHtml, navHtml) {
@@ -739,6 +957,7 @@ function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
 
 const staticFiles = [];
 const pageFilesByDir = new Map();
+const encryptedPages = [];
 
 function collect(dir) {
     let entries;
@@ -748,15 +967,22 @@ function collect(dir) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) { collect(full); continue; }
         if (RESERVED.has(entry.name)) continue;
+        // 明文源文件只在本地参与构建，绝不作为页面或静态资源复制到 /dist
+        if (entry.name.toLowerCase().endsWith(ENC_MD_SUFFIX)) {
+            encryptedPages.push(full);
+            continue;
+        }
         const ext = path.extname(entry.name).toLowerCase();
         if (ext === '.html' || ext === '.md') {
             const base = path.basename(entry.name, ext);
+            // 同名 .html.enc 存在，说明这个 html 是本地生成的密码框页面
+            const generatedEnc = ext === '.html' && fs.existsSync(path.join(dir, base + '.html.enc'));
             if (!pageFilesByDir.has(dir)) pageFilesByDir.set(dir, new Map());
             const m = pageFilesByDir.get(dir);
             if (!m.has(base)) {
-                m.set(base, { base, ext, srcFile: full, name: entry.name });
+                m.set(base, { base, ext, srcFile: full, name: entry.name, generatedEnc });
             } else if (m.get(base).ext === '.md' && ext === '.html') {
-                m.set(base, { base, ext, srcFile: full, name: entry.name });
+                m.set(base, { base, ext, srcFile: full, name: entry.name, generatedEnc });
             }
         } else {
             staticFiles.push({ full });
@@ -824,6 +1050,10 @@ function buildSitemap() {
 
 (async () => {
 try {
+// 先生成密码保护页面：产物会写回 /pages，但 collect() 已结束，本轮不会重复处理
+for (const srcFile of encryptedPages) {
+    await processEncryptedPage(srcFile);
+}
 for (const [dir, baseMap] of pageFilesByDir) {
     const pages = [...baseMap.values()];
     if (pages.length === 0) continue;
@@ -840,7 +1070,7 @@ for (const [dir, baseMap] of pageFilesByDir) {
             const bodyHtml = d.ext === '.md'
                 ? await mdBody(d.srcFile, d.outPath)
                 : fs.readFileSync(d.srcFile, 'utf8');
-            processPage(d.srcFile, bodyHtml, '');
+            processPage(d.srcFile, bodyHtml, '', d.generatedEnc);
         }
         continue;
     }
@@ -853,7 +1083,7 @@ for (const [dir, baseMap] of pageFilesByDir) {
         const bodyHtml = d.ext === '.md'
             ? await mdBody(d.srcFile, d.outPath)
             : fs.readFileSync(d.srcFile, 'utf8');
-        processPage(d.srcFile, bodyHtml, navHtml);
+        processPage(d.srcFile, bodyHtml, navHtml, d.generatedEnc);
     }
 
     const navHtmlIndex = buildNav(indexOutPath, descriptors);
@@ -864,6 +1094,8 @@ for (const [dir, baseMap] of pageFilesByDir) {
     }
     for (const sf of staticFiles) {
         if (path.dirname(sf.full) === dir) {
+            // 密文文件是密码框页面的内部数据，不列入自动列表
+            if (sf.full.toLowerCase().endsWith('.html.enc')) continue;
             const dest = path.join(DIST, path.relative(PAGES, sf.full));
             fileEntries.push({ label: path.basename(sf.full), link: dest, desc: '' });
         }
