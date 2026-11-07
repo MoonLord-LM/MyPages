@@ -7,7 +7,6 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
       color: #1f2328; line-height: 1.6; background: #fafafa;
     }
     .wrap { max-width: 900px; margin: 0 auto; padding: 40px 16px; }
@@ -29,6 +28,8 @@
 <body>
 <style>
   :root { --nav-h: 54px; }
+  /* ===== 全局默认字体：所有页面统一，各页面样式不再单独声明 font-family ===== */
+  * { font-family: "Microsoft YaHei UI", sans-serif; }
   /* ===== 顶部导航（全部收在 #site-nav 命名空间，避免与页面 CSS 冲突） ===== */
   /* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
   #site-nav, #site-nav * { box-sizing: border-box; }
