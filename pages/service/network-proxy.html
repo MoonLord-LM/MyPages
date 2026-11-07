@@ -267,7 +267,7 @@ body {
   <p class="unlock-tip">本页内容已加密，请输入密码查看。</p>
   <div class="unlock-row">
     <input type="password" id="unlockPassword" placeholder="请输入密码" autocomplete="off">
-    <button type="button" id="unlockBtn">解锁</button>
+    <button type="button" id="unlockBtn">解密</button>
   </div>
   <p class="unlock-status" id="unlockStatus"></p>
 </div>
@@ -288,7 +288,7 @@ body {
   }
   function setBusy(busy) {
     btn.disabled = busy; input.disabled = busy;
-    btn.textContent = busy ? '解密中…' : '解锁';
+    btn.textContent = busy ? '解密中…' : '解密';
   }
   async function deriveKey(password, salt) {
     var enc = new TextEncoder();
