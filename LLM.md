@@ -32,9 +32,16 @@
 
 注意：/dist 目录的内容，只通过 GitHub 流水线自动构建生成，不应该在本地直接修改内容  
 
+## 注释规范
+
+代码本身就是最好的说明，额外的注释反而增加维护成本  
+仅添加少量的注释，并且应该是对代码目标的说明，而不是复述一遍代码本身，复述没有任何意义  
+
 ## 页面字体和大小
 
-字体，统一使用 `{ font-family: "Microsoft YaHei UI", sans-serif; }` 字体  
+普通内容，优先使用 `{ font-family: "Microsoft YaHei UI", sans-serif; }` 字体  
+对于代码块，要保持等宽，使用 `{ font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-variant-ligatures: none; }` 字体  
+
 字体大小，统一使用 px 单位  
 各级标题 h1-h6 对应的字体大小，建议为 28、24、20、16、14、12px  
 除首页外，其它正常的卡片的标题，建议为 20px  
