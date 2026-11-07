@@ -252,6 +252,46 @@ function injectFooter(html, outPath, srcDir) {
     return html.replace(/<\/body>/i, ftr + '\n</body>');
 }
 
+// 链接规范化：相对路径链接在本页面打开，完整路径链接（带 http(s):// 或 //）在新页面打开
+// 在构建产物上统一处理，覆盖 HTML 源文件书写的链接与 Markdown 渲染出的链接
+// （Markdown 语法无法书写 target，只能在产物阶段补齐）
+function normalizeLinkTargets(html) {
+    function cleanAttrs(s) {
+        return s.replace(/\s+/g, ' ').trim();
+    }
+    function isFullPath(href) {
+        // 完整路径：带协议的绝对地址（http://、https://）或协议相对的 //host/path
+        return /^(https?:)?\/\//i.test(href);
+    }
+    return html.replace(/<a\b([^>]*)>/gi, (tag, attrs) => {
+        const ha = attrs.match(/\bhref\s*=\s*("([^"]*)"|'([^']*)')/i);
+        if (!ha) return tag;
+        const href = (ha[2] !== undefined ? ha[2] : ha[3]).trim();
+        if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) return tag;
+        if (!isFullPath(href)) {
+            // 相对路径：在本页面打开，移除 target="_blank"
+            if (/\btarget\s*=/i.test(attrs)) {
+                const na = cleanAttrs(attrs.replace(/\s*\btarget\s*=\s*("([^"]*)"|'([^']*)')/i, ''));
+                return '<a ' + na + '>';
+            }
+            return tag;
+        }
+        // 完整路径：在新页面打开，强制 target="_blank" 且 rel 含 noopener（防范 reverse tabnabbing）
+        let newAttrs = cleanAttrs(attrs.replace(/\s*\btarget\s*=\s*("([^"]*)"|'([^']*)')/i, ''));
+        newAttrs += ' target="_blank"';
+        const ra = newAttrs.match(/\brel\s*=\s*("([^"]*)"|'([^']*)')/i);
+        if (ra) {
+            const rv = (ra[2] !== undefined ? ra[2] : ra[3]);
+            const toks = rv.split(/\s+/).filter(Boolean);
+            if (!toks.includes('noopener')) toks.push('noopener');
+            newAttrs = newAttrs.replace(ra[0], 'rel="' + toks.join(' ') + '"');
+        } else {
+            newAttrs += ' rel="noopener"';
+        }
+        return '<a ' + cleanAttrs(newAttrs) + '>';
+    });
+}
+
 // 地址始终使用站点根地址 SITE_URL 加页面自身路径，与部署域名无关
 // 因此镜像站部署同一份产物时，收录权重会集中到主域
 function injectCanonical(html, outPath) {
@@ -260,11 +300,13 @@ function injectCanonical(html, outPath) {
     // 源文件若已自带 canonical，先移除，避免与目标地址冲突
     // 不能加行首锚点：非行首书写（如挤在单行 head 内）的 canonical 删不掉，会留下重复标签
     const cleaned = html.replace(/<link\b[^>]*\brel\s*=\s*("|')?canonical\1[^>]*>\s*/gi, '');
-    if (/<\/head>/i.test(cleaned)) return cleaned.replace(/<\/head>/i, link + '\n</head>');
-    if (/<head\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<head\b([^>]*)>/i, '<head$1>\n' + link);
-    if (/<body\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<body\b([^>]*)>/i, '<head>\n' + link + '\n</head>\n<body$1>');
-    if (/<html\b[^>]*>/i.test(cleaned)) return cleaned.replace(/<html\b([^>]*)>/i, '<html$1>\n<head>\n' + link + '\n</head>');
-    return cleaned;
+    let res;
+    if (/<\/head>/i.test(cleaned)) res = cleaned.replace(/<\/head>/i, link + '\n</head>');
+    else if (/<head\b[^>]*>/i.test(cleaned)) res = cleaned.replace(/<head\b([^>]*)>/i, '<head$1>\n' + link);
+    else if (/<body\b[^>]*>/i.test(cleaned)) res = cleaned.replace(/<body\b([^>]*)>/i, '<head>\n' + link + '\n</head>\n<body$1>');
+    else if (/<html\b[^>]*>/i.test(cleaned)) res = cleaned.replace(/<html\b([^>]*)>/i, '<html$1>\n<head>\n' + link + '\n</head>');
+    else res = cleaned;
+    return normalizeLinkTargets(res);
 }
 
 console.log('源文件目录: ' + PAGES);
