@@ -21,9 +21,6 @@ body {
   --color-accent-fg: #0969da;
   --color-neutral-muted: rgba(175, 184, 193, 0.2);
   box-sizing: border-box;
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 40px 24px 64px;
   color: var(--color-fg-default);
   font-size: 14px;
   line-height: 1.6;
@@ -97,6 +94,9 @@ body {
   /* 标题统一档位：h1-h6 = 28/24/20/16/14/12px（页面内更具体的规则可覆盖） */
   h1 { font-size: 28px; } h2 { font-size: 24px; } h3 { font-size: 20px; }
   h4 { font-size: 16px; } h5 { font-size: 14px; } h6 { font-size: 12px; }
+  /* ===== 全站主体容器：所有页面正文统一放进这个居中区域 ===== */
+  /* 显式 content-box，避免各页面全局 border-box 让容器宽度不一致：内容区 900px */
+  .wrap { box-sizing: content-box; max-width: 900px; margin: 0 auto; padding: 30px 24px 48px; }
   /* 固定滚动条槽位：避免长短页面切换时 50vw 出血计算让顶栏左右跳动 */
   html { scrollbar-gutter: stable; }
   /* 旧版浏览器（不支持 scrollbar-gutter）退化为常驻竖向滚动条，效果相同 */
@@ -119,7 +119,8 @@ body {
     box-shadow: 0 4px 18px rgba(31, 60, 114, 0.12);
   }
   #site-nav .nav-container {
-    width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+    /* 与 .wrap 内容区同为 900px：960px = 30 + 900 + 30，菜单靠左、搜索靠右 */
+    width: 100%; max-width: 960px; margin: 0 auto; padding: 0 30px;
     display: flex; align-items: center;
   }
   #site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; margin-left: 4rem; }
@@ -253,6 +254,7 @@ body {
 <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
 <!-- End Google Analytics Tag -->
 
+<div class="wrap">
 <article class="markdown-body">
 <style>
 .auto-list {
@@ -311,6 +313,7 @@ body {
 
 </div>
 </article>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
 <script>document.addEventListener("DOMContentLoaded",function(){if(window.hljs){document.querySelectorAll(".markdown-body pre code").forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});}});</script>
 <!-- Cloudflare Web Analytics -->
