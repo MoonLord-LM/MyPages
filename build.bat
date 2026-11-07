@@ -265,7 +265,7 @@ function injectFooter(html, outPath, srcDir) {
 // 因此镜像站部署同一份产物时，收录权重会集中到主域
 function injectCanonical(html, outPath) {
     const rel = path.relative(DIST, outPath).split(path.sep).join('/');
-    const link = '  <link rel="canonical" href="' + escapeAttr(toSiteUrl(rel)) + '">';
+    const link = '<link rel="canonical" href="' + escapeAttr(toSiteUrl(rel)) + '">';
     // 源文件若已自带 canonical，先移除，避免与目标地址冲突
     const cleaned = html.replace(/^[ \t]*<link\b[^>]*\brel\s*=\s*("|')?canonical\1[^>]*>[ \t]*\r?\n?/gim, '');
     if (/<\/head>/i.test(cleaned)) return cleaned.replace(/<\/head>/i, link + '\n</head>');

@@ -445,7 +445,7 @@ a:hover{text-decoration:underline;}
 a.stat{text-decoration:none;}
 a.stat:hover{color:var(--accent);}
 .section{margin-top:20px;}
-.section h2{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--text-primary);}
+.section h3{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--text-primary);}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .lang-flex{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
 .donut{flex-shrink:0;}
@@ -487,7 +487,7 @@ a.stat:hover{color:var(--accent);}
   </header>
 
   <section class="section">
-    <h2>Top Languages</h2>
+    <h3>Top Languages</h3>
     <div class="lang-flex">
       <svg class="donut" width="184" height="184" viewBox="0 0 160 160" style="transform:rotate(-90deg)">$segs</svg>
       <div class="legend">$legend</div>
@@ -495,7 +495,7 @@ a.stat:hover{color:var(--accent);}
   </section>
 
   <section class="section">
-    <h2>Top Repositories</h2>
+    <h3>Top Repositories</h3>
     <div class="cards">$cards</div>
   </section>
 
