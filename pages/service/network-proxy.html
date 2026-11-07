@@ -163,7 +163,7 @@ body {
       var plain;
       try {
         plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: TAG_LEN * 8 }, key, combined);
-      } catch (e) { throw new Error('密码错误，或内容已损坏'); }
+      } catch (e) { throw new Error('密码错误，解密失败'); }
       content.innerHTML = new TextDecoder().decode(plain);
       content.style.display = '';
       document.title = UNLOCKED_TITLE;
