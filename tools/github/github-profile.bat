@@ -426,7 +426,7 @@ a:hover{text-decoration:underline;}
 .avatar{width:128px;height:128px;border-radius:50%;border:1px solid var(--border);background:var(--bg-secondary);}
 .info{flex:1;min-width:240px;}
 .title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-.name{font-size:28px;font-weight:600;line-height:1.2;}
+.name{font-size:24px;font-weight:600;line-height:1.2;}
 .name a{color:var(--text-primary);}
 .name a:hover{color:var(--accent);text-decoration:none;}
 .login{color:var(--text-secondary);font-weight:400;font-size:20px;}
@@ -445,7 +445,7 @@ a:hover{text-decoration:underline;}
 a.stat{text-decoration:none;}
 a.stat:hover{color:var(--accent);}
 .section{margin-top:20px;}
-.section h2{font-size:24px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--text-primary);}
+.section h2{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--text-primary);}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .lang-flex{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
 .donut{flex-shrink:0;}
@@ -458,7 +458,7 @@ a.stat:hover{color:var(--accent);}
 .repo-card{display:block;min-width:0;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:16px;transition:border-color .15s,background .15s;text-decoration:none;}
 .repo-card:hover{border-color:#8b949e;background:var(--bg-tertiary);text-decoration:none;}
 .repo-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.repo-head h4{font-size:16px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.repo-head h4{font-size:14px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .repo-desc{font-size:14px;color:var(--text-secondary);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;min-height:76px;}
 .repo-meta{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-tertiary);}
 .repo-meta span{display:inline-flex;align-items:center;gap:5px;}

@@ -963,9 +963,6 @@ function buildTable(indexOutPath, fileEntries) {
     return '<table>\n  <thead>\n    <tr><th>文件名</th><th>说明</th></tr>\n  </thead>\n  <tbody>\n' + rows + '\n  </tbody>\n</table>';
 }
 
-// 自动列表页标题：优先使用中文栏目名（与顶部导航一致），未配置的目录仍显示路径
-const LIST_PAGE_TITLES = { service: '服务' };
-
 function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
     const head = [
         '<!DOCTYPE html>',
@@ -1198,14 +1195,13 @@ for (const [dir, baseMap] of pageFilesByDir) {
     }
 
     const navHtmlIndex = buildNav(indexOutPath, descriptors);
-    const dirRel = path.relative(PAGES, dir).split(path.sep).join('/');
-    const dirLabel = LIST_PAGE_TITLES[dirRel] || '/' + dirRel;
+    const dirLabel = '/' + path.relative(PAGES, dir).split(path.sep).join('/');
     const fileEntries = [];
     for (const d of descriptors) {
         // 密码保护页面不取摘要，只标注受密码保护
         fileEntries.push({
             label: d.base, link: d.outPath,
-            desc: d.lockedPage ? '页面受密码保护' : fileDescription(d.srcFile, d.ext)
+            desc: d.lockedPage ? '<页面受密码保护>' : fileDescription(d.srcFile, d.ext)
         });
     }
     for (const sf of staticFiles) {
