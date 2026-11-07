@@ -43,13 +43,13 @@ a.stat:hover{color:var(--accent);}
 .legend-row{display:flex;align-items:center;gap:10px;font-size:14px;}
 .lang-name{color:var(--text-primary);font-weight:600;white-space:nowrap;min-width:120px;}
 .lang-pct{color:var(--text-secondary);font-variant-numeric:tabular-nums;min-width:42px;text-align:right;}
-.lang-size{color:var(--text-tertiary);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:12px;}
+.lang-size{color:var(--text-tertiary);font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:12px;}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;}
 .repo-card{display:block;min-width:0;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:16px;transition:border-color .15s,background .15s;text-decoration:none;}
 .repo-card:hover{border-color:#8b949e;background:var(--bg-tertiary);text-decoration:none;}
 .repo-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.repo-head h3{font-size:15px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.repo-desc{font-size:13px;color:var(--text-secondary);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;min-height:76px;}
+.repo-head h3{font-size:16px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.repo-desc{font-size:14px;color:var(--text-secondary);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;min-height:76px;}
 .repo-meta{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-tertiary);}
 .repo-meta span{display:inline-flex;align-items:center;gap:5px;}
 .repo-lang{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);}
@@ -85,7 +85,7 @@ a.stat:hover{color:var(--accent);}
   #site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; margin-left: 4rem; }
   #site-nav .nav-menu li { display: flex; align-items: stretch; }
   #site-nav .nav-menu .nav-link {
-    color: rgba(30, 60, 114, 0.78); font-weight: 600; font-size: 1.02rem;
+    color: rgba(30, 60, 114, 0.78); font-weight: 600; font-size: 16px;
     display: flex; align-items: center; height: 100%; padding: 0 18px; position: relative;
     transition: color .25s, background .25s;
   }
@@ -127,20 +127,20 @@ a.stat:hover{color:var(--accent);}
     width: min(560px, 90vw); background: #fff; border-radius: 14px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, .3); padding: 20px;
   }
-  #searchOverlay .search-box h3 { font-size: 1.1rem; margin-bottom: 12px; color: #222; }
+  #searchOverlay .search-box h3 { font-size: 18px; margin-bottom: 12px; color: #222; }
   #searchOverlay .search-row { display: flex; gap: 10px; }
   #searchOverlay .search-input {
-    flex: 1; padding: 11px 14px; font-size: 1rem;
+    flex: 1; padding: 11px 14px; font-size: 16px;
     border: 1px solid #ccc; border-radius: 8px; outline: none;
   }
   #searchOverlay .search-input:focus { border-color: #2a5298; }
   #searchOverlay .search-submit {
     padding: 11px 20px; border: none; border-radius: 8px;
     background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff;
-    font-weight: 600; font-size: 1rem; cursor: pointer;
+    font-weight: 600; font-size: 16px; cursor: pointer;
   }
   #searchOverlay .search-submit:hover { opacity: .92; }
-  #searchOverlay .search-hint { margin-top: 10px; font-size: .82rem; color: #888; }
+  #searchOverlay .search-hint { margin-top: 10px; font-size: 14px; color: #888; }
 
   /* 防止满宽出血（100vw）在存在竖向滚动条时产生横向滚动；
      用 clip 而非 hidden：不会把 body 变成滚动容器，因而不会破坏 sticky 吸顶 */
