@@ -17,13 +17,13 @@
 
     /* ===== 首页落地区（顶部导航栏由 header.html 注入） ===== */
     .hero {
-      min-height: calc(100vh - 54px);
+      min-height: calc(100vh - 54px - 78px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem 1.5rem;
+      padding: 0;
     }
-    .hero-inner { max-width: 880px; width: 100%; text-align: center; }
+    .hero-inner { max-width: 100%; width: 100%; text-align: center; }
     .hero h1 {
       font-size: 28px;
       font-weight: 800;
@@ -60,7 +60,7 @@
 <body>
 
   <!-- 首页落地区 -->
-  <main>
+  <main class="wrap">
     <section class="hero">
       <div class="hero-inner">
         <h1>欢迎</h1>

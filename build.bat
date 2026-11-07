@@ -359,9 +359,6 @@ body {
   --color-accent-fg: #0969da;
   --color-neutral-muted: rgba(175, 184, 193, 0.2);
   box-sizing: border-box;
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 40px 24px 64px;
   color: var(--color-fg-default);
   font-size: 14px;
   line-height: 1.6;
@@ -467,10 +464,12 @@ function renderMarkdownPage(title, bodyHtml, outPath, srcDir) {
         '<link rel="stylesheet" href="-----HIGHLIGHTJS CSS URL-----">',
         '</head>',
         '<body>',
+        '<div class="wrap">',
         '<article class="markdown-body">'
     ].join('\n');
     const tail = [
         '</article>',
+        '</div>',
         '<script src="-----HIGHLIGHTJS JS URL-----"><\/script>',
         '<script>document.addEventListener("DOMContentLoaded",function(){if(window.hljs){document.querySelectorAll(".markdown-body pre code").forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});}});<\/script>',
         '</body>',
@@ -685,7 +684,7 @@ function encryptHtml(plainHtml, password, iterations) {
 
 const UNLOCK_CSS = `
 .unlock {
-  max-width: 560px; margin: 0 auto; padding: 80px 24px 64px;
+  max-width: 560px; margin: 0 auto;
 }
 .unlock h1 { font-size: 28px; margin-bottom: 8px; color: #1f2328; }
 .unlock-tip { color: #59636e; margin-bottom: 20px; font-size: 14px; }
@@ -789,6 +788,7 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle) {
         '<link rel="stylesheet" href="-----HIGHLIGHTJS CSS URL-----">',
         '</head>',
         '<body>',
+        '<div class="wrap">',
         '<div class="unlock" id="unlockPanel">',
         '  <h1>' + escapeHtml(ENC_PAGE_TITLE) + '</h1>',
         '  <p class="unlock-tip">本页内容已加密，请输入密码查看。</p>',
@@ -799,6 +799,7 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle) {
         '  <p class="unlock-status" id="unlockStatus"></p>',
         '</div>',
         '<article class="markdown-body" id="unlockContent" style="display:none"></article>',
+        '</div>',
         '<script src="-----HIGHLIGHTJS JS URL-----"></script>',
         '<script>',
         unlockScript(encFileName, iterations, unlockedTitle),
@@ -981,10 +982,11 @@ function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
     const body =
         navHtml + '\n' +
         '<div class="auto-list-content">\n' +
+        '<div class="wrap">\n' +
         '<article class="markdown-body">\n' +
         '<h1>' + escapeHtml(dirLabel) + '</h1>\n' +
         listHtml + '\n' +
-        '</article>\n</div>';
+        '</article>\n</div>\n</div>';
     const html = injectFooter(injectHeader(head + '\n' + body + '\n</body>\n</html>', indexOutPath, srcDir), indexOutPath, srcDir);
     return injectCanonical(html, indexOutPath);
 }
