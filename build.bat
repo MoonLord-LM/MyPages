@@ -649,7 +649,8 @@ async function mdBody(srcFile, outPath) {
 //   1) 读首行注释里的 JSON 配置，取密码；密码绝不写入任何产物
 //   2) 去掉配置行，把正文 Markdown 渲染为 HTML 片段，用 PBKDF2 + AES-256-GCM 加密成 .html.enc
 //   3) 生成同名 .html：可见内容只有密码框，浏览器 fetch .html.enc 后本地解密再插入正文
-//   4) .html 与 .html.enc 同时写入 /pages 和 /dist，提交后 CI 只需原样复制，不需要密码
+//   4) .html 与 .html.enc 一并写入 /pages 和 /dist 并提交；CI 无 .enc.md，不重新加密，
+//      但每次构建都会用当前模板重新渲染 .html 骨架，使密码框样式 / 解密脚本与工程同步
 function parseEncSource(markdown, srcRel) {
     const lines = String(markdown).split(/\r?\n/);
     const first = (lines[0] || '').trim();
@@ -807,6 +808,40 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle) {
     return html;
 }
 
+// 密码框骨架（*.html）不含任何密钥，只依赖当前构建的 CSS / 解密脚本模板。
+// .enc.md 只在本地存在，远程构建没有明文源；因此以随仓库提交的 *.html.enc 为凭据，
+// 每次构建都用最新模板重新渲染骨架，让它与工程其它模板 / 设置保持同步。
+function refreshUnlockShell(srcDir, baseName) {
+    const shellName = baseName + '.html';
+    const encName = baseName + '.html.enc';
+    const srcShell = path.join(srcDir, shellName);
+    const srcEnc = path.join(srcDir, encName);
+    if (!fs.existsSync(srcEnc)) return;
+
+    // 迭代次数必须与密文配套：优先沿用现有骨架里的 ITER，骨架缺失时回退默认值
+    let iterations = ENC_ITERATIONS;
+    try {
+        const m = fs.readFileSync(srcShell, 'utf8').match(/\bvar\s+ITER\s*=\s*(\d+)\s*;/);
+        if (m) iterations = Number(m[1]);
+    } catch (e) { }
+
+    const html = renderUnlockPage(encName, iterations, baseName);
+    // 内容不变就不写盘，避免无意义的文件改动反复触发 CI 提交
+    let prev = '';
+    try { prev = fs.readFileSync(srcShell, 'utf8'); } catch (e) { }
+    if (prev !== html) {
+        fs.writeFileSync(srcShell, html, 'utf8');
+        console.log('已刷新密码框骨架: ' + path.relative(PAGES, srcShell));
+    }
+
+    // 骨架原本缺失时 collect() 不会登记，这里补上，保证本轮也生成 dist 页面 / 自动列表
+    if (!pageFilesByDir.has(srcDir)) pageFilesByDir.set(srcDir, new Map());
+    const m = pageFilesByDir.get(srcDir);
+    if (!m.has(baseName)) {
+        m.set(baseName, { base: baseName, ext: '.html', srcFile: srcShell, name: shellName, lockedPage: true });
+    }
+}
+
 async function processEncryptedPage(srcFile) {
     const srcRel = path.relative(PAGES, srcFile);
     const baseName = path.basename(srcFile).slice(0, -ENC_MD_SUFFIX.length);
@@ -955,6 +990,7 @@ function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
 const staticFiles = [];
 const pageFilesByDir = new Map();
 const encryptedPages = [];
+const lockedEncPages = []; // 随仓库提交的密文（*.html.enc），用于每次构建刷新密码框骨架
 
 function collect(dir) {
     let entries;
@@ -982,6 +1018,10 @@ function collect(dir) {
                 m.set(base, { base, ext, srcFile: full, name: entry.name, lockedPage });
             }
         } else {
+            // *.html.enc 随仓库提交；远程没有 .enc.md，以它为凭据每次重建密码框骨架
+            if (entry.name.toLowerCase().endsWith('.html.enc')) {
+                lockedEncPages.push({ dir, baseName: entry.name.slice(0, -'.html.enc'.length) });
+            }
             staticFiles.push({ full });
         }
     }
@@ -1114,6 +1154,10 @@ try {
 // 先生成密码保护页面：产物会写回 /pages，但 collect() 已结束，本轮不会重复处理
 for (const srcFile of encryptedPages) {
     await processEncryptedPage(srcFile);
+}
+// 密码框骨架不含密钥，每次构建都按当前模板刷新；远程没有 .enc.md 也能同步 CSS / 解密脚本
+for (const p of lockedEncPages) {
+    refreshUnlockShell(p.dir, p.baseName);
 }
 for (const [dir, baseMap] of pageFilesByDir) {
     const pages = [...baseMap.values()];
