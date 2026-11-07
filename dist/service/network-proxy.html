@@ -302,7 +302,7 @@ body {
     if (!password) { setStatus('请输入密码', true); return; }
     if (!window.crypto || !crypto.subtle) { setStatus('请在 HTTPS 或 localhost 下打开本页', true); return; }
     setBusy(true);
-    setStatus('正在解密，请稍候（密钥派生可能需要十几秒）…');
+    setStatus('正在解密，请稍候…');
     try {
       var res = await fetch(ENC_FILE, { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
