@@ -54,7 +54,7 @@ Static Site Generator
 页面内容第一行必须是 `<!-- { "password" : "xxxxxx" } -->` 的形式，在注释中内嵌一个配置 JSON，保存密码  
 本地执行构建时，将 md 渲染为 html，然后压缩为 gzip 格式，然后用密码加密处理，保存为 `.html.zip.enc` 后缀  
 页面 md 同名的 html 只包含一个密码输入框，用户输入正确密码后，对 `.html.zip.enc` 做解密和 gzip 解压，然后再显示出实际内容  
-加密算法参考 `/pages/tools/file-encrypt-aes-256-gcm.html` 的实现  
+加密算法参考 `/pages/tools/file-encrypt-aes.html` 的实现  
 最终生成的 `.html` 和 `.html.zip.enc` 文件，在 `/pages` 和 `/dist` 目录中都进行保存  
 
 ### 自动列表

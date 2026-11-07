@@ -59,7 +59,7 @@ Static Site Generator
 本地执行构建时，将 md 渲染为 html，然后压缩为 gzip 格式，然后用密码加密处理，保存为 `.html.zip.enc` 后缀  
 页面 md 同名的 html 只包含一个密码输入框，用户输入正确密码后，对 `.html.zip.enc` 做解密和 gzip 解压，然后再显示出实际内容  
 解压依赖浏览器的 `DecompressionStream`，需使用较新版本的 Chrome / Edge / Firefox / Safari  
-加密算法参考 `/pages/tools/file-encrypt-aes-256-gcm.html` 的实现，密文布局同样为 `salt(16) + iv(12) + tag(16) + 密文`，区别仅在密文对应的是 gzip 数据而非原始 html  
+加密算法参考 `/pages/tools/file-encrypt-aes.html` 的实现，密文布局同样为 `salt(16) + iv(12) + tag(16) + 密文`，区别仅在密文对应的是 gzip 数据而非原始 html  
 最终生成的 `.html` 和 `.html.zip.enc` 文件，在 `/pages` 和 `/dist` 目录中都进行保存  
 
 ### 自动列表
