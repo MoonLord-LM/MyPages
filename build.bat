@@ -376,7 +376,7 @@ body {
 .markdown-body h4, .markdown-body h5, .markdown-body h6 {
   margin: 24px 0 16px; font-weight: 600; line-height: 1.25;
 }
-.markdown-body h1 { font-size: 32px; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
+.markdown-body h1 { font-size: 28px; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
 .markdown-body h2 { font-size: 24px; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
 .markdown-body h3 { font-size: 20px; }
 .markdown-body h4 { font-size: 16px; }
