@@ -368,21 +368,26 @@ body { overflow-x: clip; }
       clearLog();
     }
 
+    function fitSize(w, h) {
+      const scale = Math.min(MAX_SIDE / Math.max(w, h), Math.max(1, 300 / Math.min(w, h)));
+      return { w: Math.max(1, Math.round(w * scale)), h: Math.max(1, Math.round(h * scale)) };
+    }
+
     function showPreview(url) {
       const img = new Image();
       img.onload = () => {
-        const MIN_SIDE = 300;
-        const minSide = Math.min(img.width, img.height);
-        const scale = minSide >= MIN_SIDE ? 1 : MIN_SIDE / minSide;
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
+        const size = fitSize(img.width, img.height);
         const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.width = size.w;
+        canvas.height = size.h;
+        canvas.getContext('2d').drawImage(img, 0, 0, size.w, size.h);
         preview.src = canvas.toDataURL('image/png');
       };
-      img.onerror = () => { preview.src = url; };
+      img.onerror = () => {
+        preview.removeAttribute('src');
+        previewWrap.classList.add('hide');
+        log('图片无法预览', 'err');
+      };
       img.src = url;
     }
 
@@ -555,11 +560,8 @@ body { overflow-x: clip; }
       setBusy(true);
       try {
         const img = await loadImage(selectedFile);
-        const MIN_SIDE = 300;   // 最小边不足则放大到至少该值
-        const minSide = Math.min(img.width, img.height);
-        const scale = minSide >= MIN_SIDE ? 1 : MIN_SIDE / minSide;
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
+        const size = fitSize(img.width, img.height);
+        const w = size.w, h = size.h;
         const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
