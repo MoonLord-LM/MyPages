@@ -217,7 +217,7 @@
         body = body.slice(start + PEM_HEADER.length, end);
       }
       const b64 = body.replace(/\s+/g, '');
-      if (!/^[A-Za-z0-9+/=]+$/.test(b64)) {
+      if (!/^[A-Za-z0-9+/=]*$/.test(b64)) {
         throw new Error('文件内容不是有效的 Base64 / PEM 格式');
       }
       return base64ToBytes(b64);
