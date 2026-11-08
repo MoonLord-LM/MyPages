@@ -139,8 +139,8 @@
   (function () {
     'use strict';
 
-    const MAX_SIDE = 3840;
-    const MIN_SIDE = 300;
+    const MAX_SIDE = 3840; // 长边不可超过上限
+    const MIN_SIDE = 300; // 短边尽量达到下限
 
     const $ = (id) => document.getElementById(id);
     const dropEl = $('drop');
@@ -205,8 +205,16 @@
       clearLog();
     }
 
+    // 优先采用 2 的整数次幂的缩放比（…1/8、1/4、1/2、1、2、4、8…）
     function fitSize(w, h) {
-      const scale = Math.min(MAX_SIDE / Math.max(w, h), Math.max(1, MIN_SIDE / Math.min(w, h)));
+      const maxSide = Math.max(w, h);
+      const minSide = Math.min(w, h);
+      const scaleMax = MAX_SIDE / maxSide;
+      const scaleMin = MIN_SIDE / minSide;
+      let scale = Math.min(scaleMax, Math.max(1, scaleMin));
+      scale = Math.pow(2, Math.round(Math.log2(scale)));
+      while (scale > scaleMax) scale /= 2;
+      while (scale < scaleMin && scale < scaleMax) scale *= 2;
       return { w: Math.max(1, Math.round(w * scale)), h: Math.max(1, Math.round(h * scale)) };
     }
 
