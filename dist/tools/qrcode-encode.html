@@ -906,14 +906,22 @@ body { overflow-x: clip; }
     }
 
     function downloadBlob(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (!blob) {
+        log('下载失败：' + filename + ' 内容为空，请调整参数后重试', 'err');
+        return;
+      }
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (e) {
+        log('下载失败：' + filename + '，' + (e && e.message ? e.message : e), 'err');
+      }
     }
 
     function setBusy(busy) {
@@ -937,8 +945,20 @@ body { overflow-x: clip; }
         log('生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
             ' 模块，纠错等级 ' + ecc + '，每模块像素数 ' + scale + '，边缘留白模块数 ' + quiet +
             '\n字符数：' + new TextEncoder().encode(text).length + '（UTF-8 字节）', 'ok');
-        downloadPng8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.png'), 'image/png');
-        downloadJpg8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.jpg'), 'image/jpeg', 1);
+        downloadPng8bitBtn.onclick = () => {
+          try {
+            canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.png'), 'image/png');
+          } catch (e) {
+            log('下载失败：qrcode-8bit.png，' + (e && e.message ? e.message : e), 'err');
+          }
+        };
+        downloadJpg8bitBtn.onclick = () => {
+          try {
+            canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.jpg'), 'image/jpeg', 1);
+          } catch (e) {
+            log('下载失败：qrcode-8bit.jpg，' + (e && e.message ? e.message : e), 'err');
+          }
+        };
         downloadPng1bitBtn.onclick = async () => {
           if (!lastQr) return;
           try {
