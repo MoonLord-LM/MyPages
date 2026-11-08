@@ -1,4 +1,4 @@
-2026-11-07 21:54:06 +08:00  
+2026-11-08 22:32:32 +08:00  
 https://github.com/MoonLord-LM/MyBatch  
 
 ---
@@ -86,7 +86,9 @@ A collection of commonly used Windows Batch scripts
 
 | 脚本 | 说明 |
 | --- | --- |
-| [屏幕录制关闭.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/屏幕录制关闭.bat) | 关闭系统屏幕录制 |
+| [二维码生成.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/二维码生成.bat) | 将输入的文本编码为二维码图片 |
+| [二维码识别.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/二维码识别.bat) | 识别二维码图片并解码为文本 |
+| [屏幕录制关闭.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/屏幕录制关闭.bat) | 关闭屏幕录制 |
 | [屏幕录制开启 - 0.5 倍分辨率.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/屏幕录制开启%20-%200.5%20倍分辨率.bat) | 开启屏幕录制（输出 0.5 倍分辨率） |
 | [屏幕录制开启 - 完整分辨率.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/屏幕录制开启%20-%20完整分辨率.bat) | 开启屏幕录制（输出完整分辨率） |
 | [屏幕延时录制开启 - 0.5 倍分辨率.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/屏幕延时录制开启%20-%200.5%20倍分辨率.bat) | 开始屏幕延时慢速录制（输出 0.5 倍分辨率） |
@@ -116,6 +118,7 @@ A collection of commonly used Windows Batch scripts
 | [视频降噪.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/视频降噪.bat) | 对视频做降噪处理 |
 | [视频切片截取.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/视频切片截取.bat) | 按指定的时间段切片，截取视频片段 |
 | [视频详细参数导出.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/视频详细参数导出.bat) | 导出视频详细参数信息 |
+| [视频音量均衡.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/视频音量均衡.bat) | 均衡视频音量，将过大或过小的音量，统一到 -16 LUFS |
 | [视频音频导出.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/视频音频导出.bat) | 提取视频中的音频 |
 | [视频帧率扩大为2倍 - 通用 AI 版.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/视频帧率扩大为2倍%20-%20通用%20AI%20版.bat) | AI 插帧把帧率提高至 2 倍 |
 | [视频帧率扩大为3倍 - 通用 AI 版.bat](https://github.com/MoonLord-LM/MyBatch/blob/master/console/media/视频帧率扩大为3倍%20-%20通用%20AI%20版.bat) | AI 插帧把帧率提高至 3 倍 |
