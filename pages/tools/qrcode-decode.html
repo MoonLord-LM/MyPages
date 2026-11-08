@@ -140,6 +140,7 @@
     'use strict';
 
     const MAX_SIDE = 3840;
+    const MIN_SIDE = 300;
 
     const $ = (id) => document.getElementById(id);
     const dropEl = $('drop');
@@ -205,7 +206,7 @@
     }
 
     function fitSize(w, h) {
-      const scale = Math.min(MAX_SIDE / Math.max(w, h), Math.max(1, 300 / Math.min(w, h)));
+      const scale = Math.min(MAX_SIDE / Math.max(w, h), Math.max(1, MIN_SIDE / Math.min(w, h)));
       return { w: Math.max(1, Math.round(w * scale)), h: Math.max(1, Math.round(h * scale)) };
     }
 
