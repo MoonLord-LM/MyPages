@@ -286,7 +286,7 @@ function normalizeLinkTargets(html) {
             const rv = (ra[2] !== undefined ? ra[2] : ra[3]);
             const toks = rv.split(/\s+/).filter(Boolean);
             if (!toks.includes('noopener')) toks.push('noopener');
-            newAttrs = newAttrs.replace(ra[0], 'rel="' + toks.join(' ') + '"');
+            newAttrs = newAttrs.replace(ra[0], () => 'rel="' + toks.join(' ') + '"');
         } else {
             newAttrs += ' rel="noopener"';
         }
@@ -688,9 +688,11 @@ function fetchBuffer(url) {
     });
 }
 
+const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico', 'avif']);
+
 function extFromUrlAndType(url, contentType) {
-    let ext = path.extname(new URL(url).pathname).toLowerCase().replace(/^\./, '');
-    if (ext && ext.length <= 4) return ext;
+    const ext = path.extname(new URL(url).pathname).toLowerCase().replace(/^\./, '');
+    if (IMAGE_EXTS.has(ext)) return ext;
     if (contentType.includes('svg')) return 'svg';
     if (contentType.includes('png')) return 'png';
     if (contentType.includes('jpeg')) return 'jpg';
@@ -703,13 +705,13 @@ function extFromUrlAndType(url, contentType) {
 // mirrorAssetsDir 可选：把远程图片同时写一份到 /pages，供下一轮（CI）构建作为静态资源复制
 async function localizeImages(html, outPath, baseName, mirrorAssetsDir) {
     const assetsDir = path.join(path.dirname(outPath), 'assets');
-    const re = /(<img\b[^>]*?\bsrc=(["']))(https?:\/\/[^"']+)\2([^>]*?>)/gi;
+    const re = /(<img\b[^>]*?\bsrc=(["']))((?:https?:)?\/\/[^"']+)\2([^>]*?>)/gi;
     const matches = [...html.matchAll(re)];
     // 收集所有未能本地化的远程图片，循环结束后统一报错终止，绝不保留外链
     const failed = [];
     let counter = 0;
     for (const m of matches) {
-        const url = m[3];
+        const url = m[3].startsWith('//') ? 'https:' + m[3] : m[3];
         counter++;
         const prefix = baseName + '-' + String(counter).padStart(3, '0');
         // 已存在同名本地资源则跳过下载，直接复用（加快构建）
@@ -1241,7 +1243,6 @@ function buildExternalUrlList() {
         if (!s) return;
         // 还原 HTML 实体，保证 query 参数完整（例如 &amp; -> &）
         s = s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'");
-        s = s.trim().split(/\s+/)[0].replace(/[.,;:!?]+$/, '');
         if (!/^(?:https?:)?\/\//i.test(s)) return;
         const url = s.startsWith('//') ? 'https:' + s : s;
         let parsed;
