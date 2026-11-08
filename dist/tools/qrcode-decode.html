@@ -257,15 +257,15 @@ body { overflow-x: clip; }
     <div class="panel">
       <div class="field">
         <label>输入图片</label>
+        <div class="mode-tabs">
+          <button id="captureBtn" type="button">截屏识别</button>
+          <button id="cameraBtn" type="button">摄像识别</button>
+        </div>
         <div class="drop" id="drop">
           <strong>点击选择</strong> 或将图片拖拽 / 粘贴到此处
           <input type="file" id="fileInput" accept="image/*">
         </div>
         <div class="file-info" id="fileInfo"></div>
-        <div class="mode-tabs">
-          <button id="captureBtn" type="button">截屏识别</button>
-          <button id="cameraBtn" type="button">摄像识别</button>
-        </div>
       </div>
 
       <div class="field hide" id="previewWrap">
