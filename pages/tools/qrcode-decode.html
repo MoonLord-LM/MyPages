@@ -82,11 +82,25 @@
     .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
     .tips div { line-height: 1.8; }
     .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
+
+    .scripts { margin-bottom: 16px; font-size: 14px; color: #59636e; }
+    .scripts-label { display: inline-block; margin-bottom: 6px; }
+    .scripts a { display: inline-block; margin: 0 10px 6px 0; padding: 6px 14px; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
+    .scripts a:hover { border-color: #2a5298; background: #f0f5fc; }
+    .scripts .gh-link { display: inline-flex; align-items: center; gap: .45em; margin: 0 10px 6px 0; padding: 6px 14px; line-height: inherit; background: #fff; border: 1px solid #cdd7e3; border-radius: 8px; color: #2a5298; text-decoration: none; transition: border-color .2s, background .2s; }
+    .scripts .gh-link:hover { border-color: #2a5298; background: #f0f5fc; }
+    .scripts .gh-link svg { flex: none; width: 1em; height: 1em; fill: currentColor; display: block; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <h1>二维码识别 - 图片转文本</h1>
+    <div class="scripts">
+      <span class="scripts-label">批处理脚本（与网页功能一致）：</span>
+      <a href="assets/二维码识别.bat" download="二维码识别.bat">二维码识别.bat</a>
+      <a href="assets/二维码生成.bat" download="二维码生成.bat">二维码生成.bat</a>
+      开源仓库：<a class="gh-link" href="https://github.com/MoonLord-LM/MyBatch" target="_blank" rel="noopener">MyBatch<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg></a>
+    </div>
 
     <div class="tips">
       <div>从图片中识别二维码并解码为文本。</div>
@@ -446,6 +460,39 @@
     cameraBtn.addEventListener('click', toggleCamera);
     window.addEventListener('pagehide', stopCapture);
   })();
+  </script>
+  <script>
+    // 确保 .bat 脚本是「下载」而不是被浏览器打开预览：
+    // 优先取回内容后用 blob 触发下载；取回失败时回退为带 download 的原生点击，绝不跳转预览。
+    // 带修饰键或中键点击时不拦截，保留浏览器原生行为（新标签打开、链接另存为等）。
+    document.querySelectorAll('.scripts a[download]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        var href = a.getAttribute('href');
+        var name = a.getAttribute('download') || a.textContent.trim();
+        fetch(href).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.blob();
+        }).then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var tmp = document.createElement('a');
+          tmp.href = url;
+          tmp.download = name;
+          document.body.appendChild(tmp);
+          tmp.click();
+          document.body.removeChild(tmp);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        }).catch(function () {
+          var tmp = document.createElement('a');
+          tmp.href = href;
+          tmp.download = name;
+          document.body.appendChild(tmp);
+          tmp.click();
+          document.body.removeChild(tmp);
+        });
+      });
+    });
   </script>
 </body>
 </html>
