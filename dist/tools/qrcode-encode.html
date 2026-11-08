@@ -71,6 +71,7 @@
     .notice.ok { background: #eafaf0; border-color: #b7e4c7; color: #1a7f43; }
     .notice.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
     .notice.hide { display: none; }
+    .output.blank > *, .notice.blank { visibility: hidden; }
 
     .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
     .tips div { line-height: 1.8; }
@@ -247,8 +248,8 @@ body { overflow-x: clip; }
 
     <div class="tips">
       <div>将输入的文本编码为二维码，输出 PNG、JPG 位图和 SVG 矢量图。</div>
-      <div>采用 <code>UTF-8</code> 字节模式编码，纠错等级可选 <code>低(L)</code> / <code>中(M)</code> / <code>高(Q)</code> / <code>最高(H)</code>，版本（尺寸）根据内容长度自动选择 1-40。</div>
-      <div>四周预留 4 个模块宽的静区（quiet zone），符合扫码规范。</div>
+      <div>采用 <code>UTF-8</code> 字节模式编码，纠错等级可选 <code>低(L)</code> / <code>中(M)</code> / <code>高(Q)</code> / <code>最高(H)</code>，版本（尺寸）按内容长度自动选择 1-40。</div>
+      <div>每模块像素数、边缘静区宽度均可调（默认 <code>8</code> px / <code>4</code> 模块），位图尺寸随之变化。</div>
       <div>全程在浏览器本地完成，不会上传任何数据。</div>
     </div>
 
@@ -783,7 +784,7 @@ body { overflow-x: clip; }
     let lastSvg = '';
     let lastQr = null;
 
-    function clearLog() { noticeEl.className = 'notice hide'; noticeEl.textContent = ''; }
+    function clearLog() { noticeEl.className = 'notice blank'; }
     function log(msg, kind) {
       noticeEl.className = 'notice' + (kind ? ' ' + kind : '');
       noticeEl.textContent = msg;
@@ -940,8 +941,8 @@ body { overflow-x: clip; }
     }
 
     function clearResult() {
-      outputEl.classList.add('hide');
-      pngOut.removeAttribute('src');
+      outputEl.classList.remove('hide');
+      outputEl.classList.add('blank');
       lastSvg = '';
       lastQr = null;
     }
@@ -960,7 +961,7 @@ body { overflow-x: clip; }
         lastSvg = buildSvg(qr);
         const canvas = buildPng(qr);
         pngOut.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(lastSvg);
-        outputEl.classList.remove('hide');
+        outputEl.classList.remove('hide', 'blank');
         log('生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
             ' 模块，纠错等级 ' + ecc + '，每模块像素数 ' + scale + '，边缘留白模块数 ' + quiet +
             '\n字符数：' + new TextEncoder().encode(text).length + '（UTF-8 字节）', 'ok');
