@@ -356,10 +356,28 @@ body { overflow-x: clip; }
       fileInfoEl.textContent = '已选择：' + (file.name || '粘贴的图片') + '（' + formatSize(file.size) + '）';
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       previewUrl = URL.createObjectURL(file);
-      preview.src = previewUrl;
+      showPreview(previewUrl);
       previewWrap.classList.remove('hide');
       textOut.value = '';
       clearLog();
+    }
+
+    function showPreview(url) {
+      const img = new Image();
+      img.onload = () => {
+        const MIN_SIDE = 300;
+        const minSide = Math.min(img.width, img.height);
+        const scale = minSide >= MIN_SIDE ? 1 : MIN_SIDE / minSide;
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        preview.src = canvas.toDataURL('image/png');
+      };
+      img.onerror = () => { preview.src = url; };
+      img.src = url;
     }
 
     function loadImage(file) {
