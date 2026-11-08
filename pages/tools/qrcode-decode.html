@@ -304,6 +304,7 @@
       textOut.value = '';
       if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
       captureBtn.disabled = true;
+      captureBtn.innerHTML = '<span class="spinner"></span>处理中…';
       try {
         captureWrap.classList.remove('hide');
         await openStream('getDisplayMedia', { video: true, audio: false });
@@ -317,6 +318,7 @@
         log('截屏失败：' + mediaError(e), 'err');
       } finally {
         captureBtn.disabled = false;
+        captureBtn.textContent = '截屏识别';
       }
     }
 
@@ -355,6 +357,7 @@
       textOut.value = '';
       if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
       cameraBtn.disabled = true;
+      cameraBtn.innerHTML = '<span class="spinner"></span>处理中…';
       try {
         captureWrap.classList.remove('hide');
         await openStream('getUserMedia', { video: { facingMode: { ideal: 'environment' } }, audio: false });
@@ -367,6 +370,7 @@
         log('无法打开摄像头：' + mediaError(e), 'err');
       } finally {
         cameraBtn.disabled = false;
+        cameraBtn.textContent = captureStream ? '停止摄像' : '摄像识别';
       }
     }
 
