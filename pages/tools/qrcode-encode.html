@@ -84,7 +84,7 @@
     <h1>二维码生成 - 文本转图片</h1>
 
     <div class="tips">
-      <div>将输入的文本编码为二维码，并输出可复制的 <code>SVG</code> 矢量代码与 <code>PNG</code> / <code>JPG</code> 位图。</div>
+      <div>将输入的文本编码为二维码，输出 PNG / JPG 位图和 SVG 矢量图。</div>
       <div>采用 <code>UTF-8</code> 字节模式编码，纠错等级可选 <code>低(L)</code> / <code>中(M)</code> / <code>高(Q)</code> / <code>最高(H)</code>，版本（尺寸）根据内容长度自动选择 1-40。</div>
       <div>四周预留 4 个模块宽的静区（quiet zone），符合扫码规范。</div>
       <div>全程在浏览器本地完成，不会上传任何数据。</div>
@@ -144,21 +144,23 @@
 
         <div class="field">
           <div class="row">
-            <label style="margin-bottom:0">位图文件</label>
+            <label style="margin-bottom:0">位图</label>
             <span>
-              <button class="btn-mini" id="downloadPng" type="button">下载 PNG</button>
-              <button class="btn-mini" id="downloadJpg" type="button">下载 JPG</button>
-              <button class="btn-mini" id="downloadPng1bit" type="button">下载 PNG (1-bit)</button>
+              <button class="btn-mini" id="copyHtml" type="button">复制 HTML 代码</button>
+              <button class="btn-mini" id="copyMarkdown" type="button">复制 Markdown 代码</button>
+              <button class="btn-mini" id="downloadPng1bit" type="button">下载 PNG (1-bit) 文件</button>
+              <button class="btn-mini" id="downloadPng8bit" type="button">下载 PNG (8-bit) 文件</button>
+              <button class="btn-mini" id="downloadJpg8bit" type="button">下载 JPG (8-bit) 文件</button>
             </span>
           </div>
         </div>
 
         <div class="field">
           <div class="row">
-            <label style="margin-bottom:0">SVG 矢量图</label>
+            <label style="margin-bottom:0">矢量图</label>
             <span>
-              <button class="btn-mini" id="copySvg" type="button">复制代码</button>
-              <button class="btn-mini" id="downloadSvg" type="button">下载 SVG</button>
+              <button class="btn-mini" id="copySvg" type="button">复制 SVG 代码</button>
+              <button class="btn-mini" id="downloadSvg" type="button">下载 SVG 文件</button>
             </span>
           </div>
         </div>
@@ -600,9 +602,11 @@
     const pngOut = $('pngOut');
     const copySvgBtn = $('copySvg');
     const downloadSvgBtn = $('downloadSvg');
-    const downloadPngBtn = $('downloadPng');
-    const downloadJpgBtn = $('downloadJpg');
+    const downloadPng8bitBtn = $('downloadPng8bit');
+    const downloadJpg8bitBtn = $('downloadJpg8bit');
     const downloadPng1bitBtn = $('downloadPng1bit');
+    const copyHtmlBtn = $('copyHtml');
+    const copyMarkdownBtn = $('copyMarkdown');
     const logEl = $('log');
 
     let quiet = 4;     // 静区宽度（模块数，可调，默认 4）
@@ -654,9 +658,13 @@
 
     function buildPng(qr) {
       const dim = qr.size + quiet * 2;
+      const px = dim * scale;
       const canvas = document.createElement('canvas');
-      canvas.width = dim * scale;
-      canvas.height = dim * scale;
+      canvas.width = px;
+      canvas.height = px;
+      if (canvas.width !== px || canvas.height !== px) {
+        throw new Error('生成尺寸过大（' + px + '×' + px + 'px），请调小「每模块像素数」或「边缘留白模块数」后再生成。');
+      }
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -712,6 +720,9 @@
     async function buildPng1bit(qr) {
       const dim = qr.size + quiet * 2;
       const width = dim * scale, height = dim * scale;
+      if (width > 16384 || height > 16384) {
+        throw new Error('生成尺寸过大（' + width + '×' + height + 'px），请调小「每模块像素数」或「边缘留白模块数」后再生成。');
+      }
       const rowBytes = (width + 7) >> 3;
       const raw = new Uint8Array((rowBytes + 1) * height); // 全 0：滤波字节=0，黑=0
       for (let y = 0; y < height; y++) {
@@ -768,8 +779,8 @@
         log('生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
             ' 模块，纠错等级 ' + ecc + '\n字符数：' + new TextEncoder().encode(text).length +
             '（UTF-8 字节）', 'ok');
-        downloadPngBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode.png'), 'image/png');
-        downloadJpgBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode.jpg'), 'image/jpeg', 1);
+        downloadPng8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.png'), 'image/png');
+        downloadJpg8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.jpg'), 'image/jpeg', 1);
         downloadPng1bitBtn.onclick = async () => {
           if (!lastQr) return;
           try {
@@ -785,18 +796,67 @@
       }
     }
 
+    function copyText(text, okMsg) {
+      const done = () => log(okMsg, 'ok');
+      const fallback = () => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); }
+        catch (err) { log('复制失败，请手动复制', 'err'); }
+        document.body.removeChild(ta);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else {
+        fallback();
+      }
+    }
+
+    function blobToDataURL(blob) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(blob);
+      });
+    }
+
+    async function buildEmbed(qr) {
+      const blob = await buildPng1bit(qr);
+      const dataUrl = await blobToDataURL(blob);
+      const px = (qr.size + quiet * 2) * scale;
+      return { dataUrl: dataUrl, px: px };
+    }
+
     copySvgBtn.addEventListener('click', () => {
       if (!lastSvg) return;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(lastSvg).then(
-          () => log('SVG 代码已复制到剪贴板', 'ok'),
-          () => svgOut.select()
-        );
-      } else {
-        svgOut.select();
-        log('已选中 SVG 代码，请按 Ctrl+C 复制');
-      }
+      copyText(lastSvg, 'SVG 代码已复制到剪贴板');
     });
+
+    copyHtmlBtn.onclick = async () => {
+      if (!lastQr) return;
+      try {
+        const emb = await buildEmbed(lastQr);
+        copyText('<img src="' + emb.dataUrl + '" alt="QR Code" width="' + emb.px + '" height="' + emb.px + '>',
+          'HTML 代码已复制（内嵌 1-bit PNG）');
+      } catch (e) {
+        log('生成 HTML 代码失败：' + (e && e.message ? e.message : e), 'err');
+      }
+    };
+
+    copyMarkdownBtn.onclick = async () => {
+      if (!lastQr) return;
+      try {
+        const emb = await buildEmbed(lastQr);
+        copyText('![QR Code](' + emb.dataUrl + ')', 'Markdown 代码已复制（内嵌 1-bit PNG）');
+      } catch (e) {
+        log('生成 Markdown 代码失败：' + (e && e.message ? e.message : e), 'err');
+      }
+    };
     downloadSvgBtn.addEventListener('click', () => {
       if (!lastSvg) return;
       downloadBlob(new Blob([lastSvg], { type: 'image/svg+xml' }), 'qrcode.svg');
