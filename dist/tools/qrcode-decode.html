@@ -65,6 +65,12 @@
     .btn:active, .btn-mini:active, .mode-tabs button:active { transform: translateY(1px); }
     .btn:disabled, .btn-mini:disabled, .mode-tabs button:disabled { opacity: .5; cursor: not-allowed; }
 
+    .spinner {
+      display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.5);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .log {
       margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
       background: #f6f8fa; border: 1px solid #e3e8ef; white-space: pre-wrap; word-break: break-all;
@@ -459,8 +465,10 @@ body { overflow-x: clip; }
     async function captureScreen() {
       stopCapture();
       clearLog();
+      textOut.value = '';
       if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
       captureBtn.disabled = true;
+      captureBtn.innerHTML = '<span class="spinner"></span>处理中…';
       try {
         captureWrap.classList.remove('hide');
         await openStream('getDisplayMedia', { video: true, audio: false });
@@ -474,6 +482,7 @@ body { overflow-x: clip; }
         log('截屏失败：' + mediaError(e), 'err');
       } finally {
         captureBtn.disabled = false;
+        captureBtn.textContent = '截屏识别';
       }
     }
 
@@ -509,8 +518,10 @@ body { overflow-x: clip; }
     async function toggleCamera() {
       if (captureStream) { stopCapture(); clearLog(); log('已停止摄像', 'ok'); return; }
       clearLog();
+      textOut.value = '';
       if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
       cameraBtn.disabled = true;
+      cameraBtn.innerHTML = '<span class="spinner"></span>处理中…';
       try {
         captureWrap.classList.remove('hide');
         await openStream('getUserMedia', { video: { facingMode: { ideal: 'environment' } }, audio: false });
@@ -523,16 +534,22 @@ body { overflow-x: clip; }
         log('无法打开摄像头：' + mediaError(e), 'err');
       } finally {
         cameraBtn.disabled = false;
+        cameraBtn.textContent = captureStream ? '停止摄像' : '摄像识别';
       }
     }
 
     function setBusy(busy) {
       decodeBtn.disabled = busy;
-      decodeBtn.textContent = busy ? '识别中…' : '识别二维码';
+      if (busy) {
+        decodeBtn.innerHTML = '<span class="spinner"></span>处理中…';
+      } else {
+        decodeBtn.textContent = '识别二维码';
+      }
     }
 
     async function decode() {
       clearLog();
+      textOut.value = '';
       if (!selectedFile) { log('请先选择二维码图片', 'err'); return; }
       if (!window.jsQR) { log('解码库未加载，请刷新页面重试', 'err'); return; }
       setBusy(true);
