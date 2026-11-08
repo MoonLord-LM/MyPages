@@ -148,6 +148,7 @@
             <span>
               <button class="btn-mini" id="downloadPng" type="button">下载 PNG</button>
               <button class="btn-mini" id="downloadJpg" type="button">下载 JPG</button>
+              <button class="btn-mini" id="downloadPng1bit" type="button">下载 PNG (1-bit)</button>
             </span>
           </div>
         </div>
@@ -601,12 +602,14 @@
     const downloadSvgBtn = $('downloadSvg');
     const downloadPngBtn = $('downloadPng');
     const downloadJpgBtn = $('downloadJpg');
+    const downloadPng1bitBtn = $('downloadPng1bit');
     const logEl = $('log');
 
     let quiet = 4;     // 静区宽度（模块数，可调，默认 4）
     let scale = 8;     // PNG 每模块像素（可调，默认 8）
     let ecc = 'M';
     let lastSvg = '';
+    let lastQr = null;
 
     function clearLog() { logEl.className = 'log hide'; logEl.textContent = ''; }
     function log(msg, kind) {
@@ -666,6 +669,72 @@
       return canvas;
     }
 
+    const PNG_SIG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+
+    // 1-bit（灰度，bit depth = 1）PNG：直接用模块矩阵打包，无需 canvas / 第三方库
+    function crc32(buf) {
+      crc32.t = crc32.t || (function () {
+        const t = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) {
+          let c = n;
+          for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+          t[n] = c >>> 0;
+        }
+        return t;
+      })();
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < buf.length; i++) crc = crc32.t[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function pngChunk(type, data) {
+      const typeBytes = new TextEncoder().encode(type);
+      const crcInput = new Uint8Array(typeBytes.length + data.length);
+      crcInput.set(typeBytes, 0);
+      crcInput.set(data, 4);
+      const out = new Uint8Array(4 + 4 + data.length + 4);
+      const dv = new DataView(out.buffer);
+      dv.setUint32(0, data.length);
+      out.set(typeBytes, 4);
+      out.set(data, 8);
+      dv.setUint32(8 + data.length, crc32(crcInput));
+      return out;
+    }
+
+    async function compressDeflate(buf) {
+      const cs = new CompressionStream('deflate');
+      const writer = cs.writable.getWriter();
+      writer.write(buf);
+      writer.close();
+      return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    }
+
+    async function buildPng1bit(qr) {
+      const dim = qr.size + quiet * 2;
+      const width = dim * scale, height = dim * scale;
+      const rowBytes = (width + 7) >> 3;
+      const raw = new Uint8Array((rowBytes + 1) * height); // 全 0：滤波字节=0，黑=0
+      for (let y = 0; y < height; y++) {
+        const rowStart = y * (rowBytes + 1) + 1;
+        for (let x = 0; x < width; x++) {
+          const mx = (x / scale | 0) - quiet;
+          const my = (y / scale | 0) - quiet;
+          const black = mx >= 0 && my >= 0 && mx < qr.size && my < qr.size && qr.modules[my][mx];
+          if (!black) raw[rowStart + (x >> 3)] |= 0x80 >> (x & 7); // 白=1
+        }
+      }
+      const idat = await compressDeflate(raw);
+      const ihdr = new Uint8Array(13);
+      const dv = new DataView(ihdr.buffer);
+      dv.setUint32(0, width);
+      dv.setUint32(4, height);
+      ihdr[8] = 1;  // bit depth
+      ihdr[9] = 0;  // color type: 灰度
+      return new Blob(
+        [PNG_SIG, pngChunk('IHDR', ihdr), pngChunk('IDAT', idat), pngChunk('IEND', new Uint8Array(0))],
+        { type: 'image/png' });
+    }
+
     function downloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -690,6 +759,7 @@
       setBusy(true);
       try {
         const qr = QrCode.encodeText(text, ecc);
+        lastQr = qr;
         lastSvg = buildSvg(qr);
         svgOut.value = lastSvg;
         const canvas = buildPng(qr);
@@ -700,6 +770,14 @@
             '（UTF-8 字节）', 'ok');
         downloadPngBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode.png'), 'image/png');
         downloadJpgBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode.jpg'), 'image/jpeg', 1);
+        downloadPng1bitBtn.onclick = async () => {
+          if (!lastQr) return;
+          try {
+            downloadBlob(await buildPng1bit(lastQr), 'qrcode-1bit.png');
+          } catch (e) {
+            log('生成 1-bit PNG 失败：' + (e && e.message ? e.message : e), 'err');
+          }
+        };
       } catch (e) {
         log('生成失败：' + (e && e.message ? e.message : e), 'err');
       } finally {
