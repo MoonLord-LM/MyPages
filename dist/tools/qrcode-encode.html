@@ -248,8 +248,8 @@ body { overflow-x: clip; }
 
     <div class="tips">
       <div>将输入的文本编码为二维码，输出 PNG、JPG 位图和 SVG 矢量图。</div>
-      <div>采用 <code>UTF-8</code> 字节模式编码，纠错等级可选 <code>低(L)</code> / <code>中(M)</code> / <code>高(Q)</code> / <code>最高(H)</code>，版本（尺寸）按内容长度自动选择 1-40。</div>
-      <div>每模块像素数、边缘静区宽度均可调（默认 <code>8</code> px / <code>4</code> 模块），位图尺寸随之变化。</div>
+      <div>QR 码版本：1-40 自适应，数据模式：字节模式，字符编码：UTF8。</div>
+      <div>纠错等级默认值：最高（H），每模块像素数默认值：16，边缘留白模块数默认值：6。</div>
       <div>全程在浏览器本地完成，不会上传任何数据。</div>
     </div>
 
@@ -263,9 +263,9 @@ body { overflow-x: clip; }
         <label>纠错等级</label>
         <div class="mode-tabs" id="eccTabs">
           <button type="button" data-ecc="L">低 (L)</button>
-          <button type="button" data-ecc="M" class="active">中 (M)</button>
+          <button type="button" data-ecc="M">中 (M)</button>
           <button type="button" data-ecc="Q">高 (Q)</button>
-          <button type="button" data-ecc="H">最高 (H)</button>
+          <button type="button" data-ecc="H" class="active">最高 (H)</button>
         </div>
       </div>
 
@@ -274,8 +274,8 @@ body { overflow-x: clip; }
         <div class="mode-tabs" id="scaleTabs">
           <button type="button" data-scale="1">1</button>
           <button type="button" data-scale="4">4</button>
-          <button type="button" data-scale="8" class="active">8</button>
-          <button type="button" data-scale="16">16</button>
+          <button type="button" data-scale="8">8</button>
+          <button type="button" data-scale="16" class="active">16</button>
           <button type="button" data-scale="32">32</button>
           <button type="button" data-scale="64">64</button>
           <button type="button" data-scale="128">128</button>
@@ -287,8 +287,8 @@ body { overflow-x: clip; }
         <div class="mode-tabs" id="quietTabs">
           <button type="button" data-quiet="0">0</button>
           <button type="button" data-quiet="2">2</button>
-          <button type="button" data-quiet="4" class="active">4</button>
-          <button type="button" data-quiet="6">6</button>
+          <button type="button" data-quiet="4">4</button>
+          <button type="button" data-quiet="6" class="active">6</button>
           <button type="button" data-quiet="8">8</button>
           <button type="button" data-quiet="16">16</button>
           <button type="button" data-quiet="32">32</button>
@@ -772,9 +772,9 @@ body { overflow-x: clip; }
     const downloadMarkdownFileBtn = $('downloadMarkdownFile');
     const noticeEl = $('notice');
 
-    let quiet = 4;     // 静区宽度（模块数，可调，默认 4）
-    let scale = 8;     // PNG 每模块像素（可调，默认 8）
-    let ecc = 'M';
+    let quiet = 6;
+    let scale = 16;
+    let ecc = 'H';
     let lastSvg = '';
     let lastQr = null;
 
