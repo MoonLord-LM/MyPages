@@ -22,13 +22,6 @@
       border-radius: 8px; outline: none; resize: vertical; font-family: inherit;
     }
     .text-input:focus { border-color: #2a5298; }
-    .code-out {
-      width: 100%; padding: 11px 14px; font-size: 14px; border: 1px solid #ccc;
-      border-radius: 8px; outline: none; resize: vertical; color: #1f2328;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-      font-variant-ligatures: none; background: #f6f8fa;
-    }
-    .code-out:focus { border-color: #2a5298; }
 
     .actions {
       display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start;
@@ -65,21 +58,13 @@
 
     .output.hide { display: none; }
 
-    .log {
+    .notice {
       margin-top: 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
       background: #f6f8fa; border: 1px solid #e3e8ef; white-space: pre-wrap; word-break: break-all;
-      max-height: 240px; overflow: auto;
     }
-    .log.ok { background: #eafaf0; border-color: #b7e4c7; color: #1a7f43; }
-    .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
-    .log.hide { display: none; }
-
-    .result-msg {
-      margin: 12px 0 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
-      background: #eafaf0; border: 1px solid #b7e4c7; color: #1a7f43;
-      white-space: pre-wrap; word-break: break-all;
-    }
-    .result-msg.hide { display: none; }
+    .notice.ok { background: #eafaf0; border-color: #b7e4c7; color: #1a7f43; }
+    .notice.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
+    .notice.hide { display: none; }
 
     .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
     .tips div { line-height: 1.8; }
@@ -313,8 +298,6 @@ body { overflow-x: clip; }
           <div class="qr-preview" style="margin-top:12px"><img id="pngOut" alt="二维码图片预览"></div>
         </div>
 
-        <div class="result-msg hide" id="resultMsg"></div>
-
         <div class="field">
           <div class="row">
             <label style="margin-bottom:0">位图</label>
@@ -348,23 +331,9 @@ body { overflow-x: clip; }
           </div>
         </div>
 
-        <div class="field">
-          <label>SVG 代码预览</label>
-          <textarea id="svgOut" class="code-out" readonly rows="6" style="margin-top:12px"></textarea>
-        </div>
-
-        <div class="field">
-          <label>HTML 代码预览</label>
-          <textarea id="htmlOut" class="code-out" readonly rows="6" style="margin-top:12px"></textarea>
-        </div>
-
-        <div class="field">
-          <label>Markdown 代码预览</label>
-          <textarea id="mdOut" class="code-out" readonly rows="6" style="margin-top:12px"></textarea>
-        </div>
       </div>
 
-      <div class="log hide" id="log"></div>
+      <div class="notice hide" id="notice"></div>
     </div>
   </main>
 
@@ -791,7 +760,6 @@ body { overflow-x: clip; }
     const quietTabs = $('quietTabs');
     const genBtn = $('genBtn');
     const outputEl = $('output');
-    const svgOut = $('svgOut');
     const pngOut = $('pngOut');
     const copySvgBtn = $('copySvg');
     const downloadSvgBtn = $('downloadSvg');
@@ -802,10 +770,7 @@ body { overflow-x: clip; }
     const copyMarkdownBtn = $('copyMarkdown');
     const downloadHtmlFileBtn = $('downloadHtmlFile');
     const downloadMarkdownFileBtn = $('downloadMarkdownFile');
-    const htmlOut = $('htmlOut');
-    const mdOut = $('mdOut');
-    const resultMsgEl = $('resultMsg');
-    const logEl = $('log');
+    const noticeEl = $('notice');
 
     let quiet = 4;     // 静区宽度（模块数，可调，默认 4）
     let scale = 8;     // PNG 每模块像素（可调，默认 8）
@@ -813,10 +778,10 @@ body { overflow-x: clip; }
     let lastSvg = '';
     let lastQr = null;
 
-    function clearLog() { logEl.className = 'log hide'; logEl.textContent = ''; }
+    function clearLog() { noticeEl.className = 'notice hide'; noticeEl.textContent = ''; }
     function log(msg, kind) {
-      logEl.className = 'log' + (kind ? ' ' + kind : '');
-      logEl.textContent = msg;
+      noticeEl.className = 'notice' + (kind ? ' ' + kind : '');
+      noticeEl.textContent = msg;
     }
 
     eccTabs.addEventListener('click', (e) => {
@@ -957,10 +922,8 @@ body { overflow-x: clip; }
       genBtn.textContent = busy ? '生成中…' : '生成二维码';
     }
 
-    async function generate() {
+    function generate() {
       clearLog();
-      resultMsgEl.className = 'result-msg hide';
-      resultMsgEl.textContent = '';
       const text = textEl.value;
       if (!text) { log('请先输入要生成二维码的文本', 'err'); return; }
 
@@ -969,14 +932,12 @@ body { overflow-x: clip; }
         const qr = QrCode.encodeText(text, ecc);
         lastQr = qr;
         lastSvg = buildSvg(qr);
-        svgOut.value = lastSvg;
         const canvas = buildPng(qr);
-        pngOut.src = canvas.toDataURL('image/png');
+        pngOut.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(lastSvg);
         outputEl.classList.remove('hide');
-        resultMsgEl.className = 'result-msg';
-        resultMsgEl.textContent = '生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
+        log('生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
             ' 模块，纠错等级 ' + ecc + '，每模块像素数 ' + scale + '，边缘留白模块数 ' + quiet +
-            '\n字符数：' + new TextEncoder().encode(text).length + '（UTF-8 字节）';
+            '\n字符数：' + new TextEncoder().encode(text).length + '（UTF-8 字节）', 'ok');
         downloadPng8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.png'), 'image/png');
         downloadJpg8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.jpg'), 'image/jpeg', 1);
         downloadPng1bitBtn.onclick = async () => {
@@ -987,14 +948,6 @@ body { overflow-x: clip; }
             log('生成 1-bit PNG 失败：' + (e && e.message ? e.message : e), 'err');
           }
         };
-        try {
-          const emb = await buildEmbed(qr);
-          htmlOut.value = '<img src="' + emb.dataUrl + '" alt="QR Code" width="' + emb.px + '" height="' + emb.px + '">';
-          mdOut.value = '![QR Code](' + emb.dataUrl + ')';
-        } catch (e) {
-          htmlOut.value = '（因尺寸过大，无法生成预览，请调小「每模块像素数」或「边缘留白模块数」）';
-          mdOut.value = htmlOut.value;
-        }
       } catch (e) {
         log('生成失败：' + (e && e.message ? e.message : e), 'err');
       } finally {
