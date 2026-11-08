@@ -1000,7 +1000,7 @@ body { overflow-x: clip; }
       try {
         const emb = await buildEmbed(lastQr);
         copyText('<img src="' + emb.dataUrl + '" alt="QR Code" width="' + emb.px + '" height="' + emb.px + '>',
-          'HTML 代码已复制（内嵌 1-bit PNG）');
+          'HTML 代码已复制到剪贴板');
       } catch (e) {
         log('生成 HTML 代码失败：' + (e && e.message ? e.message : e), 'err');
       }
@@ -1010,7 +1010,7 @@ body { overflow-x: clip; }
       if (!lastQr) return;
       try {
         const emb = await buildEmbed(lastQr);
-        copyText('![QR Code](' + emb.dataUrl + ')', 'Markdown 代码已复制（内嵌 1-bit PNG）');
+        copyText('![QR Code](' + emb.dataUrl + ')', 'Markdown 代码已复制到剪贴板');
       } catch (e) {
         log('生成 Markdown 代码失败：' + (e && e.message ? e.message : e), 'err');
       }
