@@ -330,8 +330,8 @@ body { overflow-x: clip; }
           <div class="row">
             <label style="margin-bottom:0">矢量图</label>
             <span>
-              <button class="btn-mini" id="copySvg" type="button">复制 SVG 代码</button>
               <button class="btn-mini" id="downloadSvg" type="button">下载 SVG 文件</button>
+              <button class="btn-mini" id="copySvg" type="button">复制 SVG 代码</button>
             </span>
           </div>
         </div>
@@ -918,9 +918,6 @@ body { overflow-x: clip; }
     async function buildPng1bit(qr) {
       const dim = qr.size + quiet * 2;
       const width = dim * scale, height = dim * scale;
-      if (width > 16384 || height > 16384) {
-        throw new Error('生成尺寸过大（' + width + '×' + height + 'px），请调小「每模块像素数」或「边缘留白模块数」后再生成。');
-      }
       const rowBytes = (width + 7) >> 3;
       const raw = new Uint8Array((rowBytes + 1) * height); // 全 0：滤波字节=0，黑=0
       for (let y = 0; y < height; y++) {
@@ -995,9 +992,8 @@ body { overflow-x: clip; }
           htmlOut.value = '<img src="' + emb.dataUrl + '" alt="QR Code" width="' + emb.px + '" height="' + emb.px + '">';
           mdOut.value = '![QR Code](' + emb.dataUrl + ')';
         } catch (e) {
-          htmlOut.value = '';
-          mdOut.value = '';
-          log('生成 HTML / Markdown 预览失败：' + (e && e.message ? e.message : e), 'err');
+          htmlOut.value = '（因尺寸过大，无法生成预览，请调小「每模块像素数」或「边缘留白模块数」）';
+          mdOut.value = htmlOut.value;
         }
       } catch (e) {
         log('生成失败：' + (e && e.message ? e.message : e), 'err');
