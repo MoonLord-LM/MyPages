@@ -50,6 +50,12 @@
     .btn:active, .btn-mini:active, .mode-tabs button:active { transform: translateY(1px); }
     .btn:disabled, .btn-mini:disabled, .mode-tabs button:disabled { opacity: .5; cursor: not-allowed; }
 
+    .spinner {
+      display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.5);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .qr-preview {
       display: inline-block; padding: 12px; background: #fff; border: 1px solid #e3e8ef;
       border-radius: 10px; line-height: 0;
@@ -926,16 +932,29 @@ body { overflow-x: clip; }
 
     function setBusy(busy) {
       genBtn.disabled = busy;
-      genBtn.textContent = busy ? '生成中…' : '生成二维码';
+      if (busy) {
+        genBtn.innerHTML = '<span class="spinner"></span>处理中…';
+      } else {
+        genBtn.textContent = '生成二维码';
+      }
     }
 
-    function generate() {
+    function clearResult() {
+      outputEl.classList.add('hide');
+      pngOut.removeAttribute('src');
+      lastSvg = '';
+      lastQr = null;
+    }
+
+    async function generate() {
       clearLog();
+      clearResult();
       const text = textEl.value;
       if (!text) { log('请先输入要生成二维码的文本', 'err'); return; }
 
       setBusy(true);
       try {
+        await new Promise((r) => setTimeout(r, 0));
         const qr = QrCode.encodeText(text, ecc);
         lastQr = qr;
         lastSvg = buildSvg(qr);
