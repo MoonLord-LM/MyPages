@@ -1,4 +1,4 @@
-2026-11-08 02:34:54 +08:00  
+2026-11-08 20:16:47 +08:00  
 https://github.com/MoonLord-LM/MyPages  
 
 ---
@@ -54,12 +54,11 @@ Static Site Generator
 ### 密码保护
 
 以 `.enc.md` 后缀结尾的文件，视为需要做密码保护的页面  
-在 `.gitignore` 中忽略 `.enc.md` 文件，避免提交到远程仓库中，导致泄密  
+在 `.gitignore` 中忽略 `.enc.md` 文件，避免提交到远程仓库中，保证安全  
 页面内容第一行必须是 `<!-- { "password" : "xxxxxx" } -->` 的形式，在注释中内嵌一个配置 JSON，保存密码  
 本地执行构建时，将 md 渲染为 html，然后压缩为 gzip 格式，然后用密码加密处理，保存为 `.html.zip.enc` 后缀  
 页面 md 同名的 html 只包含一个密码输入框，用户输入正确密码后，对 `.html.zip.enc` 做解密和 gzip 解压，然后再显示出实际内容  
-解压依赖浏览器的 `DecompressionStream`，需使用较新版本的 Chrome / Edge / Firefox / Safari  
-加密算法参考 `/pages/tools/file-encrypt-aes.html` 的实现，密文布局同样为 `salt(16) + iv(12) + tag(16) + 密文`，区别仅在密文对应的是 gzip 数据而非原始 html  
+加密算法参考 `/pages/tools/file-encrypt-aes.html` 的实现  
 最终生成的 `.html` 和 `.html.zip.enc` 文件，在 `/pages` 和 `/dist` 目录中都进行保存  
 
 ### 自动列表
@@ -80,6 +79,7 @@ Static Site Generator
 
 尝试扫描 `/dist` 中所有的 html、php 文件，将引用的外部站点的链接清单，存放到 `/dist/external-url.json` 中  
 需要包含完整的 URL 链接和参数，例如 `index.html?q=1` 和 `index.html?q=2` 是两个不同的链接，都列举出来  
+对于密码保护的页面，不采集外部链接，保证安全  
 去除重复，对链接按字母做排序  
 
 ## [工程结构]
