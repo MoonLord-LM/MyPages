@@ -114,6 +114,8 @@
           <button type="button" data-scale="8" class="active">8</button>
           <button type="button" data-scale="16">16</button>
           <button type="button" data-scale="32">32</button>
+          <button type="button" data-scale="64">64</button>
+          <button type="button" data-scale="128">128</button>
         </div>
       </div>
 
@@ -125,6 +127,8 @@
           <button type="button" data-quiet="4" class="active">4</button>
           <button type="button" data-quiet="6">6</button>
           <button type="button" data-quiet="8">8</button>
+          <button type="button" data-quiet="16">16</button>
+          <button type="button" data-quiet="32">32</button>
         </div>
       </div>
 
@@ -134,14 +138,8 @@
 
       <div class="output hide" id="output">
         <div class="field">
-          <div class="row">
-            <label style="margin-bottom:0">SVG 矢量图</label>
-            <span>
-              <button class="btn-mini" id="copySvg" type="button">复制代码</button>
-              <button class="btn-mini" id="downloadSvg" type="button">下载 SVG</button>
-            </span>
-          </div>
-          <textarea id="svgOut" class="code-out" readonly rows="6" style="margin-top:20px"></textarea>
+          <label>二维码图片预览</label>
+          <div class="qr-preview" style="margin-top:12px"><img id="pngOut" alt="二维码图片预览"></div>
         </div>
 
         <div class="field">
@@ -152,7 +150,21 @@
               <button class="btn-mini" id="downloadJpg" type="button">下载 JPG</button>
             </span>
           </div>
-          <div class="qr-preview" style="margin-top:20px"><img id="pngOut" alt="二维码 PNG 预览"></div>
+        </div>
+
+        <div class="field">
+          <div class="row">
+            <label style="margin-bottom:0">SVG 矢量图</label>
+            <span>
+              <button class="btn-mini" id="copySvg" type="button">复制代码</button>
+              <button class="btn-mini" id="downloadSvg" type="button">下载 SVG</button>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>SVG 代码预览</label>
+          <textarea id="svgOut" class="code-out" readonly rows="6" style="margin-top:12px"></textarea>
         </div>
       </div>
 
