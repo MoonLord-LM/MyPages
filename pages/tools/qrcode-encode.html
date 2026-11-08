@@ -554,13 +554,7 @@
       }
 
       function toUtf8ByteArray(str) {
-        str = encodeURI(str);
-        const result = [];
-        for (let i = 0; i < str.length; i++) {
-          if (str.charAt(i) !== '%') result.push(str.charCodeAt(i));
-          else { result.push(parseInt(str.substr(i + 1, 2), 16)); i += 2; }
-        }
-        return result;
+        return Array.from(new TextEncoder().encode(str));
       }
 
       class QrSegment {
