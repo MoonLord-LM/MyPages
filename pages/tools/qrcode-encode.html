@@ -699,7 +699,7 @@
             ' 模块，纠错等级 ' + ecc + '\n字符数：' + new TextEncoder().encode(text).length +
             '（UTF-8 字节）', 'ok');
         downloadPngBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode.png'), 'image/png');
-        downloadJpgBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode.jpg'), 'image/jpeg', 0);
+        downloadJpgBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode.jpg'), 'image/jpeg', 1);
       } catch (e) {
         log('生成失败：' + (e && e.message ? e.message : e), 'err');
       } finally {
