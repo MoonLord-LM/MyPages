@@ -319,7 +319,7 @@ body { overflow-x: clip; }
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-11-08 02:34:54 +08:00<br>
+<p>2026-11-08 20:16:47 +08:00<br>
 https://github.com/MoonLord-LM/MyPages</p>
 <hr>
 <h1>MyPages</h1>
@@ -358,12 +358,11 @@ https://github.com/MoonLord-LM/MyPages</p>
 自动调整相对路径，支持 <code>src</code>、<code>href</code>、<code>url()</code> 写法</p>
 <h3>密码保护</h3>
 <p>以 <code>.enc.md</code> 后缀结尾的文件，视为需要做密码保护的页面<br>
-在 <code>.gitignore</code> 中忽略 <code>.enc.md</code> 文件，避免提交到远程仓库中，导致泄密<br>
+在 <code>.gitignore</code> 中忽略 <code>.enc.md</code> 文件，避免提交到远程仓库中，保证安全<br>
 页面内容第一行必须是 <code>&lt;!-- { &quot;password&quot; : &quot;xxxxxx&quot; } --&gt;</code> 的形式，在注释中内嵌一个配置 JSON，保存密码<br>
 本地执行构建时，将 md 渲染为 html，然后压缩为 gzip 格式，然后用密码加密处理，保存为 <code>.html.zip.enc</code> 后缀<br>
 页面 md 同名的 html 只包含一个密码输入框，用户输入正确密码后，对 <code>.html.zip.enc</code> 做解密和 gzip 解压，然后再显示出实际内容<br>
-解压依赖浏览器的 <code>DecompressionStream</code>，需使用较新版本的 Chrome / Edge / Firefox / Safari<br>
-加密算法参考 <code>/pages/tools/file-encrypt-aes.html</code> 的实现，密文布局同样为 <code>salt(16) + iv(12) + tag(16) + 密文</code>，区别仅在密文对应的是 gzip 数据而非原始 html<br>
+加密算法参考 <code>/pages/tools/file-encrypt-aes.html</code> 的实现<br>
 最终生成的 <code>.html</code> 和 <code>.html.zip.enc</code> 文件，在 <code>/pages</code> 和 <code>/dist</code> 目录中都进行保存</p>
 <h3>自动列表</h3>
 <p>当某个文件夹下存在多个页面，但没有 index 页面存在时，触发自动列表规则<br>
@@ -378,6 +377,7 @@ https://github.com/MoonLord-LM/MyPages</p>
 <h3>外链清单</h3>
 <p>尝试扫描 <code>/dist</code> 中所有的 html、php 文件，将引用的外部站点的链接清单，存放到 <code>/dist/external-url.json</code> 中<br>
 需要包含完整的 URL 链接和参数，例如 <code>index.html?q=1</code> 和 <code>index.html?q=2</code> 是两个不同的链接，都列举出来<br>
+对于密码保护的页面，不采集外部链接，保证安全<br>
 去除重复，对链接按字母做排序</p>
 <h2>[工程结构]</h2>
 <pre><code>MyPages/
