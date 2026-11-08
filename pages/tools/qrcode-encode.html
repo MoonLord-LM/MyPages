@@ -74,6 +74,13 @@
     .log.err { background: #fdecec; border-color: #f5c2c2; color: #b3261e; }
     .log.hide { display: none; }
 
+    .result-msg {
+      margin-top: 12px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
+      background: #eafaf0; border: 1px solid #b7e4c7; color: #1a7f43;
+      white-space: pre-wrap; word-break: break-all;
+    }
+    .result-msg.hide { display: none; }
+
     .tips { margin-bottom: 44px; background: #f3f7fc; border: 1px solid #dce6f2; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #59636e; }
     .tips div { line-height: 1.8; }
     .tips code { background: #e3ecf7; padding: .05em .35em; border-radius: 4px; }
@@ -84,7 +91,7 @@
     <h1>二维码生成 - 文本转图片</h1>
 
     <div class="tips">
-      <div>将输入的文本编码为二维码，输出 PNG / JPG 位图和 SVG 矢量图。</div>
+      <div>将输入的文本编码为二维码，输出 PNG、JPG 位图和 SVG 矢量图。</div>
       <div>采用 <code>UTF-8</code> 字节模式编码，纠错等级可选 <code>低(L)</code> / <code>中(M)</code> / <code>高(Q)</code> / <code>最高(H)</code>，版本（尺寸）根据内容长度自动选择 1-40。</div>
       <div>四周预留 4 个模块宽的静区（quiet zone），符合扫码规范。</div>
       <div>全程在浏览器本地完成，不会上传任何数据。</div>
@@ -142,12 +149,12 @@
           <div class="qr-preview" style="margin-top:12px"><img id="pngOut" alt="二维码图片预览"></div>
         </div>
 
+        <div class="result-msg hide" id="resultMsg"></div>
+
         <div class="field">
           <div class="row">
             <label style="margin-bottom:0">位图</label>
             <span>
-              <button class="btn-mini" id="copyHtml" type="button">复制 HTML 代码</button>
-              <button class="btn-mini" id="copyMarkdown" type="button">复制 Markdown 代码</button>
               <button class="btn-mini" id="downloadPng1bit" type="button">下载 PNG (1-bit) 文件</button>
               <button class="btn-mini" id="downloadPng8bit" type="button">下载 PNG (8-bit) 文件</button>
               <button class="btn-mini" id="downloadJpg8bit" type="button">下载 JPG (8-bit) 文件</button>
@@ -166,8 +173,30 @@
         </div>
 
         <div class="field">
+          <div class="row">
+            <label style="margin-bottom:0">文本文件</label>
+            <span>
+              <button class="btn-mini" id="downloadHtmlFile" type="button">下载 HTML 文件</button>
+              <button class="btn-mini" id="downloadMarkdownFile" type="button">下载 Markdown 文件</button>
+              <button class="btn-mini" id="copyHtml" type="button">复制 HTML 代码</button>
+              <button class="btn-mini" id="copyMarkdown" type="button">复制 Markdown 代码</button>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
           <label>SVG 代码预览</label>
           <textarea id="svgOut" class="code-out" readonly rows="6" style="margin-top:12px"></textarea>
+        </div>
+
+        <div class="field">
+          <label>HTML 代码预览</label>
+          <textarea id="htmlOut" class="code-out" readonly rows="6" style="margin-top:12px"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Markdown 代码预览</label>
+          <textarea id="mdOut" class="code-out" readonly rows="6" style="margin-top:12px"></textarea>
         </div>
       </div>
 
@@ -607,6 +636,11 @@
     const downloadPng1bitBtn = $('downloadPng1bit');
     const copyHtmlBtn = $('copyHtml');
     const copyMarkdownBtn = $('copyMarkdown');
+    const downloadHtmlFileBtn = $('downloadHtmlFile');
+    const downloadMarkdownFileBtn = $('downloadMarkdownFile');
+    const htmlOut = $('htmlOut');
+    const mdOut = $('mdOut');
+    const resultMsgEl = $('resultMsg');
     const logEl = $('log');
 
     let quiet = 4;     // 静区宽度（模块数，可调，默认 4）
@@ -762,8 +796,10 @@
       genBtn.textContent = busy ? '生成中…' : '生成二维码';
     }
 
-    function generate() {
+    async function generate() {
       clearLog();
+      resultMsgEl.className = 'result-msg hide';
+      resultMsgEl.textContent = '';
       const text = textEl.value;
       if (!text) { log('请先输入要生成二维码的文本', 'err'); return; }
 
@@ -776,9 +812,10 @@
         const canvas = buildPng(qr);
         pngOut.src = canvas.toDataURL('image/png');
         outputEl.classList.remove('hide');
-        log('生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
+        resultMsgEl.className = 'result-msg';
+        resultMsgEl.textContent = '生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
             ' 模块，纠错等级 ' + ecc + '\n字符数：' + new TextEncoder().encode(text).length +
-            '（UTF-8 字节）', 'ok');
+            '（UTF-8 字节）';
         downloadPng8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.png'), 'image/png');
         downloadJpg8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.jpg'), 'image/jpeg', 1);
         downloadPng1bitBtn.onclick = async () => {
@@ -789,6 +826,15 @@
             log('生成 1-bit PNG 失败：' + (e && e.message ? e.message : e), 'err');
           }
         };
+        try {
+          const emb = await buildEmbed(qr);
+          htmlOut.value = '<img src="' + emb.dataUrl + '" alt="QR Code" width="' + emb.px + '" height="' + emb.px + '">';
+          mdOut.value = '![QR Code](' + emb.dataUrl + ')';
+        } catch (e) {
+          htmlOut.value = '';
+          mdOut.value = '';
+          log('生成 HTML / Markdown 预览失败：' + (e && e.message ? e.message : e), 'err');
+        }
       } catch (e) {
         log('生成失败：' + (e && e.message ? e.message : e), 'err');
       } finally {
@@ -860,6 +906,28 @@
     downloadSvgBtn.addEventListener('click', () => {
       if (!lastSvg) return;
       downloadBlob(new Blob([lastSvg], { type: 'image/svg+xml' }), 'qrcode.svg');
+    });
+
+    downloadHtmlFileBtn.addEventListener('click', async () => {
+      if (!lastQr) return;
+      try {
+        const emb = await buildEmbed(lastQr);
+        const content = '<img src="' + emb.dataUrl + '" alt="QR Code" width="' + emb.px + '" height="' + emb.px + '">';
+        downloadBlob(new Blob([content], { type: 'text/html' }), 'qrcode.html');
+      } catch (e) {
+        log('生成 HTML 文件失败：' + (e && e.message ? e.message : e), 'err');
+      }
+    });
+
+    downloadMarkdownFileBtn.addEventListener('click', async () => {
+      if (!lastQr) return;
+      try {
+        const emb = await buildEmbed(lastQr);
+        const content = '![QR Code](' + emb.dataUrl + ')';
+        downloadBlob(new Blob([content], { type: 'text/markdown' }), 'qrcode.md');
+      } catch (e) {
+        log('生成 Markdown 文件失败：' + (e && e.message ? e.message : e), 'err');
+      }
     });
 
     genBtn.addEventListener('click', generate);
