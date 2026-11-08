@@ -75,7 +75,7 @@
     .log.hide { display: none; }
 
     .result-msg {
-      margin-top: 12px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
+      margin: 12px 0 20px; border-radius: 10px; padding: 14px 16px; font-size: 14px;
       background: #eafaf0; border: 1px solid #b7e4c7; color: #1a7f43;
       white-space: pre-wrap; word-break: break-all;
     }
@@ -811,8 +811,8 @@
         outputEl.classList.remove('hide');
         resultMsgEl.className = 'result-msg';
         resultMsgEl.textContent = '生成成功：版本 ' + qr.version + '，尺寸 ' + qr.size + '×' + qr.size +
-            ' 模块，纠错等级 ' + ecc + '\n字符数：' + new TextEncoder().encode(text).length +
-            '（UTF-8 字节）';
+            ' 模块，纠错等级 ' + ecc + '，每模块像素数 ' + scale + '，边缘留白模块数 ' + quiet +
+            '\n字符数：' + new TextEncoder().encode(text).length + '（UTF-8 字节）';
         downloadPng8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.png'), 'image/png');
         downloadJpg8bitBtn.onclick = () => canvas.toBlob((b) => downloadBlob(b, 'qrcode-8bit.jpg'), 'image/jpeg', 1);
         downloadPng1bitBtn.onclick = async () => {
