@@ -333,7 +333,7 @@ body { overflow-x: clip; }
     function itemHtml(item) {
       const safeUrl = /^https?:\/\/\S+$/i.test(item.url) ? escapeHtml(item.url) : '';
       const titleTag = safeUrl
-        ? '<a class="result-title" href="' + safeUrl + '" rel="noopener">' + highlight(item.title) + '</a>'
+        ? '<a class="result-title" href="' + safeUrl + '" target="_blank" rel="noopener">' + highlight(item.title) + '</a>'
         : '<span class="result-title">' + highlight(item.title) + '</span>';
       const meta = '<div class="result-meta">' +
         '<span>时间：' + highlight(item.time) + '</span>' +
@@ -341,7 +341,7 @@ body { overflow-x: clip; }
         '<span>大小：' + highlight(item.size) + '</span>' +
         '</div>';
       const link = safeUrl
-        ? '<div class="result-link">链接：<a class="result-url" href="' + safeUrl + '" rel="noopener">' + highlight(item.url) + '</a></div>'
+        ? '<div class="result-link">链接：<a class="result-url" href="' + safeUrl + '" target="_blank" rel="noopener">' + highlight(item.url) + '</a></div>'
         : '<div class="result-link">链接：' + highlight(item.url || '—') + '</div>';
       return '<div class="result-item">' + titleTag + meta + link + '</div>';
     }
