@@ -270,6 +270,8 @@ function normalizeLinkTargets(html) {
         if (!ha) return tag;
         const href = (ha[2] !== undefined ? ha[2] : ha[3]).trim();
         if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) return tag;
+        // href 由脚本运行时拼接，无法静态判断路径类型，保留源码中书写的 target
+        if (/^['"].*\+.*['"]$/.test(href)) return tag;
         if (!isFullPath(href)) {
             // 相对路径：在本页面打开，移除 target="_blank"
             if (/\btarget\s*=/i.test(attrs)) {
