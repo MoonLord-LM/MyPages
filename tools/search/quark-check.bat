@@ -8,8 +8,8 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-powershell -NoProfile -Command "Write-Host '检查 quark.json 中的夸克网盘分享链接，记录链接有效状态' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口实现' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '检查 quark.json 中的夸克网盘资源链接，记录链接有效状态' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '已失效的，以及 3 天内已检查过是有效的，不做处理' -ForegroundColor Green"
 echo.
 

@@ -8,7 +8,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-powershell -NoProfile -Command "Write-Host '清理 quark.json 中的夸克网盘分享链接，删除已失效链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '清理 quark.json 中的夸克网盘资源链接，删除已失效链接' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '失效链接的 URL 保存到 quark-invalid.json' -ForegroundColor Green"
 echo.
 
