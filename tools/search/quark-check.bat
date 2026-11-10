@@ -38,7 +38,7 @@ if !errorlevel! neq 0 (
 
 
 
-set "json_file=!script_dir!quark.json"
+set "json_file=!script_dir!data\quark.json"
 set "out_gzip=!script_dir!..\..\pages\service\internet-search\assets\pan-quark-cn.gz"
 if not exist "!json_file!" (
     echo 错误：未找到数据文件 "!json_file!"
@@ -183,9 +183,8 @@ $workerScript = @'
 
 $results = @($records)
 $sortByTime = @(
-    @{ Expression = { if ($null -ne $_.PSObject.Properties['check_valid']) { 0 } else { 1 } } },
-    @{ Expression = { if ([string]$_.time) { 0 } else { 1 } } },
-    @{ Expression = { [string]$_.time } }
+    @{ Expression = { [string]$_.time } },
+    @{ Expression = { [string]$_.url } }
 )
 $pass = 0
 $fail = 0

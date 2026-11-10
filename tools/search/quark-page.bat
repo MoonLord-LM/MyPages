@@ -14,7 +14,7 @@ echo.
 
 
 
-set "json_file=!script_dir!quark.json"
+set "json_file=!script_dir!data\quark.json"
 set "page_dir=!script_dir!..\..\pages\service\internet-search\quark"
 if not exist "!json_file!" (
     echo 错误：未找到数据文件 "!json_file!"
@@ -96,6 +96,13 @@ if ($total -eq 0) {
     Write-Host '数据文件为空' -ForegroundColor Green
     exit 0
 }
+
+$sortByTitle = @(
+    @{ Expression = { [string]$_.title } },
+    @{ Expression = { [string]$_.time } },
+    @{ Expression = { [string]$_.url } }
+)
+$records = @($records | Sort-Object -Property $sortByTitle)
 
 $groups = @{}
 $valid = 0

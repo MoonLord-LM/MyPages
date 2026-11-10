@@ -14,8 +14,8 @@ echo.
 
 
 
-set "json_file=!script_dir!quark.json"
-set "invalid_file=!script_dir!quark-invalid.json"
+set "json_file=!script_dir!data\quark.json"
+set "invalid_json_file=!script_dir!data\quark-invalid.json"
 if not exist "!json_file!" (
     echo 错误：未找到数据文件 "!json_file!"
     echo.
@@ -56,7 +56,7 @@ exit /b
 -----BEGIN POWERSHELL CODE-----
 [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
 $jsonPath = $env:json_file
-$invalidPath = $env:invalid_file
+$invalidPath = $env:invalid_json_file
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 $pattern = '(?s)\{(?:[^{}]|"(?:\\.|[^"\\])*")*\}'
 
