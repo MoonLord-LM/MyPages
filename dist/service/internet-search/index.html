@@ -360,7 +360,7 @@ body { overflow-x: clip; }
       shown = terms.length ? items.filter((item) => terms.every((t) => item.text.includes(t))) : items;
       if (!items.length) setStatus('暂无数据');
       else if (!shown.length) setStatus('未找到结果');
-      else setStatus(terms.length ? '共 ' + shown.length + ' 条结果' : '共 ' + items.length + ' 条资源');
+      else setStatus(terms.length ? '共 ' + shown.length + ' 条结果' : '已收录 ' + items.length + ' 条资源');
       render(true);
     }
 
