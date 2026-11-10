@@ -1,133 +1,27 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>/service</title>
-<style>
-:root { color-scheme: light; }
-body {
-  margin: 0;
-  background: #ffffff;
-  color: #1f2328;
-}
-.markdown-body {
-  --color-canvas-default: #ffffff;
-  --color-canvas-subtle: #f6f8fa;
-  --color-border-default: #d1d9e0;
-  --color-border-muted: #d8dee4;
-  --color-fg-default: #1f2328;
-  --color-fg-muted: #59636e;
-  --color-accent-fg: #0969da;
-  --color-neutral-muted: rgba(175, 184, 193, 0.2);
-  box-sizing: border-box;
-  color: var(--color-fg-default);
-  font-size: 14px;
-  line-height: 1.6;
-  word-wrap: break-word;
-}
-.markdown-body * { box-sizing: border-box; }
-.markdown-body > *:first-child { margin-top: 0 !important; }
-.markdown-body > *:last-child { margin-bottom: 0 !important; }
-.markdown-body a { color: var(--color-accent-fg); text-decoration: none; }
-.markdown-body a:hover { text-decoration: underline; }
-.markdown-body h1, .markdown-body h2, .markdown-body h3,
-.markdown-body h4, .markdown-body h5, .markdown-body h6 {
-  margin: 24px 0 16px; font-weight: 600; line-height: 1.25;
-}
-.markdown-body h1 { font-size: 28px; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
-.markdown-body h2 { font-size: 24px; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
-.markdown-body h3 { font-size: 20px; }
-.markdown-body h4 { font-size: 16px; }
-.markdown-body h5 { font-size: 14px; }
-.markdown-body h6 { font-size: 12px; color: var(--color-fg-muted); }
-.markdown-body p { margin: 0 0 16px; }
-.markdown-body ul, .markdown-body ol { margin: 0 0 16px; padding-left: 2em; }
-.markdown-body li { margin: .25em 0; }
-.markdown-body li::marker { color: var(--color-fg-muted); }
-.markdown-body blockquote {
-  margin: 0 0 16px; padding: 0 1em; color: var(--color-fg-muted);
-  border-left: .25em solid var(--color-border-default);
-}
-.markdown-body code {
-  font-size: 14px; padding: .2em .4em; border-radius: 6px;
-  background-color: var(--color-neutral-muted);
-}
-.markdown-body pre {
-  margin: 0 0 16px; padding: 16px; overflow: auto;
-  font-size: 14px; line-height: 1.45; border-radius: 6px;
-  background-color: var(--color-canvas-subtle);
-  border: 1px solid var(--color-border-muted);
-}
-.markdown-body pre code {
-  display: block; padding: 0; font-size: 14px;
-  background-color: transparent; border: 0; border-radius: 0;
-  overflow-x: auto; white-space: pre;
-}
-.markdown-body pre code.hljs { background: transparent; padding: 0; }
-.markdown-body .code-block { position: relative; margin: 0 0 16px; }
-.markdown-body .code-block > pre { margin: 0; }
-.copy-code-btn {
-  position: absolute; top: 8px; right: 8px; z-index: 1;
-  padding: 4px 8px; font-size: 12px; line-height: 18px;
-  color: var(--color-fg-muted); background: var(--color-canvas-default);
-  border: 1px solid var(--color-border-default); border-radius: 6px;
-  cursor: pointer; opacity: 0; pointer-events: none;
-  transition: opacity .15s, color .15s, border-color .15s;
-}
-.code-block:hover .copy-code-btn,
-.copy-code-btn:focus-visible,
-.copy-code-btn.copied,
-.copy-code-btn.failed { opacity: 1; pointer-events: auto; }
-@media (hover: none) { .copy-code-btn { opacity: 1; pointer-events: auto; } }
-.copy-code-btn:hover { color: var(--color-accent-fg); border-color: var(--color-accent-fg); }
-.copy-code-btn.copied { color: #1a7f37; border-color: #1a7f37; }
-.copy-code-btn.failed { color: #b3261e; border-color: #b3261e; }
-.markdown-body table {
-  border-collapse: collapse; display: block; width: max-content;
-  max-width: 100%; margin: 0 0 16px; overflow: auto;
-}
-.markdown-body table th, .markdown-body table td {
-  border: 1px solid var(--color-border-default); padding: 6px 13px;
-}
-.markdown-body table th { font-weight: 600; background-color: var(--color-canvas-subtle); }
-.markdown-body table tr:nth-child(2n) { background-color: var(--color-canvas-subtle); }
-.markdown-body table td.name { white-space: nowrap; }
-.markdown-body table td.desc { max-width: 560px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-fg-muted); }
-.markdown-body table td.desc.desc-empty { color: #8893a0; }
-.markdown-body img { max-width: 100%; }
-.markdown-body hr { height: 1px; border: 0; background: var(--color-border-muted); margin: 24px 0; }
-
-.auto-list {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 220px;
-  overflow: auto;
-  padding: 16px;
-  box-sizing: border-box;
-  border-right: 1px solid #d8dee4;
-  background: #f6f8fa;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.auto-list ul { list-style: none; margin: 0; padding: 0; }
-.auto-list li { margin: 0; }
-.auto-list a { display: block; padding: 8px 16px; margin: 0 -16px; color: #1a1a1a; text-decoration: none; word-break: break-all; }
-.auto-list a:hover { background: #eef3f8; text-decoration: none; }
-.auto-list a.active { background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; font-weight: 600; }
-.auto-list li.home { margin: 0; padding: 0; }
-.auto-list li.home a { display: flex; align-items: center; justify-content: flex-start; margin: -16px -16px 0; padding: 18px 16px; border-bottom: 1px solid #d8dee4; }
-.auto-list li.home a svg { width: 16px; height: 16px; display: block; }
-@media (max-width: 1360px) {
-  .auto-list-content { margin-left: 240px; }
-}
-@media (max-width: 768px) {
-  .auto-list { position: static; width: auto; border-right: none; border-bottom: 1px solid #d8dee4; }
-  .auto-list-content { margin-left: 0; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线服务</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      color: #1f2328; line-height: 1.6; background: #fafafa;
+    }
+    /* .wrap 统一由公共模板 header.html 定义 */
+    h1 { font-size: 28px; color: #1f2328; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; margin-bottom: 28px; line-height: 1.25; }
+    .tool-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .tool-card {
+      display: block; background: #fff; border: 1px solid #e3e8ef; border-radius: 14px;
+      padding: 24px; color: #1f2328; box-shadow: 0 6px 20px rgba(0,0,0,.06);
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.1); border-color: #0969da; }
+    .tool-card h2 { font-size: 20px; color: #1f2328; margin-bottom: 8px; }
+    .tool-card p { color: #59636e; font-size: 14px; }
+  </style>
 <link rel="canonical" href="https://www.moonlord.cc/service/index.html">
 </head>
 <body>
@@ -294,27 +188,20 @@ body { overflow-x: clip; }
 <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
 <!-- End Google Analytics Tag -->
 
-<nav class="auto-list">
-  <ul>
-    <li class="home"><a href="./index.html" title="返回目录首页" aria-label="返回目录首页"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.36v7.026A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V11a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75v3.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.229c0-.531.242-1.034.657-1.366l5.25-4.2z"></path></svg></a></li>
-    <li><a href="./network-proxy.html">network-proxy</a></li>
-  </ul>
-</nav>
-<div class="auto-list-content">
-<div class="wrap">
-<article class="markdown-body">
-<h1>/service</h1>
-<table>
-  <thead>
-    <tr><th>文件名</th><th>说明</th></tr>
-  </thead>
-  <tbody>
-    <tr><td class="name"><a href="./network-proxy.html">network-proxy</a></td><td class="desc" title="&lt;页面受密码保护&gt;">&lt;页面受密码保护&gt;</td></tr>
-  </tbody>
-</table>
-</article>
-</div>
-</div>
+  <main class="wrap">
+    <h1>在线服务</h1>
+    <div class="tool-list">
+      <a class="tool-card" href="internet-search/index.html">
+        <h2>互联网资源搜索</h2>
+        <p>自动采集和收录全网资源，提供资源搜索功能</p>
+      </a>
+      <a class="tool-card" href="network-proxy/index.html">
+        <h2>网络代理服务</h2>
+        <p>页面受密码保护</p>
+      </a>
+    </div>
+
+  </main>
 <!-- Cloudflare Web Analytics -->
 <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "28204d87bcf54906b3651e8f84588b48"}'></script>
 <!-- End Cloudflare Web Analytics -->

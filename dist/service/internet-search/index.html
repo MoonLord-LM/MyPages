@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>互联网资源搜索</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { color: #1f2328; line-height: 1.6; background: #fafafa; }
+    a { text-decoration: none; }
+    h1 { font-size: 28px; color: #1f2328; margin-bottom: 24px; line-height: 1.25; }
+
+    .search-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .search-input {
+      flex: 1; min-width: 0; padding: 11px 14px; font-size: 16px;
+      border: 1px solid #ccc; border-radius: 8px; outline: none;
+    }
+    .search-input:focus { border-color: #2a5298; }
+    .btn, .more {
+      font-size: 16px; font-weight: 600; border: 0; border-radius: 8px;
+      color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0); cursor: pointer;
+    }
+    .btn { padding: 11px 22px; }
+    .btn:hover, .more:hover { opacity: .92; }
+
+    .status { font-size: 14px; color: #59636e; min-height: 1.4em; margin-bottom: 16px; }
+    .status.err { color: #b3261e; }
+    .result-item {
+      background: #fff; border: 1px solid #e3e8ef; border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, .05);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .result-item:hover { border-color: #0969da; box-shadow: 0 10px 26px rgba(0, 0, 0, .08); }
+    .result-title {
+      display: block; font-size: 20px; font-weight: 600; color: #1f2328; word-break: break-all;
+    }
+    .result-title:hover { color: #0969da; }
+    .result-meta {
+      margin-top: 8px; font-size: 14px; color: #59636e;
+      display: flex; flex-wrap: wrap; gap: 4px 16px;
+    }
+    .result-meta span { white-space: nowrap; }
+    .result-link {
+      margin-top: 8px; font-size: 14px; color: #59636e; word-break: break-all;
+    }
+    .result-url { color: #0969da; }
+    .result-url:hover { color: #2a5298; }
+    mark { background: #fff2a8; color: inherit; border-radius: 2px; padding: 0 1px; }
+    .more { display: block; margin: 20px auto 0; padding: 10px 26px; }
+    .hide { display: none; }
+
+    @media (max-width: 600px) {
+      .result-title { font-size: 18px; }
+      .btn { padding: 11px 16px; }
+    }
+  </style>
+<link rel="canonical" href="https://www.moonlord.cc/service/internet-search/index.html">
+</head>
+<body>
+<style>
+:root { --nav-h: 54px; }
+/* 字号只用 px 常用档位 10/12/14/16/18/20/24/28/32/40px；普通文本 14px，控件文字 16px */
+html, body, *, *::before, *::after { font-family: "Microsoft YaHei UI", sans-serif; }
+pre, code, kbd, samp, tt {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-ligatures: none;
+}
+/* 表单控件带 UA 默认字号，需显式声明才能与普通文本一起统一到 14px */
+body, input, button, textarea, select { font-size: 14px; }
+h1 { font-size: 28px; } h2 { font-size: 24px; } h3 { font-size: 20px; }
+h4 { font-size: 16px; } h5 { font-size: 14px; } h6 { font-size: 12px; }
+/* 显式 content-box，避免各页面全局 border-box 让容器宽度不一致：内容区 900px */
+.wrap { box-sizing: content-box; max-width: 900px; margin: 0 auto; padding: 30px 24px 48px; }
+/* 固定滚动条槽位：避免长短页面切换时 50vw 出血计算让顶栏左右跳动 */
+html { scrollbar-gutter: stable; }
+/* 旧版浏览器（不支持 scrollbar-gutter）退化为常驻竖向滚动条，效果相同 */
+@supports not (scrollbar-gutter: stable) {
+  html { overflow-y: scroll; }
+}
+/* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
+#site-nav, #site-nav * { box-sizing: border-box; }
+#site-nav ul, #site-nav ol, #site-nav li { margin: 0; padding: 0; list-style: none; }
+#site-nav a { text-decoration: none; }
+#site-nav {
+  position: sticky; top: 0; height: var(--nav-h, 54px); z-index: 1000;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  display: flex; align-items: stretch;
+  background: linear-gradient(135deg, #d8e9fb 0%, #e6f0fc 50%, #f1e9fb 100%);
+  box-shadow: 0 4px 18px rgba(31, 60, 114, 0.12);
+}
+#site-nav .nav-container {
+  width: 100%; max-width: 960px; margin: 0 auto; padding: 0;
+  display: flex; align-items: center;
+}
+#site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; }
+#site-nav .nav-menu li { display: flex; align-items: stretch; }
+#site-nav .nav-menu .nav-link {
+  color: rgba(30, 60, 114, 0.78); font-weight: 600; font-size: 16px;
+  display: flex; align-items: center; height: 100%; padding: 0 18px; position: relative;
+  transition: color .25s, background .25s;
+}
+#site-nav .nav-menu .nav-link::after {
+  content: ""; position: absolute; left: 18px; right: 18px; bottom: 8px;
+  height: 2px; background: #00e0ff; transform: scaleX(0); transform-origin: center;
+  transition: transform .25s ease;
+}
+#site-nav .nav-menu .nav-link:hover { color: #1e3c72; background: rgba(30, 60, 114, 0.08); }
+#site-nav .nav-menu .nav-link:hover::after { transform: scaleX(1); }
+#site-nav .nav-menu .nav-link.active {
+  color: #fff; font-weight: 700; border-radius: 0;
+  background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+}
+
+#site-nav .nav-search-btn {
+  margin-left: auto; width: 40px; height: 40px;
+  border: 1px solid rgba(30, 60, 114, .25); border-radius: 50%;
+  background: linear-gradient(135deg, #cfe1f7, #e4d8f6); color: #1e3c72; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(31, 60, 114, .12);
+  transition: background .25s, transform .25s;
+}
+#site-nav .nav-search-btn:hover {
+  background: linear-gradient(135deg, #bcd6f5, #d8c8f0); transform: translateY(-1px);
+}
+#site-nav .nav-search-btn svg { width: 15px; height: 15px; }
+
+#searchOverlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, .45);
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 120px; z-index: 2000;
+}
+#searchOverlay.open { display: flex; }
+#searchOverlay .search-box {
+  width: min(560px, 90vw); background: #fff; border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3); padding: 20px;
+}
+#searchOverlay .search-box h3 { font-size: 20px; margin-bottom: 12px; color: #222; }
+#searchOverlay .search-row { display: flex; gap: 10px; }
+#searchOverlay .search-input {
+  flex: 1; padding: 11px 14px; font-size: 16px;
+  border: 1px solid #ccc; border-radius: 8px; outline: none;
+}
+#searchOverlay .search-input:focus { border-color: #2a5298; }
+#searchOverlay .search-submit {
+  padding: 11px 20px; border: none; border-radius: 8px;
+  background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff;
+  font-weight: 600; font-size: 16px; cursor: pointer;
+}
+#searchOverlay .search-submit:hover { opacity: .92; }
+#searchOverlay .search-hint { margin-top: 10px; font-size: 14px; color: #888; }
+
+/* 防止满宽出血（100vw）在存在竖向滚动条时产生横向滚动；
+   用 clip 而非 hidden：不会把 body 变成滚动容器，因而不会破坏 sticky 吸顶 */
+body { overflow-x: clip; }
+
+.auto-list { top: var(--nav-h, 54px) !important; }
+</style>
+
+<nav id="site-nav">
+  <div class="nav-container">
+    <ul class="nav-menu">
+      <li><a class="nav-link" href="../../index.html">首页</a></li>
+      <li><a class="nav-link active" href="../../service/index.html">服务</a></li>
+      <li><a class="nav-link" href="../../tools/index.html">工具</a></li>
+      <li><a class="nav-link" href="../../github/index.html">开源</a></li>
+      <li><a class="nav-link" href="../../admin/index.html">监控</a></li>
+      <li><a class="nav-link" href="../../about/index.html">关于</a></li>
+    </ul>
+    <button class="nav-search-btn" id="searchToggle" aria-label="搜索">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div id="searchOverlay">
+  <div class="search-box">
+    <h3>全网搜索</h3>
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="输入关键词…" autocomplete="off">
+      <button class="search-submit" id="searchSubmit">搜索</button>
+    </div>
+    <p class="search-hint">使用 Google 搜索 “site:moonlord.cc + 关键词”</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const toggle  = document.getElementById('searchToggle');
+    const overlay = document.getElementById('searchOverlay');
+    const input   = document.getElementById('searchInput');
+    const submit  = document.getElementById('searchSubmit');
+
+    function openSearch() { overlay.classList.add('open'); input.focus(); }
+    function closeSearch() { overlay.classList.remove('open'); }
+    function doSearch() {
+      const q = input.value.trim();
+      const site = 'site:moonlord.cc';
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(q ? site + ' ' + q : site);
+      window.open(url, '_blank');
+      closeSearch();
+    }
+
+    toggle.addEventListener('click', openSearch);
+    submit.addEventListener('click', doSearch);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeSearch(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
+    });
+  })();
+</script>
+
+<!-- Google Analytics Tag -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3WLVV25DZ0"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
+<!-- End Google Analytics Tag -->
+
+  <main class="wrap">
+    <h1>互联网资源搜索</h1>
+
+    <div class="search-row">
+      <input type="text" class="search-input" id="keyword" placeholder="输入关键词…"
+             autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
+      <button class="btn" id="searchBtn" type="button">搜索</button>
+    </div>
+    <p class="status" id="status">正在加载数据…</p>
+    <div id="results"></div>
+    <button class="more hide" id="more" type="button">加载更多</button>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    const DATA_URL = 'assets/pan-quark-cn.gz';
+    const PAGE_SIZE = 20;
+
+    // file_size 由 quark-check.bat 写入，单位为字节
+    function formatSize(value) {
+      if (value === null || value === undefined || value === '') return '—';
+      const bytes = Number(value);
+      if (!isFinite(bytes) || bytes < 0) return '—';
+      if (bytes < 1024) return bytes + ' B';
+      const units = ['KB', 'MB', 'GB', 'TB', 'PB'];
+      let size = bytes / 1024, i = 0;
+      while (size >= 1024 && i < units.length - 1) { size /= 1024; i++; }
+      return size.toFixed(2) + ' ' + units[i];
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const inputEl = $('keyword'), btnEl = $('searchBtn'), statusEl = $('status');
+    const listEl = $('results'), moreEl = $('more');
+
+    let items = [], shown = [], terms = [], visible = 0, timer = null, loadPromise = null;
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    }
+    function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    // 逐段转义后再插入 <mark>，避免关键词含 & < 等字符时破坏 HTML 实体
+    function highlight(value) {
+      const str = String(value);
+      if (!terms.length) return escapeHtml(str);
+      const re = new RegExp(terms.map(escapeRegExp).join('|'), 'gi');
+      let html = '', last = 0, m;
+      while ((m = re.exec(str)) !== null) {
+        html += escapeHtml(str.slice(last, m.index)) + '<mark>' + escapeHtml(m[0]) + '</mark>';
+        last = m.index + m[0].length;
+      }
+      return html + escapeHtml(str.slice(last));
+    }
+
+    function setStatus(text, isErr) {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (isErr ? ' err' : '');
+    }
+
+    // gzip 由 quark-check.bat 生成，解压使用浏览器原生 DecompressionStream
+    async function ungzipJson(buffer) {
+      if (typeof DecompressionStream === 'undefined') throw new Error('浏览器不支持 gzip 解压');
+      const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'));
+      const raw = await new Response(stream).arrayBuffer();
+      return JSON.parse(new TextDecoder('utf-8').decode(raw).replace(/^\uFEFF/, ''));
+    }
+
+    function findArray(value, depth) {
+      if (Array.isArray(value)) return value;
+      if (!depth || !value || typeof value !== 'object') return null;
+      for (const key of Object.keys(value)) {
+        const found = findArray(value[key], depth - 1);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    // 兼容数组、对象包裹数组、以及「名称 -> 内容」映射这几种常见导出格式
+    function toRecords(data) {
+      if (Array.isArray(data)) return data;
+      if (!data || typeof data !== 'object') return [];
+      for (const key of ['data', 'list', 'items', 'rows', 'records', 'results', 'resources', '列表', '数据']) {
+        if (Array.isArray(data[key])) return data[key];
+      }
+      const nested = findArray(data, 2);
+      if (nested) return nested;
+      return Object.keys(data).map((key) => ({ name: key, value: data[key] }));
+    }
+
+    function str(value) {
+      return value === null || value === undefined ? '' : String(value).trim();
+    }
+
+    // 站点数据由 quark-check.bat 生成，每条固定为 url / title / time / file_count / file_size
+    function normalize(record) {
+      if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
+      const title = str(record.title) || '（无标题）';
+      const url = str(record.url);
+      const time = str(record.time) || '—';
+      const count = str(record.file_count) || '—';
+      const size = formatSize(record.file_size);
+      return {
+        title, url, time, count, size,
+        sortKey: /^\d{4}-\d{2}-\d{2}/.test(time) ? time : '',
+        text: [title, url, time, count, size, record.file_count, record.file_size].join(' ').toLowerCase()
+      };
+    }
+
+    function itemHtml(item) {
+      const safeUrl = /^https?:\/\/\S+$/i.test(item.url) ? escapeHtml(item.url) : '';
+      const titleTag = safeUrl
+        ? '<a class="result-title" href="' + safeUrl + '" rel="noopener">' + highlight(item.title) + '</a>'
+        : '<span class="result-title">' + highlight(item.title) + '</span>';
+      const meta = '<div class="result-meta">' +
+        '<span>时间：' + highlight(item.time) + '</span>' +
+        '<span>文件数：' + highlight(item.count) + '</span>' +
+        '<span>大小：' + highlight(item.size) + '</span>' +
+        '</div>';
+      const link = safeUrl
+        ? '<div class="result-link">链接：<a class="result-url" href="' + safeUrl + '" rel="noopener">' + highlight(item.url) + '</a></div>'
+        : '<div class="result-link">链接：' + highlight(item.url || '—') + '</div>';
+      return '<div class="result-item">' + titleTag + meta + link + '</div>';
+    }
+
+    function render(reset) {
+      if (reset) { listEl.innerHTML = ''; visible = 0; }
+      const slice = shown.slice(visible, visible + PAGE_SIZE);
+      listEl.insertAdjacentHTML('beforeend', slice.map(itemHtml).join(''));
+      visible += slice.length;
+      moreEl.classList.toggle('hide', visible >= shown.length);
+    }
+
+    function search() {
+      const q = inputEl.value.trim();
+      terms = q ? q.toLowerCase().split(/\s+/).filter(Boolean) : [];
+      shown = terms.length ? items.filter((item) => terms.every((t) => item.text.includes(t))) : items;
+      if (!items.length) setStatus('暂无数据');
+      else if (!shown.length) setStatus('未找到结果');
+      else setStatus(terms.length ? '共 ' + shown.length + ' 条结果' : '共 ' + items.length + ' 条资源');
+      render(true);
+    }
+
+    function runSearch() {
+      clearTimeout(timer);
+      if (items.length) search();
+    }
+
+    function load() {
+      if (!loadPromise) {
+        loadPromise = fetch(DATA_URL)
+          .then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.arrayBuffer(); })
+          .then(ungzipJson)
+          .then((data) => {
+            items = toRecords(data).map(normalize).filter(Boolean)
+              .sort((a, b) => (a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0));
+            search();
+          })
+          .catch((err) => { console.error(err); setStatus('数据加载失败', true); });
+      }
+      return loadPromise;
+    }
+
+    inputEl.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(runSearch, 180); });
+    inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+    btnEl.addEventListener('click', runSearch);
+    moreEl.addEventListener('click', () => render(false));
+    load();
+  })();
+  </script>
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "28204d87bcf54906b3651e8f84588b48"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+</body>
+</html>
