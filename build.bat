@@ -668,6 +668,25 @@ const AUTOLIST_CSS = `
 }
 `;
 
+// 自动列表页跨页刷新后，让当前菜单项保持在侧栏可视区
+const AUTOLIST_JS = `
+(function () {
+  'use strict';
+  function keepActiveVisible() {
+    var nav = document.querySelector('.auto-list');
+    // 窄屏下侧栏回归文档流，跳过以免把正文滚出视野
+    if (!nav || getComputedStyle(nav).position !== 'fixed') return;
+    var active = nav.querySelector('a.active');
+    if (active) active.scrollIntoView({ block: 'center' });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', keepActiveVisible);
+  } else {
+    keepActiveVisible();
+  }
+})();
+`;
+
 function fetchBuffer(url) {
     return new Promise((resolve, reject) => {
         const doRequest = (u, redirects) => {
@@ -1012,6 +1031,7 @@ async function processEncryptedPage(srcFile) {
 function wrapWithNav(bodyHtml, navHtml) {
     if (!navHtml) return bodyHtml;
     return '<style>' + AUTOLIST_CSS + '</style>\n' +
+        '<script>' + AUTOLIST_JS + '</script>\n' +
         navHtml + '\n' +
         '<div class="auto-list-content">\n' +
         bodyHtml + '\n' +
@@ -1105,6 +1125,7 @@ function renderListPage(dirLabel, indexOutPath, fileEntries, navHtml, srcDir) {
     ].join('\n');
     const listHtml = buildTable(indexOutPath, fileEntries);
     const body =
+        '<script>' + AUTOLIST_JS + '</script>\n' +
         navHtml + '\n' +
         '<div class="auto-list-content">\n' +
         '<div class="wrap">\n' +
