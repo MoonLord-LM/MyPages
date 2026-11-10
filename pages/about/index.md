@@ -9,4 +9,4 @@
 [站点地图](../sitemap.xml)  
 [外链清单](../external-url.json)  
 [GitHub Repo 清单](../github/repos/index.html)  
-[夸克网盘资源收录](../service/internet-search/quark/index.html)  
+[夸克网盘资源收录清单](../service/internet-search/quark/index.html)  
