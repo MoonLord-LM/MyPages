@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>互联网资源搜索</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { color: #1f2328; line-height: 1.6; background: #fafafa; }
+    a { text-decoration: none; }
+    h1 { font-size: 28px; color: #1f2328; margin-bottom: 24px; line-height: 1.25; }
+
+    .search-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .search-input {
+      flex: 1; min-width: 0; padding: 11px 14px; font-size: 16px;
+      border: 1px solid #ccc; border-radius: 8px; outline: none;
+    }
+    .search-input:focus { border-color: #2a5298; }
+    .btn, .more {
+      font-size: 16px; font-weight: 600; border: 0; border-radius: 8px;
+      color: #fff; background: linear-gradient(135deg, #6ba0ea, #9b6fe0); cursor: pointer;
+    }
+    .btn { padding: 11px 22px; }
+    .btn:hover, .more:hover { opacity: .92; }
+
+    .status { font-size: 14px; color: #59636e; min-height: 1.4em; margin-bottom: 16px; }
+    .status.err { color: #b3261e; }
+    .result-item {
+      background: #fff; border: 1px solid #e3e8ef; border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, .05);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .result-item:hover { border-color: #0969da; box-shadow: 0 10px 26px rgba(0, 0, 0, .08); }
+    .result-title {
+      display: block; font-size: 20px; font-weight: 600; color: #1f2328; word-break: break-all;
+    }
+    .result-title:hover { color: #0969da; }
+    .result-meta {
+      margin-top: 8px; font-size: 14px; color: #59636e;
+      display: flex; flex-wrap: wrap; gap: 4px 16px;
+    }
+    .result-meta span { white-space: nowrap; }
+    .result-link {
+      margin-top: 8px; font-size: 14px; color: #59636e; word-break: break-all;
+    }
+    .result-url { color: #0969da; }
+    .result-url:hover { color: #2a5298; }
+    mark { background: #fff2a8; color: inherit; border-radius: 2px; padding: 0 1px; }
+    .more { display: block; margin: 20px auto 0; padding: 10px 26px; }
+    .hide { display: none; }
+
+    @media (max-width: 600px) {
+      .result-title { font-size: 18px; }
+      .btn { padding: 11px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>互联网资源搜索</h1>
+
+    <div class="search-row">
+      <input type="text" class="search-input" id="keyword" placeholder="输入关键词…"
+             autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
+      <button class="btn" id="searchBtn" type="button">搜索</button>
+    </div>
+    <p class="status" id="status">正在加载数据…</p>
+    <div id="results"></div>
+    <button class="more hide" id="more" type="button">加载更多</button>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    const DATA_URL = 'assets/pan-quark-cn.gz';
+    const PAGE_SIZE = 20;
+
+    // file_size 由 quark-check.bat 写入，单位为字节
+    function formatSize(value) {
+      if (value === null || value === undefined || value === '') return '—';
+      const bytes = Number(value);
+      if (!isFinite(bytes) || bytes < 0) return '—';
+      if (bytes < 1024) return bytes + ' B';
+      const units = ['KB', 'MB', 'GB', 'TB', 'PB'];
+      let size = bytes / 1024, i = 0;
+      while (size >= 1024 && i < units.length - 1) { size /= 1024; i++; }
+      return size.toFixed(2) + ' ' + units[i];
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const inputEl = $('keyword'), btnEl = $('searchBtn'), statusEl = $('status');
+    const listEl = $('results'), moreEl = $('more');
+
+    let items = [], shown = [], terms = [], visible = 0, timer = null, loadPromise = null;
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    }
+    function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    // 逐段转义后再插入 <mark>，避免关键词含 & < 等字符时破坏 HTML 实体
+    function highlight(value) {
+      const str = String(value);
+      if (!terms.length) return escapeHtml(str);
+      const re = new RegExp(terms.map(escapeRegExp).join('|'), 'gi');
+      let html = '', last = 0, m;
+      while ((m = re.exec(str)) !== null) {
+        html += escapeHtml(str.slice(last, m.index)) + '<mark>' + escapeHtml(m[0]) + '</mark>';
+        last = m.index + m[0].length;
+      }
+      return html + escapeHtml(str.slice(last));
+    }
+
+    function setStatus(text, isErr) {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (isErr ? ' err' : '');
+    }
+
+    // gzip 由 quark-check.bat 生成，解压使用浏览器原生 DecompressionStream
+    async function ungzipJson(buffer) {
+      if (typeof DecompressionStream === 'undefined') throw new Error('浏览器不支持 gzip 解压');
+      const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'));
+      const raw = await new Response(stream).arrayBuffer();
+      return JSON.parse(new TextDecoder('utf-8').decode(raw).replace(/^\uFEFF/, ''));
+    }
+
+    function findArray(value, depth) {
+      if (Array.isArray(value)) return value;
+      if (!depth || !value || typeof value !== 'object') return null;
+      for (const key of Object.keys(value)) {
+        const found = findArray(value[key], depth - 1);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    // 兼容数组、对象包裹数组、以及「名称 -> 内容」映射这几种常见导出格式
+    function toRecords(data) {
+      if (Array.isArray(data)) return data;
+      if (!data || typeof data !== 'object') return [];
+      for (const key of ['data', 'list', 'items', 'rows', 'records', 'results', 'resources', '列表', '数据']) {
+        if (Array.isArray(data[key])) return data[key];
+      }
+      const nested = findArray(data, 2);
+      if (nested) return nested;
+      return Object.keys(data).map((key) => ({ name: key, value: data[key] }));
+    }
+
+    function str(value) {
+      return value === null || value === undefined ? '' : String(value).trim();
+    }
+
+    // 站点数据由 quark-check.bat 生成，每条固定为 url / title / time / file_count / file_size
+    function normalize(record) {
+      if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
+      const title = str(record.title) || '（无标题）';
+      const url = str(record.url);
+      const time = str(record.time) || '—';
+      const count = str(record.file_count) || '—';
+      const size = formatSize(record.file_size);
+      return {
+        title, url, time, count, size,
+        sortKey: /^\d{4}-\d{2}-\d{2}/.test(time) ? time : '',
+        text: [title, url, time, count, size, record.file_count, record.file_size].join(' ').toLowerCase()
+      };
+    }
+
+    function itemHtml(item) {
+      const safeUrl = /^https?:\/\/\S+$/i.test(item.url) ? escapeHtml(item.url) : '';
+      const titleTag = safeUrl
+        ? '<a class="result-title" href="' + safeUrl + '" target="_blank" rel="noopener">' + highlight(item.title) + '</a>'
+        : '<span class="result-title">' + highlight(item.title) + '</span>';
+      const meta = '<div class="result-meta">' +
+        '<span>时间：' + highlight(item.time) + '</span>' +
+        '<span>文件数：' + highlight(item.count) + '</span>' +
+        '<span>大小：' + highlight(item.size) + '</span>' +
+        '</div>';
+      const link = safeUrl
+        ? '<div class="result-link">链接：<a class="result-url" href="' + safeUrl + '" target="_blank" rel="noopener">' + highlight(item.url) + '</a></div>'
+        : '<div class="result-link">链接：' + highlight(item.url || '—') + '</div>';
+      return '<div class="result-item">' + titleTag + meta + link + '</div>';
+    }
+
+    function render(reset) {
+      if (reset) { listEl.innerHTML = ''; visible = 0; }
+      const slice = shown.slice(visible, visible + PAGE_SIZE);
+      listEl.insertAdjacentHTML('beforeend', slice.map(itemHtml).join(''));
+      visible += slice.length;
+      moreEl.classList.toggle('hide', visible >= shown.length);
+    }
+
+    function search() {
+      const q = inputEl.value.trim();
+      terms = q ? q.toLowerCase().split(/\s+/).filter(Boolean) : [];
+      shown = terms.length ? items.filter((item) => terms.every((t) => item.text.includes(t))) : items;
+      if (!items.length) setStatus('暂无数据');
+      else if (!shown.length) setStatus('未找到结果');
+      else setStatus(terms.length ? '共 ' + shown.length + ' 条结果' : '共 ' + items.length + ' 条资源');
+      render(true);
+    }
+
+    function runSearch() {
+      clearTimeout(timer);
+      if (items.length) search();
+    }
+
+    function load() {
+      if (!loadPromise) {
+        loadPromise = fetch(DATA_URL)
+          .then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.arrayBuffer(); })
+          .then(ungzipJson)
+          .then((data) => {
+            items = toRecords(data).map(normalize).filter(Boolean)
+              .sort((a, b) => (a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0));
+            search();
+          })
+          .catch((err) => { console.error(err); setStatus('数据加载失败', true); });
+      }
+      return loadPromise;
+    }
+
+    inputEl.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(runSearch, 180); });
+    inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+    btnEl.addEventListener('click', runSearch);
+    moreEl.addEventListener('click', () => render(false));
+    load();
+  })();
+  </script>
+</body>
+</html>
