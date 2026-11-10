@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026-03-19 夸克网盘资源收录</title>
+<style>
+:root { color-scheme: light; }
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #1f2328;
+}
+.markdown-body {
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-border-default: #d1d9e0;
+  --color-border-muted: #d8dee4;
+  --color-fg-default: #1f2328;
+  --color-fg-muted: #59636e;
+  --color-accent-fg: #0969da;
+  --color-neutral-muted: rgba(175, 184, 193, 0.2);
+  box-sizing: border-box;
+  color: var(--color-fg-default);
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+.markdown-body * { box-sizing: border-box; }
+.markdown-body > *:first-child { margin-top: 0 !important; }
+.markdown-body > *:last-child { margin-bottom: 0 !important; }
+.markdown-body a { color: var(--color-accent-fg); text-decoration: none; }
+.markdown-body a:hover { text-decoration: underline; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  margin: 24px 0 16px; font-weight: 600; line-height: 1.25;
+}
+.markdown-body h1 { font-size: 28px; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
+.markdown-body h2 { font-size: 24px; padding-bottom: .3em; border-bottom: 1px solid var(--color-border-muted); }
+.markdown-body h3 { font-size: 20px; }
+.markdown-body h4 { font-size: 16px; }
+.markdown-body h5 { font-size: 14px; }
+.markdown-body h6 { font-size: 12px; color: var(--color-fg-muted); }
+.markdown-body p { margin: 0 0 16px; }
+.markdown-body ul, .markdown-body ol { margin: 0 0 16px; padding-left: 2em; }
+.markdown-body li { margin: .25em 0; }
+.markdown-body li::marker { color: var(--color-fg-muted); }
+.markdown-body blockquote {
+  margin: 0 0 16px; padding: 0 1em; color: var(--color-fg-muted);
+  border-left: .25em solid var(--color-border-default);
+}
+.markdown-body code {
+  font-size: 14px; padding: .2em .4em; border-radius: 6px;
+  background-color: var(--color-neutral-muted);
+}
+.markdown-body pre {
+  margin: 0 0 16px; padding: 16px; overflow: auto;
+  font-size: 14px; line-height: 1.45; border-radius: 6px;
+  background-color: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border-muted);
+}
+.markdown-body pre code {
+  display: block; padding: 0; font-size: 14px;
+  background-color: transparent; border: 0; border-radius: 0;
+  overflow-x: auto; white-space: pre;
+}
+.markdown-body pre code.hljs { background: transparent; padding: 0; }
+.markdown-body .code-block { position: relative; margin: 0 0 16px; }
+.markdown-body .code-block > pre { margin: 0; }
+.copy-code-btn {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  padding: 4px 8px; font-size: 12px; line-height: 18px;
+  color: var(--color-fg-muted); background: var(--color-canvas-default);
+  border: 1px solid var(--color-border-default); border-radius: 6px;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .15s, color .15s, border-color .15s;
+}
+.code-block:hover .copy-code-btn,
+.copy-code-btn:focus-visible,
+.copy-code-btn.copied,
+.copy-code-btn.failed { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .copy-code-btn { opacity: 1; pointer-events: auto; } }
+.copy-code-btn:hover { color: var(--color-accent-fg); border-color: var(--color-accent-fg); }
+.copy-code-btn.copied { color: #1a7f37; border-color: #1a7f37; }
+.copy-code-btn.failed { color: #b3261e; border-color: #b3261e; }
+.markdown-body table {
+  border-collapse: collapse; display: block; width: max-content;
+  max-width: 100%; margin: 0 0 16px; overflow: auto;
+}
+.markdown-body table th, .markdown-body table td {
+  border: 1px solid var(--color-border-default); padding: 6px 13px;
+}
+.markdown-body table th { font-weight: 600; background-color: var(--color-canvas-subtle); }
+.markdown-body table tr:nth-child(2n) { background-color: var(--color-canvas-subtle); }
+.markdown-body table td.name { white-space: nowrap; }
+.markdown-body table td.desc { max-width: 560px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-fg-muted); }
+.markdown-body table td.desc.desc-empty { color: #8893a0; }
+.markdown-body img { max-width: 100%; }
+.markdown-body hr { height: 1px; border: 0; background: var(--color-border-muted); margin: 24px 0; }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/styles/default.min.css">
+<link rel="canonical" href="https://www.moonlord.cc/service/internet-search/quark/2026-03-19.html">
+</head>
+<body>
+<style>
+:root { --nav-h: 54px; }
+/* 字号只用 px 常用档位 10/12/14/16/18/20/24/28/32/40px；普通文本 14px，控件文字 16px */
+html, body, *, *::before, *::after { font-family: "Microsoft YaHei UI", sans-serif; }
+pre, code, kbd, samp, tt {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-ligatures: none;
+}
+/* 表单控件带 UA 默认字号，需显式声明才能与普通文本一起统一到 14px */
+body, input, button, textarea, select { font-size: 14px; }
+h1 { font-size: 28px; } h2 { font-size: 24px; } h3 { font-size: 20px; }
+h4 { font-size: 16px; } h5 { font-size: 14px; } h6 { font-size: 12px; }
+/* 显式 content-box，避免各页面全局 border-box 让容器宽度不一致：内容区 900px */
+.wrap { box-sizing: content-box; max-width: 900px; margin: 0 auto; padding: 30px 24px 48px; }
+/* 固定滚动条槽位：避免长短页面切换时 50vw 出血计算让顶栏左右跳动 */
+html { scrollbar-gutter: stable; }
+/* 旧版浏览器（不支持 scrollbar-gutter）退化为常驻竖向滚动条，效果相同 */
+@supports not (scrollbar-gutter: stable) {
+  html { overflow-y: scroll; }
+}
+/* 自带最小化 reset：不依赖宿主页面的全局重置，保证各页顶栏完全一致 */
+#site-nav, #site-nav * { box-sizing: border-box; }
+#site-nav ul, #site-nav ol, #site-nav li { margin: 0; padding: 0; list-style: none; }
+#site-nav a { text-decoration: none; }
+#site-nav {
+  position: sticky; top: 0; height: var(--nav-h, 54px); z-index: 1000;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  display: flex; align-items: stretch;
+  background: linear-gradient(135deg, #d8e9fb 0%, #e6f0fc 50%, #f1e9fb 100%);
+  box-shadow: 0 4px 18px rgba(31, 60, 114, 0.12);
+}
+#site-nav .nav-container {
+  width: 100%; max-width: 960px; margin: 0 auto; padding: 0;
+  display: flex; align-items: center;
+}
+#site-nav .nav-menu { display: flex; align-items: stretch; align-self: stretch; }
+#site-nav .nav-menu li { display: flex; align-items: stretch; }
+#site-nav .nav-menu .nav-link {
+  color: rgba(30, 60, 114, 0.78); font-weight: 600; font-size: 16px;
+  display: flex; align-items: center; height: 100%; padding: 0 18px; position: relative;
+  transition: color .25s, background .25s;
+}
+#site-nav .nav-menu .nav-link::after {
+  content: ""; position: absolute; left: 18px; right: 18px; bottom: 8px;
+  height: 2px; background: #00e0ff; transform: scaleX(0); transform-origin: center;
+  transition: transform .25s ease;
+}
+#site-nav .nav-menu .nav-link:hover { color: #1e3c72; background: rgba(30, 60, 114, 0.08); }
+#site-nav .nav-menu .nav-link:hover::after { transform: scaleX(1); }
+#site-nav .nav-menu .nav-link.active {
+  color: #fff; font-weight: 700; border-radius: 0;
+  background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+}
+
+#site-nav .nav-search-btn {
+  margin-left: auto; width: 40px; height: 40px;
+  border: 1px solid rgba(30, 60, 114, .25); border-radius: 50%;
+  background: linear-gradient(135deg, #cfe1f7, #e4d8f6); color: #1e3c72; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(31, 60, 114, .12);
+  transition: background .25s, transform .25s;
+}
+#site-nav .nav-search-btn:hover {
+  background: linear-gradient(135deg, #bcd6f5, #d8c8f0); transform: translateY(-1px);
+}
+#site-nav .nav-search-btn svg { width: 15px; height: 15px; }
+
+#searchOverlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, .45);
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 120px; z-index: 2000;
+}
+#searchOverlay.open { display: flex; }
+#searchOverlay .search-box {
+  width: min(560px, 90vw); background: #fff; border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3); padding: 20px;
+}
+#searchOverlay .search-box h3 { font-size: 20px; margin-bottom: 12px; color: #222; }
+#searchOverlay .search-row { display: flex; gap: 10px; }
+#searchOverlay .search-input {
+  flex: 1; padding: 11px 14px; font-size: 16px;
+  border: 1px solid #ccc; border-radius: 8px; outline: none;
+}
+#searchOverlay .search-input:focus { border-color: #2a5298; }
+#searchOverlay .search-submit {
+  padding: 11px 20px; border: none; border-radius: 8px;
+  background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff;
+  font-weight: 600; font-size: 16px; cursor: pointer;
+}
+#searchOverlay .search-submit:hover { opacity: .92; }
+#searchOverlay .search-hint { margin-top: 10px; font-size: 14px; color: #888; }
+
+/* 防止满宽出血（100vw）在存在竖向滚动条时产生横向滚动；
+   用 clip 而非 hidden：不会把 body 变成滚动容器，因而不会破坏 sticky 吸顶 */
+body { overflow-x: clip; }
+
+.auto-list { top: var(--nav-h, 54px) !important; }
+</style>
+
+<nav id="site-nav">
+  <div class="nav-container">
+    <ul class="nav-menu">
+      <li><a class="nav-link" href="../../../index.html">首页</a></li>
+      <li><a class="nav-link active" href="../../../service/index.html">服务</a></li>
+      <li><a class="nav-link" href="../../../tools/index.html">工具</a></li>
+      <li><a class="nav-link" href="../../../github/index.html">开源</a></li>
+      <li><a class="nav-link" href="../../../admin/index.html">监控</a></li>
+      <li><a class="nav-link" href="../../../about/index.html">关于</a></li>
+    </ul>
+    <button class="nav-search-btn" id="searchToggle" aria-label="搜索">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div id="searchOverlay">
+  <div class="search-box">
+    <h3>全网搜索</h3>
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="输入关键词…" autocomplete="off">
+      <button class="search-submit" id="searchSubmit">搜索</button>
+    </div>
+    <p class="search-hint">使用 Google 搜索 “site:moonlord.cc + 关键词”</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const toggle  = document.getElementById('searchToggle');
+    const overlay = document.getElementById('searchOverlay');
+    const input   = document.getElementById('searchInput');
+    const submit  = document.getElementById('searchSubmit');
+
+    function openSearch() { overlay.classList.add('open'); input.focus(); }
+    function closeSearch() { overlay.classList.remove('open'); }
+    function doSearch() {
+      const q = input.value.trim();
+      const site = 'site:moonlord.cc';
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(q ? site + ' ' + q : site);
+      window.open(url, '_blank');
+      closeSearch();
+    }
+
+    toggle.addEventListener('click', openSearch);
+    submit.addEventListener('click', doSearch);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeSearch(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
+    });
+  })();
+</script>
+
+<!-- Google Analytics Tag -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3WLVV25DZ0"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
+<!-- End Google Analytics Tag -->
+
+<div class="wrap">
+<article class="markdown-body">
+<style>
+.auto-list {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  overflow: auto;
+  padding: 16px;
+  box-sizing: border-box;
+  border-right: 1px solid #d8dee4;
+  background: #f6f8fa;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.auto-list ul { list-style: none; margin: 0; padding: 0; }
+.auto-list li { margin: 0; }
+.auto-list a { display: block; padding: 8px 16px; margin: 0 -16px; color: #1a1a1a; text-decoration: none; word-break: break-all; }
+.auto-list a:hover { background: #eef3f8; text-decoration: none; }
+.auto-list a.active { background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; font-weight: 600; }
+.auto-list li.home { margin: 0; padding: 0; }
+.auto-list li.home a { display: flex; align-items: center; justify-content: flex-start; margin: -16px -16px 0; padding: 18px 16px; border-bottom: 1px solid #d8dee4; }
+.auto-list li.home a svg { width: 16px; height: 16px; display: block; }
+@media (max-width: 1360px) {
+  .auto-list-content { margin-left: 240px; }
+}
+@media (max-width: 768px) {
+  .auto-list { position: static; width: auto; border-right: none; border-bottom: 1px solid #d8dee4; }
+  .auto-list-content { margin-left: 0; }
+}
+</style>
+<nav class="auto-list">
+  <ul>
+    <li class="home"><a href="./index.html" title="返回目录首页" aria-label="返回目录首页"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.36v7.026A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V11a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75v3.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.229c0-.531.242-1.034.657-1.366l5.25-4.2z"></path></svg></a></li>
+    <li><a href="./2026-02-13.html">2026-02-13</a></li>
+    <li><a href="./2026-02-14.html">2026-02-14</a></li>
+    <li><a href="./2026-02-15.html">2026-02-15</a></li>
+    <li><a href="./2026-02-16.html">2026-02-16</a></li>
+    <li><a href="./2026-02-17.html">2026-02-17</a></li>
+    <li><a href="./2026-02-19.html">2026-02-19</a></li>
+    <li><a href="./2026-02-20.html">2026-02-20</a></li>
+    <li><a href="./2026-03-03.html">2026-03-03</a></li>
+    <li><a href="./2026-03-04.html">2026-03-04</a></li>
+    <li><a href="./2026-03-05.html">2026-03-05</a></li>
+    <li><a href="./2026-03-06.html">2026-03-06</a></li>
+    <li><a href="./2026-03-07.html">2026-03-07</a></li>
+    <li><a href="./2026-03-08.html">2026-03-08</a></li>
+    <li><a href="./2026-03-09.html">2026-03-09</a></li>
+    <li><a href="./2026-03-10.html">2026-03-10</a></li>
+    <li><a href="./2026-03-11.html">2026-03-11</a></li>
+    <li><a href="./2026-03-12.html">2026-03-12</a></li>
+    <li><a href="./2026-03-13.html">2026-03-13</a></li>
+    <li><a href="./2026-03-14.html">2026-03-14</a></li>
+    <li><a href="./2026-03-16.html">2026-03-16</a></li>
+    <li><a href="./2026-03-17.html">2026-03-17</a></li>
+    <li><a href="./2026-03-18.html">2026-03-18</a></li>
+    <li><a class="active" href="./2026-03-19.html">2026-03-19</a></li>
+    <li><a href="./2026-03-20.html">2026-03-20</a></li>
+    <li><a href="./2026-03-21.html">2026-03-21</a></li>
+    <li><a href="./2026-03-22.html">2026-03-22</a></li>
+    <li><a href="./2026-03-23.html">2026-03-23</a></li>
+    <li><a href="./2026-03-24.html">2026-03-24</a></li>
+    <li><a href="./2026-03-25.html">2026-03-25</a></li>
+    <li><a href="./2026-03-26.html">2026-03-26</a></li>
+    <li><a href="./2026-03-27.html">2026-03-27</a></li>
+    <li><a href="./2026-03-28.html">2026-03-28</a></li>
+    <li><a href="./2026-03-29.html">2026-03-29</a></li>
+    <li><a href="./2026-03-30.html">2026-03-30</a></li>
+    <li><a href="./2026-03-31.html">2026-03-31</a></li>
+    <li><a href="./2026-04-01.html">2026-04-01</a></li>
+    <li><a href="./2026-04-02.html">2026-04-02</a></li>
+    <li><a href="./2026-04-03.html">2026-04-03</a></li>
+    <li><a href="./2026-04-04.html">2026-04-04</a></li>
+    <li><a href="./2026-04-05.html">2026-04-05</a></li>
+    <li><a href="./2026-04-06.html">2026-04-06</a></li>
+    <li><a href="./2026-04-07.html">2026-04-07</a></li>
+    <li><a href="./2026-04-08.html">2026-04-08</a></li>
+    <li><a href="./2026-04-09.html">2026-04-09</a></li>
+    <li><a href="./2026-04-10.html">2026-04-10</a></li>
+    <li><a href="./2026-04-11.html">2026-04-11</a></li>
+    <li><a href="./2026-04-12.html">2026-04-12</a></li>
+    <li><a href="./2026-04-13.html">2026-04-13</a></li>
+    <li><a href="./2026-04-14.html">2026-04-14</a></li>
+    <li><a href="./2026-04-15.html">2026-04-15</a></li>
+    <li><a href="./2026-04-16.html">2026-04-16</a></li>
+    <li><a href="./2026-04-17.html">2026-04-17</a></li>
+    <li><a href="./2026-04-18.html">2026-04-18</a></li>
+    <li><a href="./2026-04-19.html">2026-04-19</a></li>
+    <li><a href="./2026-04-20.html">2026-04-20</a></li>
+    <li><a href="./2026-04-21.html">2026-04-21</a></li>
+    <li><a href="./2026-04-22.html">2026-04-22</a></li>
+    <li><a href="./2026-04-23.html">2026-04-23</a></li>
+    <li><a href="./2026-04-24.html">2026-04-24</a></li>
+    <li><a href="./2026-04-25.html">2026-04-25</a></li>
+    <li><a href="./2026-04-26.html">2026-04-26</a></li>
+    <li><a href="./2026-04-27.html">2026-04-27</a></li>
+    <li><a href="./2026-04-28.html">2026-04-28</a></li>
+    <li><a href="./2026-04-29.html">2026-04-29</a></li>
+    <li><a href="./2026-04-30.html">2026-04-30</a></li>
+    <li><a href="./2026-05-01.html">2026-05-01</a></li>
+    <li><a href="./2026-05-02.html">2026-05-02</a></li>
+    <li><a href="./2026-05-03.html">2026-05-03</a></li>
+    <li><a href="./2026-05-04.html">2026-05-04</a></li>
+    <li><a href="./2026-05-05.html">2026-05-05</a></li>
+    <li><a href="./2026-05-06.html">2026-05-06</a></li>
+    <li><a href="./2026-05-07.html">2026-05-07</a></li>
+    <li><a href="./2026-05-08.html">2026-05-08</a></li>
+    <li><a href="./2026-05-09.html">2026-05-09</a></li>
+    <li><a href="./2026-05-10.html">2026-05-10</a></li>
+    <li><a href="./2026-05-11.html">2026-05-11</a></li>
+    <li><a href="./2026-05-12.html">2026-05-12</a></li>
+    <li><a href="./2026-05-13.html">2026-05-13</a></li>
+    <li><a href="./2026-05-14.html">2026-05-14</a></li>
+    <li><a href="./2026-05-15.html">2026-05-15</a></li>
+    <li><a href="./2026-05-16.html">2026-05-16</a></li>
+    <li><a href="./2026-05-17.html">2026-05-17</a></li>
+    <li><a href="./2026-05-18.html">2026-05-18</a></li>
+    <li><a href="./2026-05-19.html">2026-05-19</a></li>
+    <li><a href="./2026-05-20.html">2026-05-20</a></li>
+    <li><a href="./2026-05-21.html">2026-05-21</a></li>
+    <li><a href="./2026-05-22.html">2026-05-22</a></li>
+    <li><a href="./2026-05-23.html">2026-05-23</a></li>
+    <li><a href="./2026-05-24.html">2026-05-24</a></li>
+    <li><a href="./2026-05-25.html">2026-05-25</a></li>
+    <li><a href="./2026-05-26.html">2026-05-26</a></li>
+    <li><a href="./2026-05-27.html">2026-05-27</a></li>
+    <li><a href="./2026-05-28.html">2026-05-28</a></li>
+    <li><a href="./2026-05-29.html">2026-05-29</a></li>
+    <li><a href="./2026-05-30.html">2026-05-30</a></li>
+    <li><a href="./2026-05-31.html">2026-05-31</a></li>
+    <li><a href="./2026-06-01.html">2026-06-01</a></li>
+    <li><a href="./2026-06-02.html">2026-06-02</a></li>
+    <li><a href="./2026-06-03.html">2026-06-03</a></li>
+    <li><a href="./2026-06-04.html">2026-06-04</a></li>
+    <li><a href="./2026-06-05.html">2026-06-05</a></li>
+    <li><a href="./2026-06-06.html">2026-06-06</a></li>
+    <li><a href="./2026-06-07.html">2026-06-07</a></li>
+    <li><a href="./2026-06-08.html">2026-06-08</a></li>
+    <li><a href="./2026-06-09.html">2026-06-09</a></li>
+    <li><a href="./2026-06-10.html">2026-06-10</a></li>
+    <li><a href="./2026-06-11.html">2026-06-11</a></li>
+    <li><a href="./2026-06-12.html">2026-06-12</a></li>
+    <li><a href="./2026-06-13.html">2026-06-13</a></li>
+    <li><a href="./2026-06-14.html">2026-06-14</a></li>
+    <li><a href="./2026-06-15.html">2026-06-15</a></li>
+    <li><a href="./2026-06-16.html">2026-06-16</a></li>
+    <li><a href="./2026-06-17.html">2026-06-17</a></li>
+    <li><a href="./2026-06-18.html">2026-06-18</a></li>
+    <li><a href="./2026-06-19.html">2026-06-19</a></li>
+    <li><a href="./2026-06-20.html">2026-06-20</a></li>
+    <li><a href="./2026-06-21.html">2026-06-21</a></li>
+    <li><a href="./2026-06-22.html">2026-06-22</a></li>
+    <li><a href="./2026-06-23.html">2026-06-23</a></li>
+    <li><a href="./2026-06-24.html">2026-06-24</a></li>
+    <li><a href="./2026-06-25.html">2026-06-25</a></li>
+    <li><a href="./2026-06-26.html">2026-06-26</a></li>
+    <li><a href="./2026-06-27.html">2026-06-27</a></li>
+    <li><a href="./2026-06-28.html">2026-06-28</a></li>
+    <li><a href="./2026-06-29.html">2026-06-29</a></li>
+    <li><a href="./2026-06-30.html">2026-06-30</a></li>
+    <li><a href="./2026-07-01.html">2026-07-01</a></li>
+    <li><a href="./2026-07-02.html">2026-07-02</a></li>
+    <li><a href="./2026-07-03.html">2026-07-03</a></li>
+    <li><a href="./2026-07-04.html">2026-07-04</a></li>
+    <li><a href="./2026-07-05.html">2026-07-05</a></li>
+    <li><a href="./2026-07-06.html">2026-07-06</a></li>
+    <li><a href="./2026-07-07.html">2026-07-07</a></li>
+    <li><a href="./2026-07-08.html">2026-07-08</a></li>
+    <li><a href="./2026-07-09.html">2026-07-09</a></li>
+    <li><a href="./2026-07-10.html">2026-07-10</a></li>
+    <li><a href="./2026-07-11.html">2026-07-11</a></li>
+    <li><a href="./2026-07-12.html">2026-07-12</a></li>
+    <li><a href="./2026-07-13.html">2026-07-13</a></li>
+    <li><a href="./2026-07-14.html">2026-07-14</a></li>
+    <li><a href="./2026-07-15.html">2026-07-15</a></li>
+    <li><a href="./2026-07-16.html">2026-07-16</a></li>
+    <li><a href="./2026-07-17.html">2026-07-17</a></li>
+    <li><a href="./2026-07-18.html">2026-07-18</a></li>
+    <li><a href="./2026-07-19.html">2026-07-19</a></li>
+    <li><a href="./2026-07-20.html">2026-07-20</a></li>
+    <li><a href="./2026-07-21.html">2026-07-21</a></li>
+    <li><a href="./2026-07-22.html">2026-07-22</a></li>
+    <li><a href="./2026-07-23.html">2026-07-23</a></li>
+    <li><a href="./2026-07-24.html">2026-07-24</a></li>
+    <li><a href="./2026-07-25.html">2026-07-25</a></li>
+    <li><a href="./2026-07-26.html">2026-07-26</a></li>
+    <li><a href="./2026-07-27.html">2026-07-27</a></li>
+    <li><a href="./2026-07-28.html">2026-07-28</a></li>
+    <li><a href="./2026-07-29.html">2026-07-29</a></li>
+    <li><a href="./2026-07-30.html">2026-07-30</a></li>
+    <li><a href="./2026-07-31.html">2026-07-31</a></li>
+    <li><a href="./2026-08-01.html">2026-08-01</a></li>
+    <li><a href="./2026-08-02.html">2026-08-02</a></li>
+    <li><a href="./2026-08-03.html">2026-08-03</a></li>
+    <li><a href="./2026-08-04.html">2026-08-04</a></li>
+    <li><a href="./2026-08-05.html">2026-08-05</a></li>
+    <li><a href="./2026-08-06.html">2026-08-06</a></li>
+    <li><a href="./2026-08-07.html">2026-08-07</a></li>
+    <li><a href="./2026-08-08.html">2026-08-08</a></li>
+    <li><a href="./2026-08-09.html">2026-08-09</a></li>
+    <li><a href="./2026-08-10.html">2026-08-10</a></li>
+    <li><a href="./2026-08-11.html">2026-08-11</a></li>
+    <li><a href="./2026-08-12.html">2026-08-12</a></li>
+    <li><a href="./2026-08-13.html">2026-08-13</a></li>
+    <li><a href="./2026-08-14.html">2026-08-14</a></li>
+    <li><a href="./2026-08-15.html">2026-08-15</a></li>
+    <li><a href="./2026-08-16.html">2026-08-16</a></li>
+    <li><a href="./2026-08-17.html">2026-08-17</a></li>
+    <li><a href="./2026-08-18.html">2026-08-18</a></li>
+    <li><a href="./2026-08-19.html">2026-08-19</a></li>
+    <li><a href="./2026-08-20.html">2026-08-20</a></li>
+    <li><a href="./2026-08-21.html">2026-08-21</a></li>
+    <li><a href="./2026-08-22.html">2026-08-22</a></li>
+    <li><a href="./2026-08-23.html">2026-08-23</a></li>
+    <li><a href="./2026-08-24.html">2026-08-24</a></li>
+    <li><a href="./2026-08-25.html">2026-08-25</a></li>
+    <li><a href="./2026-08-26.html">2026-08-26</a></li>
+    <li><a href="./2026-08-27.html">2026-08-27</a></li>
+    <li><a href="./2026-08-28.html">2026-08-28</a></li>
+    <li><a href="./2026-08-29.html">2026-08-29</a></li>
+    <li><a href="./2026-08-30.html">2026-08-30</a></li>
+    <li><a href="./2026-08-31.html">2026-08-31</a></li>
+    <li><a href="./2026-09-01.html">2026-09-01</a></li>
+    <li><a href="./2026-09-02.html">2026-09-02</a></li>
+    <li><a href="./2026-09-03.html">2026-09-03</a></li>
+    <li><a href="./2026-09-04.html">2026-09-04</a></li>
+    <li><a href="./2026-09-05.html">2026-09-05</a></li>
+    <li><a href="./2026-09-06.html">2026-09-06</a></li>
+    <li><a href="./2026-09-07.html">2026-09-07</a></li>
+    <li><a href="./2026-09-08.html">2026-09-08</a></li>
+    <li><a href="./2026-09-09.html">2026-09-09</a></li>
+    <li><a href="./2026-09-10.html">2026-09-10</a></li>
+    <li><a href="./2026-09-11.html">2026-09-11</a></li>
+    <li><a href="./2026-09-12.html">2026-09-12</a></li>
+    <li><a href="./2026-09-13.html">2026-09-13</a></li>
+    <li><a href="./2026-09-14.html">2026-09-14</a></li>
+    <li><a href="./2026-09-15.html">2026-09-15</a></li>
+    <li><a href="./2026-09-16.html">2026-09-16</a></li>
+    <li><a href="./2026-09-17.html">2026-09-17</a></li>
+    <li><a href="./2026-09-18.html">2026-09-18</a></li>
+    <li><a href="./2026-09-19.html">2026-09-19</a></li>
+    <li><a href="./2026-09-20.html">2026-09-20</a></li>
+    <li><a href="./2026-09-21.html">2026-09-21</a></li>
+    <li><a href="./2026-09-22.html">2026-09-22</a></li>
+    <li><a href="./2026-09-23.html">2026-09-23</a></li>
+    <li><a href="./2026-09-24.html">2026-09-24</a></li>
+    <li><a href="./2026-09-25.html">2026-09-25</a></li>
+    <li><a href="./2026-09-26.html">2026-09-26</a></li>
+    <li><a href="./2026-09-27.html">2026-09-27</a></li>
+    <li><a href="./2026-09-28.html">2026-09-28</a></li>
+    <li><a href="./2026-09-29.html">2026-09-29</a></li>
+    <li><a href="./2026-09-30.html">2026-09-30</a></li>
+    <li><a href="./2026-10-01.html">2026-10-01</a></li>
+    <li><a href="./2026-10-02.html">2026-10-02</a></li>
+    <li><a href="./2026-10-03.html">2026-10-03</a></li>
+    <li><a href="./2026-10-04.html">2026-10-04</a></li>
+    <li><a href="./2026-10-05.html">2026-10-05</a></li>
+    <li><a href="./2026-10-06.html">2026-10-06</a></li>
+    <li><a href="./2026-10-07.html">2026-10-07</a></li>
+    <li><a href="./2026-10-08.html">2026-10-08</a></li>
+    <li><a href="./2026-10-09.html">2026-10-09</a></li>
+    <li><a href="./2026-10-10.html">2026-10-10</a></li>
+    <li><a href="./2026-10-11.html">2026-10-11</a></li>
+    <li><a href="./2026-10-12.html">2026-10-12</a></li>
+    <li><a href="./2026-10-13.html">2026-10-13</a></li>
+    <li><a href="./2026-10-14.html">2026-10-14</a></li>
+    <li><a href="./2026-10-15.html">2026-10-15</a></li>
+    <li><a href="./2026-10-16.html">2026-10-16</a></li>
+    <li><a href="./2026-10-17.html">2026-10-17</a></li>
+    <li><a href="./2026-10-18.html">2026-10-18</a></li>
+    <li><a href="./2026-10-19.html">2026-10-19</a></li>
+    <li><a href="./2026-10-20.html">2026-10-20</a></li>
+    <li><a href="./2026-10-21.html">2026-10-21</a></li>
+    <li><a href="./2026-10-22.html">2026-10-22</a></li>
+    <li><a href="./2026-10-23.html">2026-10-23</a></li>
+    <li><a href="./2026-10-24.html">2026-10-24</a></li>
+    <li><a href="./2026-10-25.html">2026-10-25</a></li>
+    <li><a href="./2026-10-26.html">2026-10-26</a></li>
+    <li><a href="./2026-10-27.html">2026-10-27</a></li>
+    <li><a href="./2026-10-28.html">2026-10-28</a></li>
+    <li><a href="./2026-10-29.html">2026-10-29</a></li>
+    <li><a href="./2026-10-30.html">2026-10-30</a></li>
+    <li><a href="./2026-10-31.html">2026-10-31</a></li>
+    <li><a href="./2026-11-01.html">2026-11-01</a></li>
+    <li><a href="./2026-11-02.html">2026-11-02</a></li>
+    <li><a href="./2026-11-03.html">2026-11-03</a></li>
+    <li><a href="./2026-11-04.html">2026-11-04</a></li>
+    <li><a href="./2026-11-05.html">2026-11-05</a></li>
+    <li><a href="./2026-11-06.html">2026-11-06</a></li>
+    <li><a href="./2026-11-07.html">2026-11-07</a></li>
+    <li><a href="./2026-11-08.html">2026-11-08</a></li>
+    <li><a href="./2026-11-09.html">2026-11-09</a></li>
+  </ul>
+</nav>
+<div class="auto-list-content">
+<h1>2026-03-19 夸克网盘资源收录</h1>
+<p>共 121 条资源，✅ 有效 ❌ 失效</p>
+<ul>
+<li>✅ <a href="https://pan.quark.cn/s/aa111bd5a4f8" target="_blank" rel="noopener">44.透视：从地摊到巅峰（81集）赵志盟＆柯珂（柯以）</a>（文件数 82，大小 1012.24 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/ef6a12c21406" target="_blank" rel="noopener">42.总裁老婆别担心，我医武双绝（80集）王家霖&amp;常文景&amp;李可馨&amp;欧娜</a>（文件数 81，大小 1.13 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/19ef97026089" target="_blank" rel="noopener">43.高手下山，我以无敌镇世间（80集）杜心绯＆鑫余</a>（文件数 81，大小 955.16 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/fe560befbca3" target="_blank" rel="noopener">41.上错婚车，错娶绝色千金（80集）申芳赫&amp;孙雪阳</a>（文件数 81，大小 1.20 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/5e45bef87602" target="_blank" rel="noopener">38(1).相亲怒怼拜金女，她破防我爆金币（80集）王晨辉＆攸攸</a>（文件数 81，大小 836.29 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/1e806e645a91" target="_blank" rel="noopener">40.母女齐穿八零，我妈赚钱我躺赢（80集）路可夏&amp;井元梦</a>（文件数 81，大小 1.16 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/b288894868d2" target="_blank" rel="noopener">39.都重生了，亲一下学姐不过分吧（80集）李苗苗&amp;周越</a>（文件数 81，大小 1.36 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/a2a1b755c8ac" target="_blank" rel="noopener">35.这个杀手不太爱动（69集）陈瑞&amp;刘芝霏</a>（文件数 70，大小 916.53 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/8093ae23d5a2" target="_blank" rel="noopener">37(1).开局改掉恋爱脑，我靠系统带飞荒年全家（60集）宋喃&amp;蒋未</a>（文件数 61，大小 1.20 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/3a2b0b15d5f6" target="_blank" rel="noopener">36(1).装纨绔十年，一朝君临天下（78集）谭义然&amp;罗嘉麒</a>（文件数 79，大小 1.12 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/b20ffea385c0" target="_blank" rel="noopener">33(1).老公，你耽误我离婚了（70集）何怡婷&amp;杨霖&amp;邓卓</a>（文件数 71，大小 782.58 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/a76752a2aa94" target="_blank" rel="noopener">29(1).养崽累，恋爱废，还是虐渣我最会&amp;养崽累恋爱废还是虐渣我最会（80集）朱予彤&amp;吕晋源</a>（文件数 81，大小 418.74 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/91f83018ffbb" target="_blank" rel="noopener">30(1).狂！二嫁王妃狂到没边了（72集）孙梓铖＆阚梓艺</a>（文件数 73，大小 1.77 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/0a89519ff84a" target="_blank" rel="noopener">27(1).我领域内无敌，有本事你过来啊（70集）刘檀嘉&amp;蓝曦鹿</a>（文件数 71，大小 678.97 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/9ea508549653" target="_blank" rel="noopener">28(1).陷入圈套后，他亲手逼走了最爱的人（45集）秦玺&amp;李特&amp;夏天琪</a>（文件数 46，大小 172.12 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/363e554e65f6" target="_blank" rel="noopener">24(1).女承母业：我在豪门当保姆（68集）洪奕昕&amp;张昊</a>（文件数 69，大小 351.24 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/c3c849942b9e" target="_blank" rel="noopener">25(1).十二道金牌让我回朝，我反手登基千古女帝（70集）西米露&amp;陈梓龙</a>（文件数 71，大小 712.72 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/dbceb161a3e7" target="_blank" rel="noopener">20(1).多子多福，开局就送绝美老婆（80集）李苹&amp;高迦澜</a>（文件数 81，大小 723.24 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/56eb88e59123" target="_blank" rel="noopener">21(1).阁主大人，你捡的奶团子是满级锦鲤本鲤（70集）周晞玥&amp;李政阳&amp;刘苏皖</a>（文件数 71，大小 671.92 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/f11c99f4cc92" target="_blank" rel="noopener">22(1).古代种田，朝廷给我发媳妇（81集）刘子洋&amp;倪浩森</a>（文件数 82，大小 501.88 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/f48547255390" target="_blank" rel="noopener">19.惊！我家来福变恶少了＆忠犬变恶少（80集）曹竣柯＆赵影</a>（文件数 81，大小 1.17 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/ee085dcac3c6" target="_blank" rel="noopener">15.和离后，她冠绝京城（62集）陈政阳＆李佳轩</a>（文件数 63，大小 848.02 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/a2aa3d9489c0" target="_blank" rel="noopener">天降小财神，带我成为富贵花（71集）刘萌＆于颢鑫</a>（文件数 72，大小 518.27 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/d733c70058ea" target="_blank" rel="noopener">准时下班后，公司的天塌了（75集）张瀚文（男）＆梦露</a>（文件数 76，大小 649.26 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/fd57c5c5c8fc" target="_blank" rel="noopener">三年雪，一念春（70集）王金宝＆林诺诺</a>（文件数 71，大小 1.02 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/c795360fe9e7" target="_blank" rel="noopener">离婚后我亮出身份不装了（61集）姜沣＆李金鱼</a>（文件数 62，大小 1021.97 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/cf4906d1ee11" target="_blank" rel="noopener">被甩后，我靠表白逆袭人生（73集）何子杰＆祁雯</a>（文件数 74，大小 1.25 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/5370a6992386" target="_blank" rel="noopener">看不见的访客（62集）穆森＆夏炎</a>（文件数 63，大小 811.96 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/677ad1a2442e" target="_blank" rel="noopener">谁也别想动我的库里南（58集）吴帆＆屈浩野</a>（文件数 59，大小 704.79 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/763ccb90482b" target="_blank" rel="noopener">仙界牛马，下凡带老婆全家修仙（60集）王玉钰＆苏泓奕</a>（文件数 61，大小 914.62 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/b60ab0a3dec3" target="_blank" rel="noopener">野草怎敢沐春风（61集）王楚＆周瑾阳</a>（文件数 62，大小 790.19 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/ebafc332fcbf" target="_blank" rel="noopener">风水天师（61集）AI短剧</a>（文件数 62，大小 1.21 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/5740e258d66b" target="_blank" rel="noopener">真千金回府后，侯府全体崩溃了（70集）孙一平＆路顺</a>（文件数 71，大小 1.34 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/87615cacb925" target="_blank" rel="noopener">别惹她，她爸是女儿奴首富（74集）左馨＆王争</a>（文件数 75，大小 709.30 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/77e046894f13" target="_blank" rel="noopener">当个伴娘差点要了命（30集）夏文馨＆柳天杨</a>（文件数 31，大小 356.37 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/f90135ea9e67" target="_blank" rel="noopener">兵王归乡：种田逆袭成首富（81集）罗楚凡＆熊颖</a>（文件数 82，大小 951.50 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/66b4cfd17a5c" target="_blank" rel="noopener">赌石千金之玉面双生劫（45集）张若曦＆姜云起</a>（文件数 46，大小 639.85 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/2b8b8e0cb799" target="_blank" rel="noopener">仙医归来：开局上门就提亲（101集）李默＆陈佳怡</a>（文件数 102，大小 721.05 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/65349aaaab60" target="_blank" rel="noopener">神算：我在人间攒功德（92集）邱翔＆刘长瑜</a>（文件数 93，大小 796.71 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/548f77129c6c" target="_blank" rel="noopener">顾先生我不要你了（51集）沈玥妡＆张啸昂</a>（文件数 52，大小 472.44 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/ca7477fae6aa" target="_blank" rel="noopener">02.天降人参顾先生别跑（60集）余弦＆雷馥缦</a>（文件数 61，大小 1.11 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/09e36ea1e68e" target="_blank" rel="noopener">03.女儿国国主被绿茶皇夫缠上了＆女儿国国主今日被撩了吗（77集）黄天崎＆陈杨婷丹</a>（文件数 78，大小 1.32 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/a0ee44ead48e" target="_blank" rel="noopener">05.心花路放（60集）马小宇＆柴慧欣</a>（文件数 61，大小 331.50 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/152f825fa74c" target="_blank" rel="noopener">06.野猫难驯（73集）金佳遇＆付妤舒</a>（文件数 74，大小 970.51 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/1d92e5ce775e" target="_blank" rel="noopener">17.地久婚长：傅先生，余婚多指教＆地久婚长傅先生余婚多指教（70集）邓宇博＆王薇</a>（文件数 71，大小 1.01 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/127512771473" target="_blank" rel="noopener">29(1).养崽累，恋爱废，还是虐渣我最会&amp;养崽累恋爱废还是虐渣我最会（80集）朱予彤&amp;吕晋源</a>（文件数 81，大小 418.74 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/1c6661af51e3" target="_blank" rel="noopener">诬告我无证行医，我靠系统复仇（80集）吴嘉欢＆赵维怡</a>（文件数 81，大小 968.17 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/0c9d1e0adb8d" target="_blank" rel="noopener">读心暴富，我靠重生剧本养爹（81集）魏鹏＆黄恩茹</a>（文件数 82，大小 950.96 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/61082d4da839" target="_blank" rel="noopener">暴富：从绑定每日消费系统开始（98集）董秋怡</a>（文件数 99，大小 747.45 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/d2658a1f0629" target="_blank" rel="noopener">夜色偏航（68集）朱新辉＆洪奕昕</a>（文件数 69，大小 920.96 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/88e4259f272c" target="_blank" rel="noopener">看清凤凰男一家后，我逆风翻盘（70集）姜昊旻＆李苗苗</a>（文件数 71，大小 692.29 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/383efdc5143c" target="_blank" rel="noopener">我自铮铮（51集）陈泽轩＆马梦唯</a>（文件数 52，大小 857.02 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/4db2c24f20da" target="_blank" rel="noopener">星河落满的柔夜纪（88集）邹梓豪＆王一晴</a>（文件数 89，大小 899.60 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/d4d957a556a7" target="_blank" rel="noopener">直播离婚冷静期，我成了全网公敌（70集）于斯年＆江潼</a>（文件数 71，大小 773.57 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/d94ca4167ab1" target="_blank" rel="noopener">45(1).金盆洗手，我带小弟重建辉煌（106集）马丽莎＆丛恺凡</a>（文件数 107，大小 719.68 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/c79c42e7129a" target="_blank" rel="noopener">53.全家和我一起穿越，我带他们暴富（68集）崔馨心＆梁华</a>（文件数 69，大小 637.65 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/3feb6341f648" target="_blank" rel="noopener">46.拒绝女总裁贴贴，我竟被升职加薪（106集）吴欣旖＆董兆霖</a>（文件数 107，大小 791.40 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/19edb4318655" target="_blank" rel="noopener">54.认亲宴，我亲手断了她的豪门梦（49集）张杰＆卢巧</a>（文件数 50，大小 621.26 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/7747a9784cf9" target="_blank" rel="noopener">幽浮魔点1988</a>（文件数 2，大小 1.81 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/dc5cec81d075" target="_blank" rel="noopener">59.出狱后，他的原谅我不收（55集）余洋&amp;韩惟</a>（文件数 56，大小 662.04 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/519c7adacd6a" target="_blank" rel="noopener">65(1).全员重生：郁小姐誓不回头（46集）王珊珊＆袁川航</a>（文件数 47，大小 614.55 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/b35b3ab4cce3" target="_blank" rel="noopener">68(1).错嫁良缘，我在乡下重启人生（51集）彭千玲＆杨霖</a>（文件数 52，大小 1.18 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/e94a8f618317" target="_blank" rel="noopener">55.三年雪，一念春（70集）王金宝＆林诺诺</a>（文件数 71，大小 1.02 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/15a0cf6e4457" target="_blank" rel="noopener">54.准时下班后，公司的天塌了（75集）张瀚文（男）＆梦露</a>（文件数 76，大小 649.26 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/6d7e56ce9b6d" target="_blank" rel="noopener">53.天降小财神，带我成为富贵花（71集）刘萌＆于颢鑫</a>（文件数 72，大小 518.27 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/6acc1095613a" target="_blank" rel="noopener">56.被甩后，我靠表白逆袭人生（73集）何子杰＆祁雯</a>（文件数 74，大小 1.25 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/1b0d3e1a3ae7" target="_blank" rel="noopener">61.仙界牛马，下凡带老婆全家修仙（60集）王玉钰＆苏泓奕</a>（文件数 61，大小 914.62 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/6f63210dc2a0" target="_blank" rel="noopener">63.真千金回府后，侯府全体崩溃了（70集）孙一平＆路顺</a>（文件数 71，大小 1.34 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/604cf029b98d" target="_blank" rel="noopener">66.兵王归乡：种田逆袭成首富（81集）罗楚凡＆熊颖</a>（文件数 82，大小 951.50 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/de2c6852c554" target="_blank" rel="noopener">65.别惹她，她爸是女儿奴首富（74集）左馨＆王争</a>（文件数 75，大小 709.30 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/9866cb17dc72" target="_blank" rel="noopener">70.仙医归来：开局上门就提亲（101集）李默＆陈佳怡</a>（文件数 102，大小 721.05 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/45171d93ab0a" target="_blank" rel="noopener">08.五年后，她带着三个幼崽回归（80集）李思杨＆景露</a>（文件数 81，大小 1013.97 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/0e50f85a268b" target="_blank" rel="noopener">06.一骑红尘妃子笑（66集）杜江山＆王格格lyc</a>（文件数 67，大小 1.30 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/ceef3f3a4847" target="_blank" rel="noopener">07.来自心灵的碰撞（82集）陈景赫＆段柒萱</a>（文件数 83，大小 901.38 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/f35ee85fa777" target="_blank" rel="noopener">09.举国修仙2，向仙文明出发（73集）潘翀＆丁晓</a>（文件数 74，大小 1.11 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/e0fae6be2ccf" target="_blank" rel="noopener">10.以爱为家（84集）彭丹＆林希亚</a>（文件数 85，大小 1.11 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/195c0f83f841" target="_blank" rel="noopener">11.港夏烈吻（72集）徐东艺&amp;阳兵卓</a>（文件数 73，大小 557.63 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/f1ee8ce08565" target="_blank" rel="noopener">14.掌掴外室后，这泼天富贵我守住了（59集）胡洋＆姚慧</a>（文件数 60，大小 937.89 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/587f7e4068bc" target="_blank" rel="noopener">12.手滑后错把孕检单发了协议老公（80集）马士尧&amp;姜瑶</a>（文件数 81，大小 989.89 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/f67952d3f07e" target="_blank" rel="noopener">13.疯犬与玫瑰（80集）马應露＆张梦奇</a>（文件数 81，大小 827.17 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/c0cf1735dc21" target="_blank" rel="noopener">15.身份错位：总裁的契约恋人（50集）裘哲夫＆郇依心</a>（文件数 51，大小 739.47 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/496b22110b3b" target="_blank" rel="noopener">16.命中偏爱你（58集）王千硕＆冯易鑫</a>（文件数 59，大小 894.61 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/87ee1457c41b" target="_blank" rel="noopener">17.误把限制文发给死对头后（62集）朱永强＆苟钰浠</a>（文件数 63，大小 890.86 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/43cb2c860b9c" target="_blank" rel="noopener">20.分手后，我靠透视眼躺赢（89集）姜杉＆陈益楠</a>（文件数 90，大小 817.58 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/76e6ccd9a160" target="_blank" rel="noopener">21.敢质疑我，那就打脸给你看（77集）傅依凡＆甄果策</a>（文件数 78，大小 774.26 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/81b5f9c50dc1" target="_blank" rel="noopener">19.爱恨浮云过，一笑掌江山（63集）高旻睿＆温茉言</a>（文件数 64，大小 594.18 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/38283a3d0829" target="_blank" rel="noopener">18.糟糕，夫人还不给名分（60集）苏亮＆郭伊慧</a>（文件数 61，大小 987.16 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/df91b464cbec" target="_blank" rel="noopener">白蛇传1924（长篇）AI短剧</a>（文件数 2，大小 761.34 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/abcbcf25871e" target="_blank" rel="noopener">01-A意HJ，B赴SH（28集）Ai短剧</a>（文件数 29，大小 217.10 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/36121d976797" target="_blank" rel="noopener">02-深宫藏拙（45集）Ai短剧</a>（文件数 46，大小 398.32 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/4215664b39c5" target="_blank" rel="noopener">04-魂系人间一念牵（37集）Ai短剧</a>（文件数 38，大小 347.58 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/30efbe0de4b5" target="_blank" rel="noopener">06-穿书奶娘求生记（44集）Ai短剧</a>（文件数 45，大小 177.35 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/9ec28a7a8732" target="_blank" rel="noopener">05-重生拒婚：休夫后我成一品诰命（38集）Ai短剧</a>（文件数 39，大小 308.03 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/b5111d73342e" target="_blank" rel="noopener">07-嫡女惊华：休夫掌乾坤（40集）Ai短剧</a>（文件数 41，大小 242.23 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/674bcc887149" target="_blank" rel="noopener">09-头车之争，我踹了前夫嫁竹马（43集）Ai短剧</a>（文件数 44，大小 201.55 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/e3f879da52e6" target="_blank" rel="noopener">08-换命耳环（20集）Ai短剧</a>（文件数 21，大小 169.67 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/4edb4484f88f" target="_blank" rel="noopener">12-宫墙下的直播游戏（45集）Ai短剧</a>（文件数 46，大小 351.55 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/c705d2e63bb8" target="_blank" rel="noopener">13-后宫全是穿越女（40集）Ai短剧</a>（文件数 41，大小 303.69 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/2755d3b17660" target="_blank" rel="noopener">11-红妆换良人（47集）Ai短剧</a>（文件数 22，大小 216.95 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/a131143ededc" target="_blank" rel="noopener">15-竹马碎我真心，我嫁他死对头（41集）Ai短剧</a>（文件数 42，大小 210.74 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/e48ab21258cc" target="_blank" rel="noopener">14-深海缄默：工地的末日远征（45集）Ai短剧</a>（文件数 46，大小 587.72 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/1adc2c67c26d" target="_blank" rel="noopener">31.神豪：开局绝美总裁就给我生孩子（67集）范呈麒＆刘妙</a>（文件数 68，大小 571.73 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/927555dcc3fb" target="_blank" rel="noopener">30.软饭硬吃：攻略千金后老丈人给我当小弟（81集）冠佑＆沈初玥</a>（文件数 82，大小 965.68 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/ad55937f9ede" target="_blank" rel="noopener">33.获得女神信物后，我无敌了（88集）张涵&amp;金泷汐</a>（文件数 89，大小 533.65 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/4e849e364e9c" target="_blank" rel="noopener">32.穿越后我成了反派们的首富哥哥（79集）谢海青＆张红瑜</a>（文件数 80，大小 918.30 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/306f04745d38" target="_blank" rel="noopener">34.鉴宝之王：从滴滴司机到古董大亨（80集）张佳艺&amp;周亦燃</a>（文件数 81，大小 566.36 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/77138f181c06" target="_blank" rel="noopener">37.死对头竟是暗恋对象（99集）林千仟&amp;陈智慧</a>（文件数 100，大小 376.22 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/d25dbb0958af" target="_blank" rel="noopener">35.让你表白校花，你当校花妈妈秘书（86集）黄增志&amp;龙荧</a>（文件数 87，大小 332.16 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/95f7ffc72f5a" target="_blank" rel="noopener">36.双穿：开局面包换女仆（80集）李俊良&amp;胡继月</a>（文件数 81，大小 466.50 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/f1ea95bc889b" target="_blank" rel="noopener">43.下山后，被女总裁赖上了（80集）王紫雯&amp;刘国文</a>（文件数 81，大小 291.57 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/8db51a3a8e4e" target="_blank" rel="noopener">42.五位绝色师姐，兵王的都市修真路（80集）李苗苗&amp;朱涵驿</a>（文件数 81，大小 348.90 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/c66b228bd265" target="_blank" rel="noopener">41.我在人间飘零千年（80集）李明珠&amp;张翊轩</a>（文件数 81，大小 360.18 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/0fb9c83bbac8" target="_blank" rel="noopener">44.撞破小三产检那天，我撕了结婚证（70集）张炯艾&amp;李思杨</a>（文件数 71，大小 370.84 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/1bb972f1d19b" target="_blank" rel="noopener">46.但愿君心有时尽（65集）吴明宇＆丁海霞</a>（文件数 66，大小 858.64 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/94f6a12ef55a" target="_blank" rel="noopener">45.绑定反派系统，我掀翻主角团（107集）王行宇＆赵书苑</a>（文件数 108，大小 627.59 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/b372a1b2f03c" target="_blank" rel="noopener">49.天降神眼，我能无限鉴宝（119集）张笑颜＆韩升</a>（文件数 120，大小 966.61 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/81ef993dca5c" target="_blank" rel="noopener">48.人生无憾之重回九二（81集）史宣洪＆李雪莹</a>（文件数 82，大小 867.48 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/811261b15563" target="_blank" rel="noopener">47.借钱不还，我送你儿子落榜（69集）崔十一＆林昕宜</a>（文件数 70，大小 1.01 GB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/744ba666a8aa" target="_blank" rel="noopener">38.天崩开局，还好我有婚契续命（50集）彭瑞风&amp;杨春</a>（文件数 51，大小 228.13 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/5ff257eda62a" target="_blank" rel="noopener">40.往生堂掌柜，我在娱乐圈看风水（80集）陈柯宇&amp;黄璟媛</a>（文件数 81，大小 397.90 MB）</li>
+<li>✅ <a href="https://pan.quark.cn/s/907f69c2efc5" target="_blank" rel="noopener">39(1).退婚后，成了女总裁的掌心宠（78集）韩非儿&amp;刘锦辰</a>（文件数 79，大小 467.43 MB）</li>
+</ul>
+
+</div>
+</article>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
+<script>document.addEventListener("DOMContentLoaded",function(){if(window.hljs){document.querySelectorAll(".markdown-body pre code").forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});}});</script>
+<script>
+(function () {
+  'use strict';
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { }
+    document.body.removeChild(ta);
+    return ok ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function () { return legacyCopy(text); });
+    }
+    return legacyCopy(text);
+  }
+  function attach(pre) {
+    if (pre.dataset.copyCodeReady) return;
+    var target = pre.querySelector('code') || pre;
+    var wrap = document.createElement('div');
+    wrap.className = 'code-block';
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(pre);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-code-btn';
+    btn.textContent = '复制';
+    btn.title = '复制代码到剪贴板';
+    btn.setAttribute('aria-label', '复制代码到剪贴板');
+    var timer;
+    btn.addEventListener('click', function () {
+      copyText(target.textContent).then(function () {
+        btn.textContent = '已复制';
+        btn.className = 'copy-code-btn copied';
+      }, function () {
+        btn.textContent = '复制失败';
+        btn.className = 'copy-code-btn failed';
+      }).then(function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          btn.textContent = '复制';
+          btn.className = 'copy-code-btn';
+        }, 1600);
+      });
+    });
+    wrap.appendChild(btn);
+    pre.dataset.copyCodeReady = '1';
+  }
+  window.initCodeCopy = function (root) {
+    var pres = (root || document).querySelectorAll('pre');
+    for (var i = 0; i < pres.length; i++) {
+      if (pres[i].closest('.markdown-body')) attach(pres[i]);
+    }
+  };
+  function init() { window.initCodeCopy(); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "28204d87bcf54906b3651e8f84588b48"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+</body>
+</html>
