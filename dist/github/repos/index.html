@@ -294,6 +294,23 @@ body { overflow-x: clip; }
 <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-3WLVV25DZ0');</script>
 <!-- End Google Analytics Tag -->
 
+<script>
+(function () {
+  'use strict';
+  function keepActiveVisible() {
+    var nav = document.querySelector('.auto-list');
+    // 窄屏下侧栏回归文档流，跳过以免把正文滚出视野
+    if (!nav || getComputedStyle(nav).position !== 'fixed') return;
+    var active = nav.querySelector('a.active');
+    if (active) active.scrollIntoView({ block: 'center' });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', keepActiveVisible);
+  } else {
+    keepActiveVisible();
+  }
+})();
+</script>
 <nav class="auto-list">
   <ul>
     <li class="home"><a href="./index.html" title="返回目录首页" aria-label="返回目录首页"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.36v7.026A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V11a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75v3.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.229c0-.531.242-1.034.657-1.366l5.25-4.2z"></path></svg></a></li>

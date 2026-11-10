@@ -240,6 +240,9 @@ body { overflow-x: clip; }
     const DATA_URL = 'assets/pan-quark-cn.gz';
     const PAGE_SIZE = 20;
 
+    // 搜索字段的优先级：命中越靠前的字段，结果排得越前
+    const SEARCH_FIELDS = ['title', 'url', 'time', 'size', 'count'];
+
     // file_size 由 quark-check.bat 写入，单位为字节
     function formatSize(value) {
       if (value === null || value === undefined || value === '') return '—';
@@ -318,16 +321,18 @@ body { overflow-x: clip; }
     // 站点数据由 quark-check.bat 生成，每条固定为 url / title / time / file_count / file_size
     function normalize(record) {
       if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
-      const title = str(record.title) || '（无标题）';
-      const url = str(record.url);
       const time = str(record.time) || '—';
-      const count = str(record.file_count) || '—';
-      const size = formatSize(record.file_size);
-      return {
-        title, url, time, count, size,
-        sortKey: /^\d{4}-\d{2}-\d{2}/.test(time) ? time : '',
-        text: [title, url, time, count, size, record.file_count, record.file_size].join(' ').toLowerCase()
+      const item = {
+        title: str(record.title) || '（无标题）',
+        url: str(record.url),
+        time,
+        count: str(record.file_count) || '—',
+        size: formatSize(record.file_size),
+        sortKey: /^\d{4}-\d{2}-\d{2}/.test(time) ? time : ''
       };
+      // 只保存页面上实际显示的文本，各字段独立匹配，不再拼成一整串
+      item.fields = SEARCH_FIELDS.map((key) => item[key].toLowerCase());
+      return item;
     }
 
     function itemHtml(item) {
@@ -354,10 +359,30 @@ body { overflow-x: clip; }
       moreEl.classList.toggle('hide', visible >= shown.length);
     }
 
+    // 每个关键词都要在某个字段里命中；取命中的最高优先级字段作为分组
+    function matchRank(item) {
+      let rank = -1;
+      for (const t of terms) {
+        const hit = item.fields.findIndex((field) => field.includes(t));
+        if (hit < 0) return -1;
+        if (rank < 0 || hit < rank) rank = hit;
+      }
+      return rank;
+    }
+
     function search() {
       const q = inputEl.value.trim();
       terms = q ? q.toLowerCase().split(/\s+/).filter(Boolean) : [];
-      shown = terms.length ? items.filter((item) => terms.every((t) => item.text.includes(t))) : items;
+      if (!terms.length) {
+        shown = items;
+      } else {
+        const groups = SEARCH_FIELDS.map(() => []);
+        for (const item of items) {
+          const rank = matchRank(item);
+          if (rank >= 0) groups[rank].push(item);
+        }
+        shown = groups.flat();
+      }
       if (!items.length) setStatus('暂无数据');
       else if (!shown.length) setStatus('未找到结果');
       else setStatus(terms.length ? '共 ' + shown.length + ' 条结果' : '已收录 ' + items.length + ' 条资源');
