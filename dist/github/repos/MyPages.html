@@ -319,7 +319,7 @@ body { overflow-x: clip; }
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-11-08 20:16:47 +08:00<br>
+<p>2026-11-10 06:22:24 +08:00<br>
 https://github.com/MoonLord-LM/MyPages</p>
 <hr>
 <h1>MyPages</h1>
@@ -361,7 +361,8 @@ https://github.com/MoonLord-LM/MyPages</p>
 在 <code>.gitignore</code> 中忽略 <code>.enc.md</code> 文件，避免提交到远程仓库中，保证安全<br>
 页面内容第一行必须是 <code>&lt;!-- { &quot;password&quot; : &quot;xxxxxx&quot; } --&gt;</code> 的形式，在注释中内嵌一个配置 JSON，保存密码<br>
 本地执行构建时，将 md 渲染为 html，然后压缩为 gzip 格式，然后用密码加密处理，保存为 <code>.html.zip.enc</code> 后缀<br>
-页面 md 同名的 html 只包含一个密码输入框，用户输入正确密码后，对 <code>.html.zip.enc</code> 做解密和 gzip 解压，然后再显示出实际内容<br>
+同时，生成一个与页面 md 同名的 html，只包含一个密码输入框<br>
+用户输入正确密码后，对 <code>.html.zip.enc</code> 做解密和 gzip 解压，然后再显示出实际内容<br>
 加密算法参考 <code>/pages/tools/file-encrypt-aes.html</code> 的实现<br>
 最终生成的 <code>.html</code> 和 <code>.html.zip.enc</code> 文件，在 <code>/pages</code> 和 <code>/dist</code> 目录中都进行保存</p>
 <h3>自动列表</h3>
