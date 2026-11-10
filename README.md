@@ -86,10 +86,14 @@ MyPages/
 ├── dist/                                 # 站点构建产物
 ├── pages/                                # 站点源文件
 ├── tools/                                # 辅助工具
-│   ├── tools.bat                         # 工具脚本
-│   └── github/                           # GitHub 相关工具
-│       ├── github-profile.bat            # 采集 GitHub 用户资料
-│       └── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
+│   ├── tools.bat                         # 工具入口
+│   ├── github/                           # GitHub 相关工具
+│   │   ├── github-profile.bat            # 采集 GitHub 用户资料
+│   │   ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
+│   └── search/                           # 搜索功能相关工具
+│       ├── quark-check.bat               # 检查夸克网盘链接有效性
+│       └── quark-clean.bat               # 清理失效的夸克网盘链接
+│       ├── quark-page.bat                # 按天生成夸克网盘资源收录页面
 ├── build.bat                             # 构建脚本
 ├── LLM.md                                # 提示信息
 └── README.md                             # 工程说明

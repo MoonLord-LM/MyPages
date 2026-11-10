@@ -133,7 +133,7 @@ foreach ($day in ($groups.Keys | Sort-Object)) {
     foreach ($line in $groups[$day]) { $lines.Add($line) }
     $pages.Add([pscustomobject]@{
         Name = $day + '.md'
-        Text = ($lines -join "`n") + "`n"
+        Text = ($lines -join "`r`n") + "`r`n"
     })
 }
 
