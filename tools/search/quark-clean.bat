@@ -9,11 +9,13 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 powershell -NoProfile -Command "Write-Host '清理 quark.json 中的夸克网盘分享链接，删除已失效链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '失效链接的 URL 保存到 quark-invalid.json' -ForegroundColor Green"
 echo.
 
 
 
 set "json_file=!script_dir!quark.json"
+set "invalid_file=!script_dir!quark-invalid.json"
 if not exist "!json_file!" (
     echo 错误：未找到数据文件 "!json_file!"
     echo.
@@ -54,6 +56,7 @@ exit /b
 -----BEGIN POWERSHELL CODE-----
 [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
 $jsonPath = $env:json_file
+$invalidPath = $env:invalid_file
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 $pattern = '(?s)\{(?:[^{}]|"(?:\\.|[^"\\])*")*\}'
 
@@ -79,11 +82,14 @@ if ($elements.Count -ne $total) {
 
 $drop = [bool[]]::new($total)
 $dropCount = 0
+$invalidUrls = [System.Collections.Generic.List[string]]::new()
 for ($i = 0; $i -lt $total; $i++) {
     $prop = $records[$i].PSObject.Properties['check_valid']
     if ($null -ne $prop -and $prop.Value -is [bool] -and -not $prop.Value) {
         $drop[$i] = $true
         $dropCount++
+        $url = [string]$records[$i].url
+        if ($url) { $invalidUrls.Add($url) }
     }
 }
 
@@ -133,6 +139,34 @@ try {
 }
 
 try {
+    $invalidList = [System.Collections.Generic.List[object]]::new()
+    $seen = [System.Collections.Generic.HashSet[string]]::new()
+    if ([System.IO.File]::Exists($invalidPath)) {
+        $invalidRaw = [System.IO.File]::ReadAllText($invalidPath, [System.Text.Encoding]::UTF8)
+        if (-not [string]::IsNullOrWhiteSpace($invalidRaw)) {
+            $oldRecords = ConvertFrom-Json -InputObject $invalidRaw
+            foreach ($old in $oldRecords) {
+                if ($null -eq $old) { continue }
+                $oldUrl = [string]$old.url
+                if ($oldUrl -and $seen.Add($oldUrl)) {
+                    $invalidList.Add([pscustomobject][ordered]@{ url = $oldUrl })
+                }
+            }
+        }
+    }
+    foreach ($url in $invalidUrls) {
+        if ($seen.Add($url)) {
+            $invalidList.Add([pscustomobject][ordered]@{ url = $url })
+        }
+    }
+    $invalidText = ConvertTo-Json -InputObject $invalidList -Depth 5
+    [System.IO.File]::WriteAllText($invalidPath, $invalidText + "`n", $utf8)
+} catch {
+    Write-Host '错误：保存失效记录失败' -ForegroundColor Red
+    exit 1
+}
+
+try {
     [System.IO.File]::WriteAllText($jsonPath, $outText, $utf8)
 } catch {
     Write-Host '错误：写入结果失败' -ForegroundColor Red
@@ -141,5 +175,6 @@ try {
 
 Write-Host ('清理完成：共 ' + $total + ' 条，删除 ' + $dropCount + ' 条，保留 ' + $kept + ' 条') -ForegroundColor Green
 Write-Host ('已写回: ' + $jsonPath) -ForegroundColor Green
+Write-Host ('已保存失效链接: ' + $invalidPath)
 exit 0
 -----END POWERSHELL CODE-----
