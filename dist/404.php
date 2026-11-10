@@ -29,4 +29,4 @@ if (isset($redirects[$path])) {
 
 http_response_code(404);
 header('Content-Type: text/plain; charset=utf-8');
-echo '404 Not Found';
+echo '404 Not Found: ' . $path;
