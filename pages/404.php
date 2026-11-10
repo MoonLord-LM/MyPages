@@ -11,6 +11,6 @@ if ($path === '/service/network-proxy.html') {
     exit;
 }
 
-http_response_code(404);
+http_response_code(200);
 header('Content-Type: text/plain; charset=utf-8');
-echo '404 Not Found';
+echo 'Page Not Found';
