@@ -8,7 +8,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-powershell -NoProfile -Command "Write-Host '读取 quark.json 中的夸克网盘分享链接，按天生成资源收录页面' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '读取 quark.json 中的夸克网盘资源链接，按天生成资源收录页面' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '资源收录页面，以 md 文件，保存在 /pages/service/internet-search/quark 中' -ForegroundColor Green"
 echo.
 
