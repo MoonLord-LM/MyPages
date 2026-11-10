@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线服务</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      color: #1f2328; line-height: 1.6; background: #fafafa;
+    }
+    /* .wrap 统一由公共模板 header.html 定义 */
+    h1 { font-size: 28px; color: #1f2328; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; margin-bottom: 28px; line-height: 1.25; }
+    .tool-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .tool-card {
+      display: block; background: #fff; border: 1px solid #e3e8ef; border-radius: 14px;
+      padding: 24px; color: #1f2328; box-shadow: 0 6px 20px rgba(0,0,0,.06);
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.1); border-color: #0969da; }
+    .tool-card h2 { font-size: 20px; color: #1f2328; margin-bottom: 8px; }
+    .tool-card p { color: #59636e; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>在线服务</h1>
+    <div class="tool-list">
+      <a class="tool-card" href="internet-search/index.html">
+        <h2>互联网资源搜索</h2>
+        <p>自动采集和收录全网资源，提供资源搜索功能</p>
+      </a>
+      <a class="tool-card" href="network-proxy/index.html">
+        <h2>网络代理服务</h2>
+        <p>页面受密码保护</p>
+      </a>
+    </div>
+
+  </main>
+</body>
+</html>

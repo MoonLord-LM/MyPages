@@ -122,45 +122,6 @@ body {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/styles/default.min.css">
 </head>
 <body>
-<style>
-.auto-list {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 220px;
-  overflow: auto;
-  padding: 16px;
-  box-sizing: border-box;
-  border-right: 1px solid #d8dee4;
-  background: #f6f8fa;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.auto-list ul { list-style: none; margin: 0; padding: 0; }
-.auto-list li { margin: 0; }
-.auto-list a { display: block; padding: 8px 16px; margin: 0 -16px; color: #1a1a1a; text-decoration: none; word-break: break-all; }
-.auto-list a:hover { background: #eef3f8; text-decoration: none; }
-.auto-list a.active { background: linear-gradient(135deg, #6ba0ea, #9b6fe0); color: #fff; font-weight: 600; }
-.auto-list li.home { margin: 0; padding: 0; }
-.auto-list li.home a { display: flex; align-items: center; justify-content: flex-start; margin: -16px -16px 0; padding: 18px 16px; border-bottom: 1px solid #d8dee4; }
-.auto-list li.home a svg { width: 16px; height: 16px; display: block; }
-@media (max-width: 1360px) {
-  .auto-list-content { margin-left: 240px; }
-}
-@media (max-width: 768px) {
-  .auto-list { position: static; width: auto; border-right: none; border-bottom: 1px solid #d8dee4; }
-  .auto-list-content { margin-left: 0; }
-}
-</style>
-<nav class="auto-list">
-  <ul>
-    <li class="home"><a href="./index.html" title="返回目录首页" aria-label="返回目录首页"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.36v7.026A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V11a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75v3.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.229c0-.531.242-1.034.657-1.366l5.25-4.2z"></path></svg></a></li>
-    <li><a class="active" href="./network-proxy.html">network-proxy</a></li>
-  </ul>
-</nav>
-<div class="auto-list-content">
-
 <div class="wrap">
 <div class="unlock" id="unlockPanel">
   <h1>需要密码</h1>
@@ -172,8 +133,6 @@ body {
   <p class="unlock-status" id="unlockStatus"></p>
 </div>
 <article class="markdown-body" id="unlockContent" style="display:none"></article>
-</div>
-
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
 <script>
@@ -249,8 +208,7 @@ body {
   'use strict';
   var ITER = 10000000;
   var SALT_LEN = 16, IV_LEN = 12, TAG_LEN = 16, HEADER_LEN = 44;
-  var ENC_FILE = "network-proxy.html.zip.enc";
-  var UNLOCKED_TITLE = "network-proxy";
+  var ENC_FILE = "index.html.zip.enc";
   var $ = function (id) { return document.getElementById(id); };
   var input = $('unlockPassword'), btn = $('unlockBtn'),
       statusEl = $('unlockStatus'), panel = $('unlockPanel'), content = $('unlockContent');
@@ -303,7 +261,7 @@ body {
       content.innerHTML = new TextDecoder().decode(await gunzip(plain));
       if (window.initCodeCopy) { window.initCodeCopy(content); }
       content.style.display = '';
-      document.title = UNLOCKED_TITLE;
+      document.title = "密码保护页面";
       panel.style.display = 'none';
       setStatus('');
       if (window.hljs) {

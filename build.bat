@@ -821,7 +821,7 @@ const UNLOCK_CSS = `
 .unlock-status.err { color: #b3261e; }
 `;
 
-function unlockScript(encFileName, iterations, unlockedTitle) {
+function unlockScript(encFileName, iterations) {
     // 该脚本在浏览器运行：密码由用户输入，页面里不含任何密钥信息
     return [
         "(function () {",
@@ -830,7 +830,6 @@ function unlockScript(encFileName, iterations, unlockedTitle) {
         "  var SALT_LEN = " + ENC_SALT_LEN + ", IV_LEN = " + ENC_IV_LEN +
             ", TAG_LEN = " + ENC_TAG_LEN + ", HEADER_LEN = " + ENC_HEADER_LEN + ";",
         "  var ENC_FILE = " + JSON.stringify(encFileName) + ";",
-        "  var UNLOCKED_TITLE = " + JSON.stringify(unlockedTitle) + ";",
         "  var $ = function (id) { return document.getElementById(id); };",
         "  var input = $('unlockPassword'), btn = $('unlockBtn'),",
         "      statusEl = $('unlockStatus'), panel = $('unlockPanel'), content = $('unlockContent');",
@@ -883,7 +882,7 @@ function unlockScript(encFileName, iterations, unlockedTitle) {
         "      content.innerHTML = new TextDecoder().decode(await gunzip(plain));",
         "      if (window.initCodeCopy) { window.initCodeCopy(content); }",
         "      content.style.display = '';",
-        "      document.title = UNLOCKED_TITLE;",
+        "      document.title = \"密码保护页面\";",
         "      panel.style.display = 'none';",
         "      setStatus('');",
         "      if (window.hljs) {",
@@ -901,12 +900,7 @@ function unlockScript(encFileName, iterations, unlockedTitle) {
     ].join('\n');
 }
 
-function renderUnlockPage(encFileName, iterations, unlockedTitle, navHtml) {
-    navHtml = navHtml || '';
-    const navOpen = navHtml
-        ? '<style>' + AUTOLIST_CSS + '</style>\n' + navHtml + '\n<div class="auto-list-content">\n'
-        : '';
-    const navClose = navHtml ? '\n</div>' : '';
+function renderUnlockPage(encFileName, iterations) {
     const html = [
         '<!DOCTYPE html>',
         '<html lang="zh-CN">',
@@ -918,7 +912,6 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle, navHtml) {
         '<link rel="stylesheet" href="-----HIGHLIGHTJS CSS URL-----">',
         '</head>',
         '<body>',
-        navOpen,
         '<div class="wrap">',
         '<div class="unlock" id="unlockPanel">',
         '  <h1>' + escapeHtml(ENC_PAGE_TITLE) + '</h1>',
@@ -931,11 +924,10 @@ function renderUnlockPage(encFileName, iterations, unlockedTitle, navHtml) {
         '</div>',
         '<article class="markdown-body" id="unlockContent" style="display:none"></article>',
         '</div>',
-        navClose,
         '<script src="-----HIGHLIGHTJS JS URL-----"></script>',
         '<script>' + CODE_COPY_JS + '</script>',
         '<script>',
-        unlockScript(encFileName, iterations, unlockedTitle),
+        unlockScript(encFileName, iterations),
         '</script>',
         '</body>',
         '</html>'
@@ -961,7 +953,7 @@ function refreshUnlockShell(srcDir, baseName) {
         if (m) iterations = Number(m[1]);
     } catch (e) { }
 
-    const html = renderUnlockPage(encName, iterations, baseName, buildUnlockNav(srcDir, baseName));
+    const html = renderUnlockPage(encName, iterations);
     // 内容不变就不写盘，避免无意义的文件改动反复触发 CI 提交
     let prev = '';
     try { prev = fs.readFileSync(srcShell, 'utf8'); } catch (e) { }
@@ -997,7 +989,7 @@ async function processEncryptedPage(srcFile) {
     const normalizedBody = normalizeLinkTargets(bodyHtml);
     console.log('正在加密: ' + srcRel);
     const encBytes = encryptHtml(normalizedBody, cfg.password, cfg.iterations);
-    const shellHtml = renderUnlockPage(encName, cfg.iterations, baseName, buildUnlockNav(srcDir, baseName));
+    const shellHtml = renderUnlockPage(encName, cfg.iterations);
 
     fs.mkdirSync(path.dirname(distShell), { recursive: true });
     fs.writeFileSync(srcShell, shellHtml, 'utf8');
@@ -1041,22 +1033,6 @@ function buildNav(currentOutPath, descriptors) {
         return '    <li><a' + active + ' href="' + escapeAttr(rel) + '">' + escapeHtml(d.displayName) + '</a></li>';
     }).join('\n');
     return '<nav class="auto-list">\n  <ul>\n' + homeItem + '\n' + items + '\n  </ul>\n</nav>';
-}
-
-function descriptorsForDir(dir) {
-    const m = pageFilesByDir.get(dir);
-    if (!m) return [];
-    return [...m.values()].map((p) => {
-        const outPath = outPathFor(p.srcFile);
-        return Object.assign({}, p, { outPath, displayName: p.base });
-    });
-}
-
-// 为锁页骨架生成侧栏：相对路径以骨架自身的产出路径为基准，保证与本目录其它页面一致
-function buildUnlockNav(srcDir, baseName) {
-    const shellSrc = path.join(srcDir, baseName + '.html');
-    const outPath = outPathFor(shellSrc);
-    return buildNav(outPath, descriptorsForDir(srcDir));
 }
 
 function firstNonEmptyLine(text) {
