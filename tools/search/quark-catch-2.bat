@@ -101,6 +101,7 @@ foreach ($ch in $tgChannels) {
         Start-Sleep -Milliseconds 300
     }
     Write-Host ('频道 ' + $ch + ' 采集完成，累计 ' + $rawLinks.Count + ' 条')
+    Write-Host ''
 }
 if ($rawLinks.Count -eq 0) {
     Write-Host '未提取到夸克分享链接'
