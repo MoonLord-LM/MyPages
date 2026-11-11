@@ -709,10 +709,27 @@ body { overflow-x: clip; }
     }
     async function fetchMp3Cover(src, token) {
       try {
-        const res = await fetch(src, { headers: { Range: 'bytes=0-4194303' } });
-        if (res.status !== 206) { try { res.body && res.body.cancel(); } catch (e) {} return; } // 不支持 Range 则不下载整文件
-        const buf = new Uint8Array(await res.arrayBuffer());
+        // 静态托管可能不支持 Range（永远返回 200 全量），不依赖 206；
+        // 改为流式只读前 4MB 再取消连接，避免为封面下载整首文件。
+        const res = await fetch(src);
+        if (!res.ok || !res.body) return;
+        const reader = res.body.getReader();
+        const chunks = [];
+        let received = 0;
+        const MAX = 4 * 1048576;
+        while (received < MAX) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+        }
+        try { reader.cancel(); } catch (e) {}
         if (token !== coverToken) return; // 已切歌，丢弃旧封面
+        let len = 0;
+        for (const c of chunks) len += c.length;
+        const buf = new Uint8Array(len);
+        let o = 0;
+        for (const c of chunks) { buf.set(c, o); o += c.length; }
         const cover = parseID3Cover(buf);
         if (cover) showCover(cover);
       } catch (e) {}
