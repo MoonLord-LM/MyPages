@@ -32,7 +32,7 @@
     }
     .result-item:hover { border-color: #0969da; box-shadow: 0 10px 26px rgba(0, 0, 0, .08); }
     .result-title {
-      display: block; font-size: 20px; font-weight: 600; color: #1f2328; word-break: break-all;
+      display: inline; font-size: 20px; font-weight: 600; color: #1f2328; word-break: break-all;
     }
     .result-title:hover { color: #0969da; }
     .result-meta {
@@ -96,6 +96,7 @@
     const listEl = $('results'), moreEl = $('more');
 
     let items = [], shown = [], terms = [], visible = 0, timer = null, loadPromise = null;
+    let totalBytes = 0;
 
     function escapeHtml(s) {
       return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -158,12 +159,14 @@
     function normalize(record) {
       if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
       const time = str(record.time) || '—';
+      const fileSizeBytes = Number(record.file_size) || 0;
       const item = {
         title: str(record.title) || '（无标题）',
         url: str(record.url),
         time,
         count: str(record.file_count) || '—',
         size: formatSize(record.file_size),
+        fileSizeBytes,
         sortKey: /^\d{4}-\d{2}-\d{2}/.test(time) ? time : ''
       };
       // 只保存页面上实际显示的文本，各字段独立匹配，不再拼成一整串
@@ -221,7 +224,7 @@
       }
       if (!items.length) setStatus('暂无数据');
       else if (!shown.length) setStatus('未找到结果');
-      else setStatus(terms.length ? '共 ' + shown.length + ' 条结果' : '已收录 ' + items.length + ' 条资源');
+      else setStatus(terms.length ? '共 ' + shown.length + ' 条结果' : '已收录 ' + items.length + ' 条资源，总文件大小 ' + formatSize(totalBytes));
       render(true);
     }
 
@@ -238,6 +241,7 @@
           .then((data) => {
             items = toRecords(data).map(normalize).filter(Boolean)
               .sort((a, b) => (a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0));
+            totalBytes = items.reduce((sum, it) => sum + it.fileSizeBytes, 0);
             search();
           })
           .catch((err) => { console.error(err); setStatus('数据加载失败', true); });
