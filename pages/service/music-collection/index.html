@@ -54,18 +54,42 @@
     }
     .play-btn:hover { transform: scale(1.06); }
     .play-btn svg { width: 24px; height: 24px; }
-    .song-list { list-style: none; margin-top: 14px; border-top: 1px solid #eef1f5; }
+    .song-list {
+      list-style: none; margin-top: 14px;
+      border: 1px solid #e3e8ef; border-radius: 12px;
+      overflow: hidden; background: #fff;
+    }
     .song-item {
-      display: flex; align-items: center; gap: 12px; padding: 7px 4px;
+      display: flex; align-items: center; gap: 12px; padding: 7px 12px;
       border-bottom: 1px solid #f2f4f7; cursor: pointer; color: #1f2329;
       transition: background .12s, color .12s;
     }
+    .song-item:last-child { border-bottom: none; }
     .song-item:hover { background: #f6f8fb; }
     .song-item.active { color: #4a72c4; font-weight: 600; }
     .song-index { width: 22px; text-align: right; color: #8a949e; font-size: 13px; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
     .song-item.active .song-index { color: #4a72c4; }
     .song-title { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .song-dur { font-size: 12px; color: #8a949e; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+    .player-volume { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; }
+    .vol-btn {
+      border: none; background: transparent; cursor: pointer; color: #1f2328;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .vol-btn svg { width: 24px; height: 24px; }
+    .vol-track {
+      position: relative; width: 120px; height: 6px; border-radius: 3px;
+      background: #e3e8ef; cursor: pointer; touch-action: none;
+    }
+    .vol-fill {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
+      border-radius: 3px; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+    }
+    .vol-thumb {
+      position: absolute; top: 50%; left: 100%; transform: translate(-50%, -50%);
+      width: 14px; height: 14px; border-radius: 50%; background: #fff;
+      border: 3px solid #6ba0ea; box-shadow: 0 1px 4px rgba(0,0,0,.2); pointer-events: none;
+    }
     @media (max-width: 560px) {
       .player { flex-direction: column; text-align: center; }
       .player-main { width: 100%; }
@@ -101,6 +125,15 @@
           <button class="ctrl-btn" id="next" aria-label="下一首">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 0l8.5 6-8.5 6z"/></svg>
           </button>
+        </div>
+        <div class="player-volume">
+          <button class="vol-btn" id="mute" aria-label="静音/取消静音">
+            <svg viewBox="0 0 24 24" fill="currentColor" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
+          </button>
+          <div class="vol-track" id="volTrack">
+            <div class="vol-fill" id="volFill"></div>
+            <div class="vol-thumb" id="volThumb"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -150,9 +183,15 @@
     const prevBtn = document.getElementById('prev');
     const nextBtn = document.getElementById('next');
     const listEl = document.getElementById('list');
+    const muteBtn = document.getElementById('mute');
+    const volIcon = document.getElementById('volIcon');
+    const volTrack = document.getElementById('volTrack');
+    const volFill = document.getElementById('volFill');
+    const volThumb = document.getElementById('volThumb');
 
     let current = -1;
     let dragging = false;
+    let volDragging = false;
     let activeLoad = null;
 
     const PLAY_PATH = 'M8 5v14l11-7z';
@@ -222,6 +261,25 @@
       pctEl.textContent = ld.total ? Math.floor(pct * 100) + '%' : (ld.received / 1048576).toFixed(1) + 'MB';
     }
 
+    // 原生流式：根据 audio.buffered 显示已缓冲进度（浏览器边下边播，无法直接拿到字节百分比）
+    function updateNativeBuffer() {
+      const ld = activeLoad;
+      if (!ld || !ld.native) return;
+      const b = audio.buffered;
+      if (b && b.length) {
+        const end = b.end(b.length - 1);
+        const total = audio.duration && isFinite(audio.duration) ? audio.duration : 0;
+        if (total) {
+          const pct = Math.min(1, end / total) * 100;
+          buffer.style.width = pct + '%';
+          pctEl.textContent = Math.floor(pct) + '%';
+        } else {
+          buffer.style.width = '0%';
+          pctEl.textContent = '…';
+        }
+      }
+    }
+
     function makeBlobUrl(ld) {
       const blob = new Blob(ld.chunks, { type: 'audio/mp4' });
       if (ld.objectUrl) { try { URL.revokeObjectURL(ld.objectUrl); } catch (e) {} }
@@ -269,8 +327,39 @@
       }
     }
 
+    // 可原生流式播放的格式：元数据在前、可按帧即时解码，交给浏览器 <audio> 原生流式播放，
+    // 实现真正的边下边播、按需缓冲、拖拽跳转（依赖服务端 Range 支持）
+    function isNativeStreamable(src) {
+      return /\.(mp3|ogg|oga|opus|webm|wav|aac|flac)(?:[?#]|$)/i.test(src || '');
+    }
+
+    // 统一入口：mp3/ogg 等原生可流式格式走浏览器原生流式；m4a/mp4 等需探测 moov 的格式走 fetch 分块
+    function load(i, autoplay) {
+      if (isNativeStreamable(songs[i] && songs[i].src)) loadNative(i, autoplay);
+      else loadFetch(i, autoplay);
+    }
+
+    // 原生流式播放：直接设置 audio.src，由浏览器接管下载/解码/缓冲，边下边播
+    function loadNative(i, autoplay) {
+      current = i;
+      const song = songs[i];
+      clearLoad();
+      titleEl.textContent = song.name;
+      curEl.textContent = '0:00';
+      durEl.textContent = '0:00';
+      fill.style.width = '0%';
+      thumb.style.left = '0%';
+      buffer.style.width = '0%';
+      pctEl.textContent = '…';
+      renderList();
+      activeLoad = { native: true, started: false };
+      audio.src = song.src;
+      audio.currentTime = 0;
+      if (autoplay) { activeLoad.started = true; audio.play().catch(() => {}); }
+    }
+
     // 流式拉取音频：边下边显示下载百分比；moov 就绪即开播（faststart 可提前播），否则下完再播
-    async function load(i, autoplay) {
+    async function loadFetch(i, autoplay) {
       current = i;
       const song = songs[i];
       clearLoad();
@@ -330,6 +419,47 @@
       playIcon.innerHTML = '<path d="' + (playing ? PAUSE_PATH : PLAY_PATH) + '"></path>';
     }
 
+    const VOL_HIGH = 'M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z';
+    const VOL_LOW  = 'M3 9v6h4l5 5V4L7 9H3zm10.5 3a4.5 4.5 0 0 0-.5-2.03v4.06A4.5 4.5 0 0 0 13.5 12z';
+    const VOL_MUTE = 'M3 9v6h4l5 5V4L7 9H3zm13.59 3l2.7-2.7-1.41-1.42-2.7 2.71-2.71-2.71-1.41 1.42 2.7 2.7-2.7 2.71 1.41 1.41 2.71-2.7 2.7 2.7 1.41-1.41-2.7-2.71z';
+
+    let volume = 1;
+    let lastVolume = 1;
+
+    function updateVolIcon() {
+      const path = volume === 0 ? VOL_MUTE : (volume < 0.5 ? VOL_LOW : VOL_HIGH);
+      volIcon.innerHTML = '<path d="' + path + '"></path>';
+    }
+
+    function setVolume(v) {
+      v = Math.min(1, Math.max(0, v));
+      volume = v;
+      audio.volume = v;
+      if (v > 0) lastVolume = v;
+      const w = (v * 100) + '%';
+      volFill.style.width = w;
+      volThumb.style.left = w;
+      updateVolIcon();
+    }
+
+    function setVolumeFromEvent(e) {
+      const rect = volTrack.getBoundingClientRect();
+      let ratio = (e.clientX - rect.left) / rect.width;
+      setVolume(Math.min(1, Math.max(0, ratio)));
+    }
+
+    muteBtn.addEventListener('click', () => {
+      setVolume(volume > 0 ? 0 : (lastVolume > 0 ? lastVolume : 1));
+    });
+    volTrack.addEventListener('pointerdown', (e) => {
+      volDragging = true;
+      try { volTrack.setPointerCapture(e.pointerId); } catch (err) {}
+      setVolumeFromEvent(e);
+    });
+    volTrack.addEventListener('pointermove', (e) => { if (volDragging) setVolumeFromEvent(e); });
+    volTrack.addEventListener('pointerup', () => { volDragging = false; });
+    volTrack.addEventListener('pointercancel', () => { volDragging = false; });
+
     function seekFromEvent(e) {
       const rect = track.getBoundingClientRect();
       let ratio = (e.clientX - rect.left) / rect.width;
@@ -349,8 +479,13 @@
       curEl.textContent = fmt(target);
     }
 
-    audio.addEventListener('play', () => setPlayIcon(true));
+    audio.addEventListener('play', () => { if (activeLoad) activeLoad.started = true; setPlayIcon(true); });
     audio.addEventListener('pause', () => setPlayIcon(false));
+    audio.addEventListener('progress', updateNativeBuffer);
+    audio.addEventListener('canplay', updateNativeBuffer);
+    audio.addEventListener('error', () => {
+      if (activeLoad && activeLoad.native) titleEl.textContent = '加载失败：' + (audio.error ? audio.error.code : 'unknown');
+    });
     audio.addEventListener('timeupdate', () => {
       if (dragging) return;
       const ratio = audio.duration ? (audio.currentTime / audio.duration) : 0;
@@ -387,6 +522,7 @@
     track.addEventListener('pointerup', () => { dragging = false; });
     track.addEventListener('pointercancel', () => { dragging = false; });
 
+    setVolume(1);
     loadSongs();
   </script>
 </body>
