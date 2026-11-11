@@ -9,10 +9,13 @@
     .wrap h1 { font-size: 28px; color: #1f2328; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; margin-bottom: 24px; }
     .player {
       background: #fff; border: 1px solid #e3e8ef; border-radius: 16px;
-      padding: 18px 22px; box-shadow: 0 6px 20px rgba(0,0,0,.06); margin-bottom: 28px;
+      padding: 14px 20px; box-shadow: 0 6px 20px rgba(0,0,0,.06); margin-bottom: 28px;
+      display: flex; align-items: center; gap: 18px;
     }
-    .player-row { display: flex; align-items: center; gap: 16px; }
     .controls { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
+    .player-center { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+    .player-top { display: flex; align-items: center; gap: 14px; }
+    .player-bottom { display: flex; align-items: center; gap: 6px; }
     .player-cover {
       width: 56px; height: 56px; border-radius: 10px; flex: 0 0 auto;
       background: linear-gradient(135deg, #bcd6f6, #d6c4f0);
@@ -22,8 +25,6 @@
     .player-cover svg { width: 26px; height: 26px; }
     .player-meta { flex: 1 1 auto; min-width: 0; }
     .player-title { font-size: 16px; font-weight: 600; color: #1f2328; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .player-right { display: flex; align-items: center; gap: 18px; flex: 0 0 auto; margin-left: 12px; }
-    .player-progress { display: flex; align-items: center; gap: 6px; margin-top: 16px; }
     .progress-track {
       position: relative; flex: 1; height: 6px; border-radius: 3px;
       background: #e3e8ef; cursor: pointer; touch-action: none;
@@ -107,8 +108,8 @@
     }
     .loop-btn svg { width: 24px; height: 24px; }
     @media (max-width: 560px) {
-      .player-row { flex-wrap: wrap; }
-      .player-right { margin-left: auto; }
+      .player { flex-wrap: wrap; }
+      .player-center { flex: 1 1 100%; order: -1; }
     }
   </style>
 </head>
@@ -116,48 +117,50 @@
   <main class="wrap">
     <h1>音乐推荐</h1>
     <div class="player">
-      <div class="player-row">
-        <div class="controls">
-          <button class="ctrl-btn" id="prev" aria-label="上一首">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-          </button>
-          <button class="ctrl-btn play-btn" id="play" aria-label="播放/暂停">
-            <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
-          </button>
-          <button class="ctrl-btn" id="next" aria-label="下一首">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 0l8.5 6-8.5 6z"/></svg>
-          </button>
-        </div>
-        <div class="player-cover" id="cover">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
-        </div>
-        <div class="player-meta">
-          <div class="player-title" id="title">未选择歌曲</div>
-        </div>
-        <div class="player-right">
-          <div class="vol-wrap">
-            <button class="vol-btn" id="mute" aria-label="音量">
-              <svg viewBox="0 0 24 24" fill="currentColor" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
-            </button>
-            <div class="vol-pop" id="volPop">
-              <div class="vol-track" id="volTrack">
-                <div class="vol-fill" id="volFill"></div>
-                <div class="vol-thumb" id="volThumb"></div>
-              </div>
-            </div>
+      <div class="controls">
+        <button class="ctrl-btn" id="prev" aria-label="上一首">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="ctrl-btn play-btn" id="play" aria-label="播放/暂停">
+          <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="next" aria-label="下一首">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 0l8.5 6-8.5 6z"/></svg>
+        </button>
+      </div>
+      <div class="player-center">
+        <div class="player-top">
+          <div class="player-cover" id="cover">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
           </div>
-          <button class="loop-btn" id="loop" aria-label="循环模式">
-            <svg viewBox="0 0 24 24" fill="currentColor" id="loopIcon"></svg>
-          </button>
+          <div class="player-meta">
+            <div class="player-title" id="title">未选择歌曲</div>
+          </div>
+        </div>
+        <div class="player-bottom">
+          <div class="progress-track" id="track">
+            <div class="progress-buffer" id="buffer"></div>
+            <div class="progress-fill" id="fill"></div>
+            <div class="progress-thumb" id="thumb"></div>
+          </div>
+          <span class="time" id="time">00:00 / 00:00</span>
         </div>
       </div>
-      <div class="player-progress">
-        <div class="progress-track" id="track">
-          <div class="progress-buffer" id="buffer"></div>
-          <div class="progress-fill" id="fill"></div>
-          <div class="progress-thumb" id="thumb"></div>
+      <div class="controls">
+        <div class="vol-wrap">
+          <button class="vol-btn" id="mute" aria-label="音量">
+            <svg viewBox="0 0 24 24" fill="currentColor" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
+          </button>
+          <div class="vol-pop" id="volPop">
+            <div class="vol-track" id="volTrack">
+              <div class="vol-fill" id="volFill"></div>
+              <div class="vol-thumb" id="volThumb"></div>
+            </div>
+          </div>
         </div>
-        <span class="time" id="time">00:00 / 00:00</span>
+        <button class="loop-btn" id="loop" aria-label="循环模式">
+          <svg viewBox="0 0 24 24" fill="currentColor" id="loopIcon"></svg>
+        </button>
       </div>
     </div>
     <ul class="song-list" id="list">
