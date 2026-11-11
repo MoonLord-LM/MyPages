@@ -15,15 +15,15 @@
     .controls { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
     .player-cover {
       width: 56px; height: 56px; border-radius: 10px; flex: 0 0 auto;
-      background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
-      display: flex; align-items: center; justify-content: center; color: #fff;
-      box-shadow: 0 4px 14px rgba(107,160,234,.3); overflow: hidden;
+      background: linear-gradient(135deg, #bcd6f6, #d6c4f0);
+      display: flex; align-items: center; justify-content: center; color: #6b8fc8;
+      box-shadow: 0 4px 14px rgba(107,160,234,.18); overflow: hidden;
     }
     .player-cover svg { width: 26px; height: 26px; }
     .player-meta { flex: 1 1 auto; min-width: 0; }
     .player-title { font-size: 16px; font-weight: 600; color: #1f2328; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .player-right { display: flex; align-items: center; gap: 18px; flex: 0 0 auto; margin-left: 12px; }
-    .player-progress { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+    .player-progress { display: flex; align-items: center; gap: 6px; margin-top: 16px; }
     .progress-track {
       position: relative; flex: 1; height: 6px; border-radius: 3px;
       background: #e3e8ef; cursor: pointer; touch-action: none;
@@ -321,7 +321,7 @@ body { overflow-x: clip; }
           <div class="progress-fill" id="fill"></div>
           <div class="progress-thumb" id="thumb"></div>
         </div>
-        <span class="time" id="time">0:00 / 0:00</span>
+        <span class="time" id="time">00:00 / 00:00</span>
       </div>
     </div>
     <ul class="song-list" id="list">
@@ -513,10 +513,10 @@ body { overflow-x: clip; }
     const PAUSE_PATH = 'M6 5h4v14H6zM14 5h4v14h-4z';
 
     function fmt(t) {
-      if (!isFinite(t) || t < 0) return '0:00';
+      if (!isFinite(t) || t < 0) return '00:00';
       const m = Math.floor(t / 60);
       const s = Math.floor(t % 60);
-      return m + ':' + String(s).padStart(2, '0');
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
 
     function updateTimeLabel() {
@@ -781,7 +781,7 @@ body { overflow-x: clip; }
       fill.style.width = '0%';
       thumb.style.left = '0%';
       buffer.style.width = '0%';
-      timeEl.textContent = '0:00 / 0:00';
+      timeEl.textContent = '00:00 / 00:00';
       renderList();
       activeLoad = { native: true, started: false };
       audio.src = song.src;
@@ -806,7 +806,7 @@ body { overflow-x: clip; }
       fill.style.width = '0%';
       thumb.style.left = '0%';
       buffer.style.width = '0%';
-      timeEl.textContent = '0:00 / 0:00';
+      timeEl.textContent = '00:00 / 00:00';
       renderList();
 
       const controller = new AbortController();
