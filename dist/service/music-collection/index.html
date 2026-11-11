@@ -582,6 +582,7 @@ body { overflow-x: clip; }
 
     // 封面解析：MP3 读 ID3v2 APIC，M4A 读 MP4 covr；解析失败保留渐变占位
     let coverUrl = null;
+    let coverToken = 0; // 切歌时自增，旧封面请求完成后比对，防止覆盖新歌封面
     function clearCover() {
       if (coverUrl) { try { URL.revokeObjectURL(coverUrl); } catch (e) {} coverUrl = null; }
       coverEl.style.backgroundImage = '';
@@ -706,11 +707,12 @@ body { overflow-x: clip; }
       }
       return null;
     }
-    async function fetchMp3Cover(src) {
+    async function fetchMp3Cover(src, token) {
       try {
         const res = await fetch(src, { headers: { Range: 'bytes=0-4194303' } });
         if (res.status !== 206) { try { res.body && res.body.cancel(); } catch (e) {} return; } // 不支持 Range 则不下载整文件
         const buf = new Uint8Array(await res.arrayBuffer());
+        if (token !== coverToken) return; // 已切歌，丢弃旧封面
         const cover = parseID3Cover(buf);
         if (cover) showCover(cover);
       } catch (e) {}
@@ -789,7 +791,7 @@ body { overflow-x: clip; }
       activeLoad = { native: true, started: false };
       audio.src = song.src;
       audio.currentTime = 0;
-      fetchMp3Cover(song.src);
+      fetchMp3Cover(song.src, ++coverToken);
       if (autoplay) { activeLoad.started = true; audio.play().catch(() => {}); }
     }
 
