@@ -224,7 +224,7 @@ $onSitemap = {
         [void]$pageSeen.Add($loc)
     }
     if (($n % 20) -eq 0) {
-        Write-Host ('已解析 sitemap ' + $n + ' 个，剩余 ' + $sitemapQueue.Count + ' 个，页面 ' + $pageSeen.Count + ' 个')
+        Write-Host ('已解析 sitemap ' + $n + '/' + $sitemapSeen.Count + ' 个，发现页面 ' + $pageSeen.Count + ' 个')
     }
 }
 
@@ -259,7 +259,7 @@ $onPage = {
         }
     }
     if (($n % $pageLog) -eq 0) {
-        Write-Host ('已采集 ' + $n + ' 页，剩余 ' + $pageQueue.Count + ' 页，夸克链接 ' + $quarkSeen.Count + ' 条')
+        Write-Host ('已采集 ' + $n + '/' + ($pageQueue.Count + $n) + ' 页，发现夸克链接 ' + $quarkSeen.Count + ' 条')
     }
 }
 
