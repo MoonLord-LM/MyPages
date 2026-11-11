@@ -85,12 +85,8 @@
     <lastmod>2026-11-07T18:52:42Z</lastmod>
   </url>
   <url>
-    <loc>https://www.moonlord.cc/music-collection/index.html</loc>
-    <lastmod>2026-11-11T11:21:26Z</lastmod>
-  </url>
-  <url>
     <loc>https://www.moonlord.cc/service/index.html</loc>
-    <lastmod>2026-11-11T11:21:26Z</lastmod>
+    <lastmod>2026-11-11T11:28:31Z</lastmod>
   </url>
   <url>
     <loc>https://www.moonlord.cc/service/internet-search/index.html</loc>
@@ -3451,6 +3447,10 @@
   <url>
     <loc>https://www.moonlord.cc/service/internet-search/quark/index.html</loc>
     <lastmod>2026-11-11T01:50:43Z</lastmod>
+  </url>
+  <url>
+    <loc>https://www.moonlord.cc/service/music-collection/index.html</loc>
+    <lastmod>2026-11-11T11:28:31Z</lastmod>
   </url>
   <url>
     <loc>https://www.moonlord.cc/service/network-proxy/index.html</loc>
