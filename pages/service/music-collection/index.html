@@ -164,31 +164,45 @@
     <audio id="audio" preload="metadata"></audio>
   </main>
   <script>
-    const LIST_URL = 'https://cloudflare.moonlord.cc/static/static.json';
+    // 歌曲列表直接烘焙进页面（static.json 数据长期不变），避免运行时额外请求
+    const STATIC_SONGS = [
+      { name: '2008 郭静 - 爱情讯息.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2008%20郭静%20-%20爱情讯息.m4a' },
+      { name: '2009 BY2 - 我知道.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2009%20BY2%20-%20我知道.m4a' },
+      { name: '2010 金莎 - 星月神话.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2010%20金莎%20-%20星月神话.m4a' },
+      { name: '2012 陈芳语 - 爱你.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2012%20陈芳语%20-%20爱你.m4a' },
+      { name: '2014 童可可 - 萌萌哒.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2014%20童可可%20-%20萌萌哒.m4a' },
+      { name: '2015 阿肆 - 直到你降临.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2015%20阿肆%20-%20直到你降临.m4a' },
+      { name: '2016 任然 - 疑心病.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2016%20任然%20-%20疑心病.m4a' },
+      { name: '2018 鞠婧祎 - 叹云兮.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2018%20鞠婧祎%20-%20叹云兮.m4a' },
+      { name: '2019 刘梦妤Uu - 那女孩对我说.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2019%20刘梦妤Uu%20-%20那女孩对我说.m4a' },
+      { name: '2019 司南 - 冬眠.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2019%20司南%20-%20冬眠.m4a' },
+      { name: '2019 泠鸢yousa - 勾指起誓.mp3', src: 'https://cloudflare.moonlord.cc/static/music/2019%20泠鸢yousa%20-%20勾指起誓.mp3' },
+      { name: '2019 黄诗扶 - 九万字.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2019%20黄诗扶%20-%20九万字.m4a' },
+      { name: '2020 傅梦彤 - 潮汐.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2020%20傅梦彤%20-%20潮汐.m4a' },
+      { name: '2020 刘亦心 - 熬夜上瘾.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2020%20刘亦心%20-%20熬夜上瘾.m4a' },
+      { name: '2020 江偌绮 - 是想你的声音啊.mp3', src: 'https://cloudflare.moonlord.cc/static/music/2020%20江偌绮%20-%20是想你的声音啊.mp3' },
+      { name: '2020 火羊瞌睡了 - 夏天的风.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2020%20火羊瞌睡了%20-%20夏天的风.m4a' },
+      { name: '2020 王艳薇 - 离开我的依赖.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2020%20王艳薇%20-%20离开我的依赖.m4a' },
+      { name: '2020 阿YueYue&戾格&小田音乐社 - 沈园外.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2020%20阿YueYue&戾格&小田音乐社%20-%20沈园外.m4a' },
+      { name: '2021 Joysaaaa - 你不明白.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2021%20Joysaaaa%20-%20你不明白.m4a' },
+      { name: '2021 yihuik苡慧 - 热恋冰淇淋.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20热恋冰淇淋.m4a' },
+      { name: '2021 yihuik苡慧 - 致你.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20致你.m4a' },
+      { name: '2021 刘梦妤Uu - 气象站台.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2021%20刘梦妤Uu%20-%20气象站台.m4a' },
+      { name: '2021 戴羽彤 - 来迟.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2021%20戴羽彤%20-%20来迟.m4a' },
+      { name: '2021 苏星婕 - 风吹过八千里.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2021%20苏星婕%20-%20风吹过八千里.m4a' },
+      { name: '2021 陈子晴 - 偏向.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2021%20陈子晴%20-%20偏向.m4a' },
+      { name: '2022 yihuik苡慧 - 麦浪.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2022%20yihuik苡慧%20-%20麦浪.m4a' },
+      { name: '2024 庄东茹 - 又活了一天.m4a', src: 'https://cloudflare.moonlord.cc/static/music/2024%20庄东茹%20-%20又活了一天.m4a' }
+    ];
     let songs = [];
 
-    // 取 URL 末段（百分号解码）作为显示文件名
-    function parseItem(item) {
-      const raw = (item && item.url && item.url[0]) || (item && item.file) || '';
-      let name = String(raw).split('/').pop() || raw;
-      try { name = decodeURIComponent(name); } catch (e) {}
-      return { name, src: raw };
-    }
-
-    async function loadSongs() {
-      try {
-        const res = await fetch(LIST_URL, { cache: 'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        songs = (Array.isArray(data) ? data : []).map(parseItem).filter(s => s.src);
-        renderList();
-        if (songs.length) {
-          load(0, true); // 默认进入页面直接播放第一首
-        } else {
-          titleEl.textContent = '列表为空';
-        }
-      } catch (e) {
-        titleEl.textContent = '列表加载失败：' + String(e && e.message ? e.message : e);
+    function loadSongs() {
+      songs = STATIC_SONGS;
+      renderList();
+      if (songs.length) {
+        load(0, true); // 默认进入页面直接播放第一首
+      } else {
+        titleEl.textContent = '列表为空';
       }
     }
 
