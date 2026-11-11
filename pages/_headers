@@ -1,0 +1,8 @@
+# Cloudflare Pages 响应头规则
+
+/static/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET,POST,OPTIONS,HEAD,PUT,DELETE
+  Access-Control-Allow-Headers: Content-Type,X-Requested-With
+  X-Content-Type-Options: nosniff
