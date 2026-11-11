@@ -202,7 +202,8 @@ $workerScript = @'
             $fileCount = [int64]$share.file_only_num
             $fileSize = [int64]$share.size
             $title = [string]$share.title
-            $time = [System.DateTimeOffset]::FromUnixTimeMilliseconds([int64]$share.created_at).ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
+            $fileTime = if ($share.first_file -and $share.first_file.updated_at) { $share.first_file.updated_at } else { $share.created_at }
+            $time = [System.DateTimeOffset]::FromUnixTimeMilliseconds([int64]$fileTime).ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
             $expiredAt = [int64]$share.expired_at
             if ($expiredAt -gt 0 -and $expiredAt -lt [System.DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) {
                 $reason = '链接已过期'
