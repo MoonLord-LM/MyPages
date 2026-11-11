@@ -348,10 +348,6 @@
     const PLAY_PATH = 'M8 5v14l11-7z';
     const PAUSE_PATH = 'M6 5h4v14H6zM14 5h4v14h-4z';
 
-    function escapeHtml(s) {
-      return String(s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-    }
-
     function fmt(t) {
       if (!isFinite(t) || t < 0) return '0:00';
       const m = Math.floor(t / 60);
@@ -364,17 +360,7 @@
     }
 
     function renderList() {
-      listEl.innerHTML = '';
-      songs.forEach((song, i) => {
-        const li = document.createElement('li');
-        li.className = 'song-item' + (i === current ? ' active' : '');
-        li.innerHTML =
-          '<span class="song-index">' + (i + 1) + '</span>' +
-          '<span class="song-title">' + escapeHtml(song.name) + '</span>' +
-          '<span class="song-dur" data-dur="' + i + '">—</span>';
-        li.addEventListener('click', () => playIndex(i));
-        listEl.appendChild(li);
-      });
+      songEls.forEach((li, i) => li.classList.toggle('active', i === current));
     }
 
     function clearLoad() {
@@ -427,7 +413,7 @@
       }
     }
 
-    // ---- 封面解析：MP3 读 ID3v2 APIC，M4A 读 MP4 covr 原子；解析失败则保留渐变占位 ----
+    // 封面解析：MP3 读 ID3v2 APIC，M4A 读 MP4 covr；解析失败保留渐变占位
     let coverUrl = null;
     function clearCover() {
       if (coverUrl) { try { URL.revokeObjectURL(coverUrl); } catch (e) {} coverUrl = null; }
