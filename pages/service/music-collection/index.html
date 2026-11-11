@@ -9,19 +9,21 @@
     .wrap h1 { font-size: 28px; color: #1f2328; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; margin-bottom: 24px; }
     .player {
       background: #fff; border: 1px solid #e3e8ef; border-radius: 16px;
-      padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,.06); margin-bottom: 28px;
-      display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+      padding: 18px 22px; box-shadow: 0 6px 20px rgba(0,0,0,.06); margin-bottom: 28px;
     }
+    .player-row { display: flex; align-items: center; gap: 16px; }
+    .controls { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
     .player-cover {
-      width: 120px; height: 120px; border-radius: 14px; flex: 0 0 auto;
+      width: 56px; height: 56px; border-radius: 10px; flex: 0 0 auto;
       background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
       display: flex; align-items: center; justify-content: center; color: #fff;
-      box-shadow: 0 8px 24px rgba(107,160,234,.35);
+      box-shadow: 0 4px 14px rgba(107,160,234,.3); overflow: hidden;
     }
-    .player-cover svg { width: 52px; height: 52px; }
-    .player-main { flex: 1 1 280px; min-width: 0; }
-    .player-title { font-size: 20px; font-weight: 600; color: #1f2328; margin-bottom: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .player-progress { display: flex; align-items: center; gap: 10px; }
+    .player-cover svg { width: 26px; height: 26px; }
+    .player-meta { flex: 1 1 auto; min-width: 0; }
+    .player-title { font-size: 16px; font-weight: 600; color: #1f2328; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-right { display: flex; align-items: center; gap: 18px; flex: 0 0 auto; margin-left: 12px; }
+    .player-progress { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
     .progress-track {
       position: relative; flex: 1; height: 6px; border-radius: 3px;
       background: #e3e8ef; cursor: pointer; touch-action: none;
@@ -39,9 +41,7 @@
       width: 14px; height: 14px; border-radius: 50%; background: #fff;
       border: 3px solid #6ba0ea; box-shadow: 0 1px 4px rgba(0,0,0,.2); pointer-events: none;
     }
-    .time { font-size: 12px; color: #59636e; font-variant-numeric: tabular-nums; min-width: 40px; text-align: center; }
-    .dl { font-size: 12px; color: #6ba0ea; font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
-    .player-controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 16px; }
+    .time { font-size: 12px; color: #59636e; font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; white-space: nowrap; }
     .ctrl-btn {
       border: none; background: transparent; cursor: pointer; color: #1f2328;
       display: flex; align-items: center; justify-content: center; padding: 0;
@@ -71,28 +71,44 @@
     .song-item.active .song-index { color: #4a72c4; }
     .song-title { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .song-dur { font-size: 12px; color: #8a949e; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
-    .player-volume { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; }
     .vol-btn {
       border: none; background: transparent; cursor: pointer; color: #1f2328;
       display: flex; align-items: center; justify-content: center; padding: 0;
     }
     .vol-btn svg { width: 24px; height: 24px; }
+    .vol-wrap { position: relative; display: flex; align-items: center; }
+    .vol-pop {
+      position: absolute; bottom: calc(100% + 14px); left: 50%; transform: translateX(-50%);
+      background: #fff; border: 1px solid #e3e8ef; border-radius: 12px; padding: 14px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.14); display: none; flex-direction: column;
+      align-items: center; gap: 10px;
+    }
+    .vol-pop.open { display: flex; }
+    .vol-pop::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 7px solid transparent; border-top-color: #fff;
+    }
     .vol-track {
-      position: relative; width: 120px; height: 6px; border-radius: 3px;
+      position: relative; width: 6px; height: 100px; border-radius: 3px;
       background: #e3e8ef; cursor: pointer; touch-action: none;
     }
     .vol-fill {
-      position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
-      border-radius: 3px; background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+      position: absolute; left: 0; right: 0; bottom: 0; height: 50%;
+      border-radius: 3px; background: linear-gradient(180deg, #9b6fe0, #6ba0ea);
     }
     .vol-thumb {
-      position: absolute; top: 50%; left: 100%; transform: translate(-50%, -50%);
+      position: absolute; left: 50%; bottom: 50%; transform: translate(-50%, 50%);
       width: 14px; height: 14px; border-radius: 50%; background: #fff;
       border: 3px solid #6ba0ea; box-shadow: 0 1px 4px rgba(0,0,0,.2); pointer-events: none;
     }
+    .loop-btn {
+      border: none; background: transparent; cursor: pointer; color: #1f2328;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .loop-btn svg { width: 24px; height: 24px; }
     @media (max-width: 560px) {
-      .player { flex-direction: column; text-align: center; }
-      .player-main { width: 100%; }
+      .player-row { flex-wrap: wrap; }
+      .player-right { margin-left: auto; }
     }
   </style>
 </head>
@@ -100,22 +116,8 @@
   <main class="wrap">
     <h1>音乐推荐</h1>
     <div class="player">
-      <div class="player-cover" id="cover">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
-      </div>
-      <div class="player-main">
-        <div class="player-title" id="title">未选择歌曲</div>
-        <div class="player-progress">
-          <span class="time" id="cur">0:00</span>
-          <div class="progress-track" id="track">
-            <div class="progress-buffer" id="buffer"></div>
-            <div class="progress-fill" id="fill"></div>
-            <div class="progress-thumb" id="thumb"></div>
-          </div>
-          <span class="time" id="dur">0:00</span>
-          <span class="dl" id="pct">0%</span>
-        </div>
-        <div class="player-controls">
+      <div class="player-row">
+        <div class="controls">
           <button class="ctrl-btn" id="prev" aria-label="上一首">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
           </button>
@@ -126,15 +128,36 @@
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 0l8.5 6-8.5 6z"/></svg>
           </button>
         </div>
-        <div class="player-volume">
-          <button class="vol-btn" id="mute" aria-label="静音/取消静音">
-            <svg viewBox="0 0 24 24" fill="currentColor" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
-          </button>
-          <div class="vol-track" id="volTrack">
-            <div class="vol-fill" id="volFill"></div>
-            <div class="vol-thumb" id="volThumb"></div>
-          </div>
+        <div class="player-cover" id="cover">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
         </div>
+        <div class="player-meta">
+          <div class="player-title" id="title">未选择歌曲</div>
+        </div>
+        <div class="player-right">
+          <div class="vol-wrap">
+            <button class="vol-btn" id="mute" aria-label="音量">
+              <svg viewBox="0 0 24 24" fill="currentColor" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
+            </button>
+            <div class="vol-pop" id="volPop">
+              <div class="vol-track" id="volTrack">
+                <div class="vol-fill" id="volFill"></div>
+                <div class="vol-thumb" id="volThumb"></div>
+              </div>
+            </div>
+          </div>
+          <button class="loop-btn" id="loop" aria-label="循环模式">
+            <svg viewBox="0 0 24 24" fill="currentColor" id="loopIcon"></svg>
+          </button>
+        </div>
+      </div>
+      <div class="player-progress">
+        <div class="progress-track" id="track">
+          <div class="progress-buffer" id="buffer"></div>
+          <div class="progress-fill" id="fill"></div>
+          <div class="progress-thumb" id="thumb"></div>
+        </div>
+        <span class="time" id="time">0:00 / 0:00</span>
       </div>
     </div>
     <ul class="song-list" id="list"></ul>
@@ -144,7 +167,7 @@
     const LIST_URL = 'https://cloudflare.moonlord.cc/static/static.json';
     let songs = [];
 
-    // 直接用 URL 末段作为文件名（百分号编码解码即可，保留原始文件名含扩展名）
+    // 取 URL 末段（百分号解码）作为显示文件名
     function parseItem(item) {
       const raw = (item && item.url && item.url[0]) || (item && item.file) || '';
       let name = String(raw).split('/').pop() || raw;
@@ -158,12 +181,12 @@
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         songs = (Array.isArray(data) ? data : []).map(parseItem).filter(s => s.src);
+        renderList();
         if (songs.length) {
-          titleEl.textContent = '共 ' + songs.length + ' 首，点击歌曲开始播放';
+          load(0, true); // 默认进入页面直接播放第一首
         } else {
           titleEl.textContent = '列表为空';
         }
-        renderList();
       } catch (e) {
         titleEl.textContent = '列表加载失败：' + String(e && e.message ? e.message : e);
       }
@@ -171,23 +194,25 @@
 
     const audio = document.getElementById('audio');
     const titleEl = document.getElementById('title');
-    const curEl = document.getElementById('cur');
-    const durEl = document.getElementById('dur');
     const track = document.getElementById('track');
     const fill = document.getElementById('fill');
     const buffer = document.getElementById('buffer');
-    const pctEl = document.getElementById('pct');
     const thumb = document.getElementById('thumb');
+    const timeEl = document.getElementById('time');
     const playBtn = document.getElementById('play');
     const playIcon = document.getElementById('playIcon');
     const prevBtn = document.getElementById('prev');
     const nextBtn = document.getElementById('next');
     const listEl = document.getElementById('list');
+    const coverEl = document.getElementById('cover');
     const muteBtn = document.getElementById('mute');
     const volIcon = document.getElementById('volIcon');
     const volTrack = document.getElementById('volTrack');
     const volFill = document.getElementById('volFill');
     const volThumb = document.getElementById('volThumb');
+    const volPop = document.getElementById('volPop');
+    const loopBtn = document.getElementById('loop');
+    const loopIcon = document.getElementById('loopIcon');
 
     let current = -1;
     let dragging = false;
@@ -206,6 +231,10 @@
       const m = Math.floor(t / 60);
       const s = Math.floor(t % 60);
       return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function updateTimeLabel() {
+      timeEl.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
     }
 
     function renderList() {
@@ -240,8 +269,7 @@
       return out;
     }
 
-    // m4a 的 moov 原子在前（faststart）时，元数据就绪即可开播；
-    // 在尾部时（当前文件）需等到下载接近完成，浏览器才能解析出时长
+    // m4a 的 moov 原子含元数据：在前(faststart)可提前开播，在尾部需下载接近完成
     function moovComplete(ld) {
       const buf = concatChunks(ld.chunks);
       let p = 0;
@@ -258,10 +286,9 @@
     function updateDownload(ld) {
       const pct = ld.total ? ld.received / ld.total : 0;
       buffer.style.width = (pct * 100) + '%';
-      pctEl.textContent = ld.total ? Math.floor(pct * 100) + '%' : (ld.received / 1048576).toFixed(1) + 'MB';
     }
 
-    // 原生流式：根据 audio.buffered 显示已缓冲进度（浏览器边下边播，无法直接拿到字节百分比）
+    // 原生流式：按 audio.buffered 更新缓冲条
     function updateNativeBuffer() {
       const ld = activeLoad;
       if (!ld || !ld.native) return;
@@ -269,15 +296,145 @@
       if (b && b.length) {
         const end = b.end(b.length - 1);
         const total = audio.duration && isFinite(audio.duration) ? audio.duration : 0;
-        if (total) {
-          const pct = Math.min(1, end / total) * 100;
-          buffer.style.width = pct + '%';
-          pctEl.textContent = Math.floor(pct) + '%';
-        } else {
-          buffer.style.width = '0%';
-          pctEl.textContent = '…';
-        }
+        if (total) buffer.style.width = Math.min(1, end / total) * 100 + '%';
+        else buffer.style.width = '0%';
       }
+    }
+
+    // ---- 封面解析：MP3 读 ID3v2 APIC，M4A 读 MP4 covr 原子；解析失败则保留渐变占位 ----
+    let coverUrl = null;
+    function clearCover() {
+      if (coverUrl) { try { URL.revokeObjectURL(coverUrl); } catch (e) {} coverUrl = null; }
+      coverEl.style.backgroundImage = '';
+      coverEl.style.backgroundSize = '';
+      coverEl.style.backgroundPosition = '';
+      const svg = coverEl.querySelector('svg');
+      if (svg) svg.style.display = '';
+    }
+    function showCover(blob) {
+      if (!blob) return;
+      if (coverUrl) { try { URL.revokeObjectURL(coverUrl); } catch (e) {} }
+      coverUrl = URL.createObjectURL(blob);
+      coverEl.style.backgroundImage = 'url("' + coverUrl + '")';
+      coverEl.style.backgroundSize = 'cover';
+      coverEl.style.backgroundPosition = 'center';
+      const svg = coverEl.querySelector('svg');
+      if (svg) svg.style.display = 'none';
+    }
+    function synchsafe(a, b, c, d) {
+      return ((a & 0x7f) << 21) | ((b & 0x7f) << 14) | ((c & 0x7f) << 7) | (d & 0x7f);
+    }
+    function parseID3Cover(buf) {
+      if (buf.length < 10) return null;
+      if (String.fromCharCode(buf[0], buf[1], buf[2]) !== 'ID3') return null;
+      const major = buf[3];
+      const flags = buf[5];
+      let offset = 10;
+      if (flags & 0x40) {
+        if (major >= 4) offset += synchsafe(buf[10], buf[11], buf[12], buf[13]);
+        else offset += (buf[10] << 24) | (buf[11] << 16) | (buf[12] << 8) | buf[13];
+      }
+      const tagEnd = 10 + synchsafe(buf[6], buf[7], buf[8], buf[9]);
+      while (offset + 10 <= tagEnd && offset + 10 <= buf.length) {
+        let id, fsize, fstart;
+        if (major === 2) {
+          id = String.fromCharCode(buf[offset], buf[offset + 1], buf[offset + 2]);
+          fsize = (buf[offset + 3] << 16) | (buf[offset + 4] << 8) | buf[offset + 5];
+          fstart = offset + 6;
+        } else {
+          id = String.fromCharCode(buf[offset], buf[offset + 1], buf[offset + 2], buf[offset + 3]);
+          if (major >= 4) fsize = synchsafe(buf[offset + 4], buf[offset + 5], buf[offset + 6], buf[offset + 7]);
+          else fsize = (buf[offset + 4] << 24) | (buf[offset + 5] << 16) | (buf[offset + 6] << 8) | buf[offset + 7];
+          fstart = offset + 10;
+        }
+        if (fsize <= 0) break;
+        if (id === 'APIC' || id === 'PIC') return parseAPIC(buf.subarray(fstart, fstart + fsize), major);
+        offset = fstart + fsize;
+      }
+      return null;
+    }
+    function parseAPIC(data, major) {
+      let p = 0;
+      const enc = data[p++];
+      if (major === 2) {
+        p += 3;
+        p += 1;
+      } else {
+        let mimeEnd = p;
+        while (mimeEnd < data.length && data[mimeEnd] !== 0) mimeEnd++;
+        p = mimeEnd + 1;
+        p += 1;
+      }
+      if (enc === 1 || enc === 2) {
+        while (p + 1 < data.length && !(data[p] === 0 && data[p + 1] === 0)) p += 2;
+        p += 2;
+      } else {
+        while (p < data.length && data[p] !== 0) p++;
+        p += 1;
+      }
+      const img = data.subarray(p);
+      if (img.length < 8) return null;
+      let mime = 'image/jpeg';
+      if (img[0] === 0x89 && img[1] === 0x50) mime = 'image/png';
+      return new Blob([img], { type: mime });
+    }
+    function findMp4Cover(bytes) {
+      const v = bytes;
+      if (String.fromCharCode(v[4], v[5], v[6], v[7]) !== 'ftyp') return null;
+      const CONTAINERS = { moov: 1, trak: 1, mdia: 1, minf: 1, stbl: 1, edts: 1, udta: 1, meta: 1, ilst: 1 };
+      function walk(start, end) {
+        let off = start;
+        while (off + 8 <= end) {
+          let size = (v[off] << 24) | (v[off + 1] << 16) | (v[off + 2] << 8) | v[off + 3];
+          if (size === 0) size = end - off;
+          if (size === 1) break;
+          if (size < 8) break;
+          const type = String.fromCharCode(v[off + 4], v[off + 5], v[off + 6], v[off + 7]);
+          if (type === 'covr') return extractCovr(v, off + 8, off + size);
+          if (CONTAINERS[type]) {
+            let child = off + 8;
+            if (type === 'meta') child += 4;
+            const r = walk(child, off + size);
+            if (r) return r;
+          }
+          off += size;
+        }
+        return null;
+      }
+      return walk(0, bytes.length);
+    }
+    function extractCovr(v, start, end) {
+      let off = start;
+      while (off + 8 <= end) {
+        let size = (v[off] << 24) | (v[off + 1] << 16) | (v[off + 2] << 8) | v[off + 3];
+        if (size < 8) break;
+        const type = String.fromCharCode(v[off + 4], v[off + 5], v[off + 6], v[off + 7]);
+        if (type === 'data') {
+          const img = v.subarray(off + 16, off + size);
+          if (img.length > 8) {
+            let mime = 'image/jpeg';
+            if (img[0] === 0x89 && img[1] === 0x50) mime = 'image/png';
+            return new Blob([img], { type: mime });
+          }
+        }
+        off += size;
+      }
+      const raw = v.subarray(start, end);
+      if (raw.length > 8) {
+        let mime = 'image/jpeg';
+        if (raw[0] === 0x89) mime = 'image/png';
+        return new Blob([raw], { type: mime });
+      }
+      return null;
+    }
+    async function fetchMp3Cover(src) {
+      try {
+        const res = await fetch(src, { headers: { Range: 'bytes=0-4194303' } });
+        if (res.status !== 206) { try { res.body && res.body.cancel(); } catch (e) {} return; } // 不支持 Range 则不下载整文件
+        const buf = new Uint8Array(await res.arrayBuffer());
+        const cover = parseID3Cover(buf);
+        if (cover) showCover(cover);
+      } catch (e) {}
     }
 
     function makeBlobUrl(ld) {
@@ -327,42 +484,42 @@
       }
     }
 
-    // 可原生流式播放的格式：元数据在前、可按帧即时解码，交给浏览器 <audio> 原生流式播放，
-    // 实现真正的边下边播、按需缓冲、拖拽跳转（依赖服务端 Range 支持）
+    // 原生可流式格式：元数据在前、按帧解码，交给浏览器 <audio> 原生边下边播
     function isNativeStreamable(src) {
       return /\.(mp3|ogg|oga|opus|webm|wav|aac|flac)(?:[?#]|$)/i.test(src || '');
     }
 
-    // 统一入口：mp3/ogg 等原生可流式格式走浏览器原生流式；m4a/mp4 等需探测 moov 的格式走 fetch 分块
+    // 入口：原生可流式格式走浏览器，m4a/mp4 走 fetch 分块
     function load(i, autoplay) {
       if (isNativeStreamable(songs[i] && songs[i].src)) loadNative(i, autoplay);
       else loadFetch(i, autoplay);
     }
 
-    // 原生流式播放：直接设置 audio.src，由浏览器接管下载/解码/缓冲，边下边播
+    // 原生流式：直接设 audio.src，交给浏览器接管下载/解码/缓冲
     function loadNative(i, autoplay) {
       current = i;
       const song = songs[i];
       clearLoad();
+      clearCover();
       titleEl.textContent = song.name;
-      curEl.textContent = '0:00';
-      durEl.textContent = '0:00';
       fill.style.width = '0%';
       thumb.style.left = '0%';
       buffer.style.width = '0%';
-      pctEl.textContent = '…';
+      timeEl.textContent = '0:00 / 0:00';
       renderList();
       activeLoad = { native: true, started: false };
       audio.src = song.src;
       audio.currentTime = 0;
+      fetchMp3Cover(song.src);
       if (autoplay) { activeLoad.started = true; audio.play().catch(() => {}); }
     }
 
-    // 流式拉取音频：边下边显示下载百分比；moov 就绪即开播（faststart 可提前播），否则下完再播
+    // m4a/mp4：fetch 分块下载，moov 就绪即开播，否则下完再播
     async function loadFetch(i, autoplay) {
       current = i;
       const song = songs[i];
       clearLoad();
+      clearCover();
       const ld = {
         chunks: [], received: 0, total: 0, objectUrl: null,
         started: false, complete: false, playing: !!autoplay,
@@ -370,12 +527,10 @@
       };
       activeLoad = ld;
       titleEl.textContent = song.name;
-      curEl.textContent = '0:00';
-      durEl.textContent = '0:00';
       fill.style.width = '0%';
       thumb.style.left = '0%';
       buffer.style.width = '0%';
-      pctEl.textContent = '0%';
+      timeEl.textContent = '0:00 / 0:00';
       renderList();
 
       const controller = new AbortController();
@@ -397,7 +552,8 @@
         ld.complete = true;
         if (!ld.started) startPlayback(ld);
         else extendIfNeeded(ld, true);
-        pctEl.textContent = '';
+        const cover = findMp4Cover(concatChunks(ld.chunks));
+        if (cover) showCover(cover);
       } catch (e) {
         if (e && e.name === 'AbortError') return;
         titleEl.textContent = '加载失败：' + String(e && e.message ? e.message : e);
@@ -423,8 +579,32 @@
     const VOL_LOW  = 'M3 9v6h4l5 5V4L7 9H3zm10.5 3a4.5 4.5 0 0 0-.5-2.03v4.06A4.5 4.5 0 0 0 13.5 12z';
     const VOL_MUTE = 'M3 9v6h4l5 5V4L7 9H3zm13.59 3l2.7-2.7-1.41-1.42-2.7 2.71-2.71-2.71-1.41 1.42 2.7 2.7-2.7 2.71 1.41 1.41 2.71-2.7 2.7 2.7 1.41-1.41-2.7-2.71z';
 
-    let volume = 1;
-    let lastVolume = 1;
+    const LOOP_LIST = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>';
+    const LOOP_SINGLE = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/><text x="12" y="15.5" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor">1</text>';
+    const LOOP_RANDOM = '<path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>';
+
+    let loopMode = 'list'; // 循环模式：list(列表) | single(单曲) | random(随机)，默认列表循环
+
+    function updateLoopIcon() {
+      const icon = loopMode === 'list' ? LOOP_LIST : (loopMode === 'single' ? LOOP_SINGLE : LOOP_RANDOM);
+      loopIcon.innerHTML = icon;
+      loopBtn.setAttribute('aria-label', loopMode === 'list' ? '列表循环' : (loopMode === 'single' ? '单曲循环' : '随机循环'));
+    }
+
+    function cycleLoop() {
+      loopMode = loopMode === 'list' ? 'single' : (loopMode === 'single' ? 'random' : 'list');
+      updateLoopIcon();
+    }
+
+    function randomIndex() {
+      if (songs.length <= 1) return current;
+      let i;
+      do { i = Math.floor(Math.random() * songs.length); } while (i === current);
+      return i;
+    }
+
+    let volume = 0.5;
+    let lastVolume = 0.5;
 
     function updateVolIcon() {
       const path = volume === 0 ? VOL_MUTE : (volume < 0.5 ? VOL_LOW : VOL_HIGH);
@@ -437,19 +617,25 @@
       audio.volume = v;
       if (v > 0) lastVolume = v;
       const w = (v * 100) + '%';
-      volFill.style.width = w;
-      volThumb.style.left = w;
+      volFill.style.height = w;
+      volThumb.style.bottom = w;
       updateVolIcon();
     }
 
     function setVolumeFromEvent(e) {
       const rect = volTrack.getBoundingClientRect();
-      let ratio = (e.clientX - rect.left) / rect.width;
+      let ratio = 1 - (e.clientY - rect.top) / rect.height;
       setVolume(Math.min(1, Math.max(0, ratio)));
     }
 
-    muteBtn.addEventListener('click', () => {
-      setVolume(volume > 0 ? 0 : (lastVolume > 0 ? lastVolume : 1));
+    muteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      volPop.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (volPop.classList.contains('open') && !volPop.contains(e.target) && !muteBtn.contains(e.target)) {
+        volPop.classList.remove('open');
+      }
     });
     volTrack.addEventListener('pointerdown', (e) => {
       volDragging = true;
@@ -476,7 +662,7 @@
       const w = (Math.min(1, Math.max(0, r2)) * 100) + '%';
       fill.style.width = w;
       thumb.style.left = w;
-      curEl.textContent = fmt(target);
+      updateTimeLabel();
     }
 
     audio.addEventListener('play', () => { if (activeLoad) activeLoad.started = true; setPlayIcon(true); });
@@ -491,27 +677,29 @@
       const ratio = audio.duration ? (audio.currentTime / audio.duration) : 0;
       fill.style.width = (ratio * 100) + '%';
       thumb.style.left = (ratio * 100) + '%';
-      curEl.textContent = fmt(audio.currentTime);
+      updateTimeLabel();
     });
     audio.addEventListener('loadedmetadata', () => {
-      durEl.textContent = fmt(audio.duration);
+      updateTimeLabel();
       const durSpan = listEl.querySelector('[data-dur="' + current + '"]');
       if (durSpan) durSpan.textContent = fmt(audio.duration);
     });
     audio.addEventListener('ended', () => {
-      const next = (current + 1) % songs.length;
-      load(next, true);
+      if (loopMode === 'single') { load(current, true); return; }
+      if (loopMode === 'random') { load(randomIndex(), true); return; }
+      load((current + 1) % songs.length, true);
     });
 
     playBtn.addEventListener('click', togglePlay);
     prevBtn.addEventListener('click', () => {
-      const i = (current - 1 + songs.length) % songs.length;
-      load(i, true);
+      if (loopMode === 'random') { load(randomIndex(), true); return; }
+      load((current - 1 + songs.length) % songs.length, true);
     });
     nextBtn.addEventListener('click', () => {
-      const i = (current + 1) % songs.length;
-      load(i, true);
+      if (loopMode === 'random') { load(randomIndex(), true); return; }
+      load((current + 1) % songs.length, true);
     });
+    loopBtn.addEventListener('click', cycleLoop);
 
     track.addEventListener('pointerdown', (e) => {
       dragging = true;
@@ -522,7 +710,8 @@
     track.addEventListener('pointerup', () => { dragging = false; });
     track.addEventListener('pointercancel', () => { dragging = false; });
 
-    setVolume(1);
+    setVolume(0.5);
+    updateLoopIcon();
     loadSongs();
   </script>
 </body>
