@@ -67,7 +67,6 @@ $threadCount = 50
 [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 $urlPattern = '^https://pan\.quark\.cn/s/([A-Za-z0-9]+)$'
-$extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
 $sites = @(
     @{ Host = 'soquark.com';   Base = 'https://www.soquark.com/d/';   Start = 1 },
@@ -79,57 +78,127 @@ $stopFails = 100
 $rawLinks = [System.Collections.Generic.List[string]]::new()
 $collectedSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
+$collectScript = {
+    param($base, $num, $headers)
+    [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $ProgressPreference = 'SilentlyContinue'
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+    $uri = $base + $num + '.html'
+    $result = [pscustomobject]@{
+        num      = $num
+        ok       = $false
+        links    = [System.Collections.Generic.List[string]]::new()
+        hasBaidu = $false
+        message  = ''
+    }
+    try {
+        $resp = Invoke-WebRequest -Uri $uri -Headers $headers -TimeoutSec 30 -UseBasicParsing -MaximumRedirection 0 -ErrorAction Stop
+        $html = [string]$resp.Content
+        if ([int]$resp.StatusCode -ne 200) {
+            $result.message = '状态码 ' + $resp.StatusCode + ' 非 200'
+        } else {
+            $m = [regex]::Matches($html, 'https://pan\.quark\.cn/s/[A-Za-z0-9]+')
+            $result.hasBaidu = [regex]::IsMatch($html, 'https://pan\.baidu\.com/s/[A-Za-z0-9]+')
+            if ($m.Count -eq 0 -and -not $result.hasBaidu) {
+                $result.message = '200 但无夸克/百度链接'
+            } else {
+                $result.ok = $true
+                foreach ($x in $m) { [void]$result.links.Add($x.Value) }
+            }
+        }
+    } catch {
+        $result.message = $_.Exception.Message
+    }
+    return $result
+}
+
+$pool = [runspacefactory]::CreateRunspacePool(1, $threadCount)
+$pool.Open()
+
 foreach ($site in $sites) {
     $base = $site.Base
-    $num = $site.Start - 1
+    $num = $site.Start
+    $verified = $site.Start
     $consecutiveFails = 0
+    $stop = $false
+    $inFlight = [System.Collections.Generic.List[object]]::new()
+    $results = @{}
     Write-Host ('开始采集站点 ' + $base)
-    while ($true) {
-        $num++
-        $uri = $base + $num + '.html'
-        $fail = $false
-        $m = $null
+    while (-not $stop) {
+        while ($inFlight.Count -lt $threadCount -and -not $stop) {
+            $ps = [powershell]::Create()
+            $ps.RunspacePool = $pool
+            [void]$ps.AddScript($collectScript).AddArgument($base).AddArgument($num).AddArgument($headers)
+            [void]$inFlight.Add([pscustomobject]@{ Pipe = $ps; Handle = $ps.BeginInvoke(); num = $num })
+            $num++
+        }
+        $done = $null
+        foreach ($job in $inFlight) {
+            if ($job.Handle.IsCompleted) { $done = $job; break }
+        }
+        if ($null -eq $done) { Start-Sleep -Milliseconds 20; continue }
+        [void]$inFlight.Remove($done)
+        $res = $null
         try {
-            $resp = Invoke-WebRequest -Uri $uri -Headers $headers -TimeoutSec 30 -UseBasicParsing -MaximumRedirection 0
-            $html = [string]$resp.Content
-            if ([int]$resp.StatusCode -ne 200) {
-                $fail = $true
-                Write-Host ('  页面 ' + $num + ' 状态码 ' + $resp.StatusCode + ' 非 200') -ForegroundColor Red
+            $out = $done.Pipe.EndInvoke($done.Handle)
+            if ($out.Count -gt 0) { $res = $out[$out.Count - 1] }
+        } catch {
+            $res = $null
+        } finally {
+            $done.Pipe.Dispose()
+        }
+        if ($null -eq $res) {
+            $res = [pscustomobject]@{ num = $done.num; ok = $false; links = [System.Collections.Generic.List[string]]::new(); hasBaidu = $false; message = '处理失败' }
+        }
+        $results[$res.num] = $res
+        while ($results.ContainsKey($verified)) {
+            $r = $results[$verified]
+            if ($r.ok) {
+                $consecutiveFails = 0
+                foreach ($lk in $r.links) {
+                    if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add($lk) }
+                }
+                if ($r.links.Count -gt 0) {
+                    Write-Host ('页面 ' + $r.num + ' 采集到 ' + $r.links.Count + ' 条')
+                } else {
+                    Write-Host ('页面 ' + $r.num + ' 含百度链接')
+                }
             } else {
-                $m = [regex]::Matches($html, $extractPattern)
-                $hasBaidu = $html -match 'pan\.baidu\.com/s/[A-Za-z0-9]+'
-                if ($m.Count -eq 0 -and -not $hasBaidu) {
-                    $fail = $true
-                    Write-Host ('  页面 ' + $num + ' 200 但无夸克/百度链接') -ForegroundColor Red
+                $consecutiveFails++
+                Write-Host ('页面 ' + $r.num + ' ' + $r.message)
+                if ($consecutiveFails -ge $stopFails) {
+                    Write-Host ('站点 ' + $base + ' 连续 ' + $consecutiveFails + ' 次失败，结束该站点')
+                    $stop = $true
+                    break
                 }
             }
-        } catch {
-            $fail = $true
-            Write-Host ('  页面 ' + $num + ' 非 200 / 重定向: ' + $_.Exception.Message) -ForegroundColor Red
+            [void]$results.Remove($verified)
+            $verified++
         }
-        if ($fail) {
-            $consecutiveFails++
-            if ($consecutiveFails -ge $stopFails) {
-                Write-Host ('站点 ' + $base + ' 连续 ' + $consecutiveFails + ' 次失败，结束该站点') -ForegroundColor Red
-                break
-            }
-        } else {
-            $consecutiveFails = 0
-            foreach ($x in $m) {
-                if ($collectedSeen.Add($x.Value)) { [void]$rawLinks.Add($x.Value) }
-            }
-            if (($num % 100) -eq 0) {
-                Write-Host ('  已采集到 ' + $num + ' 页，累计 ' + $rawLinks.Count + ' 条')
+    }
+    foreach ($job in $inFlight) {
+        try { $job.Handle.AsyncWaitHandle.WaitOne(60000) } catch {}
+        try {
+            $out = $job.Pipe.EndInvoke($job.Handle)
+            if ($out.Count -gt 0) { $res = $out[$out.Count - 1] } else { $res = $null }
+        } catch { $res = $null } finally { $job.Pipe.Dispose() }
+        if ($null -eq $res) { continue }
+        if ($res.ok) {
+            foreach ($lk in $res.links) {
+                if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add($lk) }
             }
         }
     }
     Write-Host ('站点 ' + $base + ' 采集完成，累计 ' + $rawLinks.Count + ' 条')
     Write-Host ''
 }
-Write-Host ('全部站点采集结束，累计提取 ' + $rawLinks.Count + ' 条唯一夸克链接')
+
+$pool.Close()
+$pool.Dispose()
+Write-Host ('全部站点采集结束，累计提取 ' + $rawLinks.Count + ' 条夸克资源链接')
 Write-Host ''
 if ($rawLinks.Count -eq 0) {
-    Write-Host '未提取到夸克分享链接'
+    Write-Host '未提取到夸克资源链接'
     exit 0
 }
 
