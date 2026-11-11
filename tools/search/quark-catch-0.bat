@@ -10,6 +10,8 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 powershell -NoProfile -Command "Write-Host '解析当前目录下的 txt 文件' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '从文件内容中提取夸克网盘分享链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '可手动复制保存 https://www.kdocs.cn/l/cawB2PIrZPaq' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '可手动复制保存 https://www.kdocs.cn/l/cpYeXcTFzxq4' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '有效的完整信息保存到 quark.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '在 quark.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
