@@ -177,7 +177,7 @@ foreach ($site in $sites) {
         }
     }
     foreach ($job in $inFlight) {
-        try { $job.Handle.AsyncWaitHandle.WaitOne(60000) } catch {}
+        try { [void]$job.Handle.AsyncWaitHandle.WaitOne(60000) } catch {}
         try {
             $out = $job.Pipe.EndInvoke($job.Handle)
             if ($out.Count -gt 0) { $res = $out[$out.Count - 1] } else { $res = $null }
