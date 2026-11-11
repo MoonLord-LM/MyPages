@@ -644,7 +644,11 @@
       activeLoad = { native: true, started: false };
       audio.src = song.src;
       audio.currentTime = 0;
-      fetchMp3Cover(song.src, ++coverToken);
+      // 先保证播放流；封面图延后到浏览器空闲再拉，避免与音频开头下载抢带宽。
+      // 立即递增 token，使切歌发生在 idle 回调前也能让旧封面请求失效。
+      const coverTok = ++coverToken;
+      const idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 600); };
+      idle(function () { fetchMp3Cover(song.src, coverTok); }, { timeout: 2000 });
       if (autoplay) { activeLoad.started = true; audio.play().catch(() => {}); }
     }
 
