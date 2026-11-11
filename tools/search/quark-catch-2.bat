@@ -103,7 +103,7 @@ foreach ($ch in $tgChannels) {
     Write-Host ''
 }
 if ($rawLinks.Count -eq 0) {
-    Write-Host '未提取到夸克分享链接'
+    Write-Host '未提取到夸克资源链接'
     exit 0
 }
 
