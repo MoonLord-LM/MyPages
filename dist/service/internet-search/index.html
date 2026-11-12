@@ -243,7 +243,7 @@ body { overflow-x: clip; }
     // 搜索字段的优先级：命中越靠前的字段，结果排得越前
     const SEARCH_FIELDS = ['title', 'url', 'time', 'size', 'count'];
 
-    // file_size 由 quark-check.bat 写入，单位为字节
+    // file_size 由 quark-update.bat 写入，单位为字节
     function formatSize(value) {
       if (value === null || value === undefined || value === '') return '—';
       const bytes = Number(value);
@@ -285,7 +285,7 @@ body { overflow-x: clip; }
       statusEl.className = 'status' + (isErr ? ' err' : '');
     }
 
-    // gzip 由 quark-check.bat 生成，解压使用浏览器原生 DecompressionStream
+    // gzip 由 quark-update.bat 生成，解压使用浏览器原生 DecompressionStream
     async function ungzipJson(buffer) {
       if (typeof DecompressionStream === 'undefined') throw new Error('浏览器不支持 gzip 解压');
       const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'));
@@ -319,7 +319,7 @@ body { overflow-x: clip; }
       return value === null || value === undefined ? '' : String(value).trim();
     }
 
-    // 站点数据由 quark-check.bat 生成，每条固定为 url / title / time / file_count / file_size
+    // 站点数据由 quark-update.bat 生成，每条固定为 url / title / time / file_count / file_size
     function normalize(record) {
       if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
       const time = str(record.time) || '—';
