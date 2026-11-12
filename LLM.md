@@ -18,7 +18,7 @@
 由于 GitHub 仓库大小有限制，因此一些大的静态资源，只在 CloudFlare Pages 上托管部署  
 手动上传网址 https://dash.cloudflare.com/2d295aefa3699c7b878cf0468beaf53e/pages/view/moonlord/deployments/new  
 部署后，使用 https://cloudflare.moonlord.cc/static/* 的链接，访问静态资源文件  
-另外，手动维护了一份 [static.json](https://cloudflare.moonlord.cc/static/static.json) 静态资源清单文件  
+另外，手动维护了一份 [list.json](https://cloudflare.moonlord.cc/static/list.json) 静态资源清单文件  
 
 # TODO
 
