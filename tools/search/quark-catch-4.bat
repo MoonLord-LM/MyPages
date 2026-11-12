@@ -114,7 +114,7 @@ function Invoke-Pool([string]$WorkerScript, [System.Collections.Generic.Queue[st
 }
 $httpGet = @'
 function Get-PageText([string]$url, [string]$accept) {
-    $ok = $false; $text = ''; $message = ''
+    $ok = $false; $text = ''; $message = ''; $finalUrl = ''
     $ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36'
     for ($try = 1; $try -le 3; $try++) {
         $resp = $null; $reader = $null
@@ -130,6 +130,7 @@ function Get-PageText([string]$url, [string]$accept) {
             $req.MaximumAutomaticRedirections = 10
             $req.AutomaticDecompression = [System.Net.DecompressionMethods]::Gzip -bor [System.Net.DecompressionMethods]::Deflate
             $resp = $req.GetResponse()
+            $finalUrl = $resp.ResponseUri.AbsoluteUri
             $reader = New-Object System.IO.StreamReader($resp.GetResponseStream(), [System.Text.Encoding]::UTF8, $false, 8192)
             $text = $reader.ReadToEnd()
             $ok = $true
@@ -142,7 +143,7 @@ function Get-PageText([string]$url, [string]$accept) {
             if ($resp) { try { $resp.Close() } catch {} }
         }
     }
-    return [pscustomobject]@{ Ok = $ok; Text = $text; Message = $message }
+    return [pscustomobject]@{ Ok = $ok; Text = $text; Message = $message; FinalUrl = $finalUrl }
 }
 '@
 
@@ -170,6 +171,12 @@ $pageWorker = @'
     $siteBase = [System.Uri]::new('https://1000n.com/')
     $r = Get-PageText $url 'text/html,application/xhtml+xml,*/*;q=0.8'
     $ok = $r.Ok; $text = $r.Text; $message = $r.Message
+    $finalHost = $null
+    try { $finalHost = ([System.Uri]$r.FinalUrl).Host } catch {}
+    if ($ok -and $finalHost -and $finalHost -notmatch '(^|\.)1000n\.com$') {
+        $ok = $false
+        $message = '重定向到站外，已跳过: ' + $r.FinalUrl
+    }
     $quarks = [System.Collections.Generic.List[string]]::new()
     $subs = [System.Collections.Generic.List[string]]::new()
     if ($ok) {
@@ -258,8 +265,9 @@ $onPage = {
             $stat.PageFail++
         }
     }
-    if (($n % $pageLog) -eq 0) {
-        Write-Host ('已采集 ' + $n + '/' + ($pageQueue.Count + $n) + ' 页，发现夸克链接 ' + $quarkSeen.Count + ' 条')
+    $donePages = $stat.PageOk + $stat.PageFail
+    if (($donePages % $pageLog) -eq 0) {
+        Write-Host ('已采集 ' + $donePages + ' 页（已发现 ' + $pageSeen.Count + ' 个，队列剩余 ' + $pageQueue.Count + '），发现夸克链接 ' + $quarkSeen.Count + ' 条')
     }
 }
 
