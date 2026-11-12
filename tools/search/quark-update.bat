@@ -11,6 +11,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 powershell -NoProfile -Command "Write-Host '检查 quark.json 中的夸克网盘资源链接，记录链接有效状态' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '已失效的，以及 3 天内已检查过是有效的，不做处理' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '按检查结果生成站点搜索数据 gz 文件，并按天生成资源收录页面' -ForegroundColor Green"
 echo.
 
 
@@ -39,7 +40,9 @@ if !errorlevel! neq 0 (
 
 
 set "json_file=!script_dir!data\quark.json"
-set "out_gzip=!script_dir!..\..\pages\service\internet-search\assets\pan-quark-cn.gz"
+set "out_dir=!script_dir!..\..\dist\static\search"
+set "out_file_name=pan-quark-cn"
+set "page_dir=!script_dir!..\..\pages\service\internet-search\quark"
 if not exist "!json_file!" (
     echo 错误：未找到数据文件 "!json_file!"
     echo.
@@ -83,7 +86,9 @@ exit /b
 $ProgressPreference = 'SilentlyContinue'
 
 $jsonPath = $env:json_file
-$outGzip = [System.IO.Path]::GetFullPath($env:out_gzip)
+$outDir = [System.IO.Path]::GetFullPath($env:out_dir)
+$pageDir = [System.IO.Path]::GetFullPath($env:page_dir)
+$outFileName = $env:out_file_name
 $api = 'https://drive-h.quark.cn/1/clouddrive/share/sharepage'
 $headers = @{
     'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36';
@@ -96,6 +101,29 @@ $skipHours = 72
 $threadCount = 50
 [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 $utf8 = [System.Text.UTF8Encoding]::new($false)
+
+function Escape-Md([string]$text) {
+    $t = $text.Replace("`r", ' ').Replace("`n", ' ')
+    $t = $t.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')
+    foreach ($ch in @('\', '`', '*', '_', '[', ']', '|', '#')) {
+        $t = $t.Replace($ch, '\' + $ch)
+    }
+    return $t
+}
+
+function Format-Size($value) {
+    if ($null -eq $value) { return '—' }
+    $bytes = 0.0
+    if (-not [double]::TryParse([string]$value, [System.Globalization.NumberStyles]::Float,
+            [System.Globalization.CultureInfo]::InvariantCulture, [ref]$bytes)) { return '—' }
+    if ($bytes -lt 0) { return '—' }
+    if ($bytes -lt 1024) { return ([int64]$bytes).ToString() + ' B' }
+    $units = @('KB', 'MB', 'GB', 'TB', 'PB')
+    $size = $bytes / 1024
+    $i = 0
+    while ($size -ge 1024 -and $i -lt 4) { $size = $size / 1024; $i++ }
+    return $size.ToString('0.00', [System.Globalization.CultureInfo]::InvariantCulture) + ' ' + $units[$i]
+}
 
 try {
     $raw = [System.IO.File]::ReadAllText($jsonPath, [System.Text.Encoding]::UTF8)
@@ -327,10 +355,10 @@ try {
     $siteText = if ($siteList.Count -eq 0) { '[]' } else { ConvertTo-Json -InputObject $siteList -Depth 5 -Compress }
     $siteBytes = $utf8.GetBytes($siteText)
 
+    $tempGzip = [System.IO.Path]::Combine($env:TEMP, 'quark-update-' + [guid]::NewGuid().ToString('N') + '.gz')
     if ($env:seven_zip) {
         Write-Host '压缩方式：使用 7-Zip 压缩 gzip 格式' -ForegroundColor Green
-        if (Test-Path -LiteralPath $outGzip) { Remove-Item -Force -LiteralPath $outGzip }
-        $argLine = 'a -tgzip -mx=9 -mmt=on -mtc=off -mtm=off -mta=off -y "' + $outGzip + '" -sipan-quark-cn.json'
+        $argLine = 'a -tgzip -mx=9 -mmt=on -mtc=off -mtm=off -mta=off -y "' + $tempGzip + '" -si' + $outFileName + '.json'
         $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
         $startInfo.FileName = $env:seven_zip
         $startInfo.Arguments = $argLine
@@ -347,6 +375,8 @@ try {
         [void]$process.StandardError.ReadToEnd()
         $process.WaitForExit()
         if ($process.ExitCode -ne 0) { throw '7-Zip 压缩失败' }
+        $gzipBytes = [System.IO.File]::ReadAllBytes($tempGzip)
+        Remove-Item -Force -LiteralPath $tempGzip
     } else {
         Write-Host '压缩方式：使用 PowerShell 内置的 GZipStream 压缩' -ForegroundColor Green
         Add-Type -AssemblyName System.IO.Compression
@@ -355,10 +385,20 @@ try {
         $gzipStream = New-Object System.IO.Compression.GzipStream($memStream, $mode)
         $gzipStream.Write($siteBytes, 0, $siteBytes.Length)
         $gzipStream.Close()
-        $bytes = $memStream.ToArray()
+        $gzipBytes = $memStream.ToArray()
         $memStream.Close()
-        [System.IO.File]::WriteAllBytes($outGzip, $bytes)
     }
+    $sha = [System.Security.Cryptography.SHA512]::Create()
+    try {
+        $hashBytes = $sha.ComputeHash($gzipBytes)
+        $fingerprint = ([System.BitConverter]::ToString($hashBytes).Replace('-', '')).ToLowerInvariant()
+    } finally {
+        $sha.Dispose()
+    }
+    $dateTag = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).ToString('yyyy-MM-dd')
+    $outGzip = [System.IO.Path]::Combine($outDir, $outFileName + '-' + $dateTag + '.' + $fingerprint + '.gz')
+    [System.IO.Directory]::CreateDirectory($outDir) | Out-Null
+    [System.IO.File]::WriteAllBytes($outGzip, $gzipBytes)
     if (-not (Test-Path -LiteralPath $outGzip)) { throw '压缩文件生成失败' }
 } catch {
     Write-Host ('错误：写入结果失败 - ' + $_.Exception.Message) -ForegroundColor Red
@@ -369,4 +409,71 @@ Write-Host ('检查完成：共 ' + $records.Count + ' 条，跳过 ' + $skipped
 Write-Host ('数据统计：共 ' + $records.Count + ' 条，有效数据共 ' + $siteList.Count + ' 条，无效数据共 ' + ($records.Count - $siteList.Count) + ' 条')
 Write-Host ('已写回检查结果: ' + $jsonPath)
 Write-Host ('已生成站点数据: ' + $outGzip)
+Write-Host ''
+
+Write-Host '开始生成资源收录页面'
+
+$total = $sorted.Count
+$sortByTitle = @(
+    @{ Expression = { [string]$_.title } },
+    @{ Expression = { [string]$_.time } },
+    @{ Expression = { [string]$_.url } }
+)
+$pageRecords = @($sorted | Sort-Object -Property $sortByTitle)
+
+$groups = @{}
+$pageValid = 0
+$pageInvalid = 0
+$pageSkipped = 0
+foreach ($rec in $pageRecords) {
+    $prop = $rec.PSObject.Properties['check_valid']
+    $mark = if ($null -ne $prop -and $prop.Value -eq $false) { '❌' } else { '✅' }
+
+    $time = [string]$rec.time
+    $url = [string]$rec.url
+    if ($time -notmatch '^(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}$') { $pageSkipped++; continue }
+    $day = $Matches[1]
+    if ($url -notmatch '^https://pan\.quark\.cn/s/[A-Za-z0-9]+$') { $pageSkipped++; continue }
+
+    if (-not $groups.ContainsKey($day)) {
+        $groups[$day] = [System.Collections.Generic.List[string]]::new()
+    }
+    $title = [string]$rec.title
+    if ([string]::IsNullOrWhiteSpace($title)) { $title = '（无标题）' }
+    $count = [string]$rec.file_count
+    if ([string]::IsNullOrWhiteSpace($count)) { $count = '—' }
+    $size = Format-Size $rec.file_size
+    $groups[$day].Add('- ' + $mark + ' [' + (Escape-Md $title) + '](' + $url + ')（文件数 ' + $count + '，大小 ' + $size + '）')
+    if ($mark -eq '✅') { $pageValid++ } else { $pageInvalid++ }
+}
+
+$pages = [System.Collections.Generic.List[object]]::new()
+foreach ($day in ($groups.Keys | Sort-Object)) {
+    $lines = [System.Collections.Generic.List[string]]::new()
+    $lines.Add('# ' + $day + ' 夸克网盘资源收录')
+    $lines.Add('')
+    $lines.Add('共 ' + $groups[$day].Count + ' 条资源，✅ 有效 ❌ 失效')
+    $lines.Add('')
+    foreach ($line in $groups[$day]) { $lines.Add($line) }
+    $pages.Add([pscustomobject]@{
+        Name = $day + '.md'
+        Text = ($lines -join "`r`n") + "`r`n"
+    })
+}
+
+try {
+    [System.IO.Directory]::CreateDirectory($pageDir) | Out-Null
+    foreach ($file in [System.IO.Directory]::GetFiles($pageDir, '*.md')) {
+        [System.IO.File]::Delete($file)
+    }
+    foreach ($page in $pages) {
+        [System.IO.File]::WriteAllText([System.IO.Path]::Combine($pageDir, $page.Name), $page.Text, $utf8)
+    }
+} catch {
+    Write-Host ('错误：写入页面失败 - ' + $_.Exception.Message) -ForegroundColor Red
+    exit 1
+}
+
+Write-Host ('生成完成：共 ' + $total + ' 条，有效 ' + $pageValid + ' 条，失效 ' + $pageInvalid + ' 条，跳过 ' + $pageSkipped + ' 条，生成 ' + $pages.Count + ' 个页面') -ForegroundColor Green
+Write-Host ('页面目录: ' + $pageDir)
 -----END POWERSHELL CODE-----
