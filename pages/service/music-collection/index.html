@@ -9,19 +9,19 @@
     .wrap h1 { font-size: 28px; color: #1f2328; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; margin-bottom: 24px; }
     .player {
       background: #fff; border: 1px solid #e3e8ef; border-radius: 16px;
-      padding: 14px 20px; box-shadow: 0 6px 20px rgba(0,0,0,.06); margin-bottom: 28px;
-      display: flex; align-items: center; gap: 18px;
+      padding: 12px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.06); margin-bottom: 28px;
+      display: flex; align-items: center; gap: 14px;
     }
     .controls { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
     .player-center { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
     .player-bottom { display: flex; align-items: center; gap: 6px; }
     .player-cover {
-      width: 72px; height: 72px; border-radius: 14px; flex: 0 0 auto;
+      width: 88px; height: 88px; border-radius: 16px; flex: 0 0 auto;
       background: linear-gradient(135deg, #bcd6f6, #d6c4f0);
       display: flex; align-items: center; justify-content: center; color: #6b8fc8;
       box-shadow: 0 4px 14px rgba(107,160,234,.18); overflow: hidden;
     }
-    .player-cover svg { width: 34px; height: 34px; }
+    .player-cover svg { width: 42px; height: 42px; }
     .player-meta { flex: 1 1 auto; min-width: 0; text-align: center; }
     .player-title { font-size: 16px; font-weight: 600; color: #1f2328; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .progress-track {
@@ -120,6 +120,9 @@
   <main class="wrap">
     <h1>音乐推荐</h1>
     <div class="player">
+      <div class="player-cover" id="cover">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+      </div>
       <div class="controls">
         <button class="ctrl-btn" id="prev" aria-label="上一首">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
@@ -132,13 +135,8 @@
         </button>
       </div>
       <div class="player-center">
-        <div class="player-top">
-          <div class="player-cover" id="cover">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
-          </div>
-          <div class="player-meta">
-            <div class="player-title" id="title">未选择歌曲</div>
-          </div>
+        <div class="player-meta">
+          <div class="player-title" id="title">未选择歌曲</div>
         </div>
         <div class="player-bottom">
           <div class="progress-track" id="track">
@@ -399,14 +397,16 @@
       }
     }
 
-    // 封面：直接使用 list.json 中的预提取图片，秒出且可被浏览器缓存
+    // 封面：默认展示图标；开始播放后才显示音乐封面图
     let coverTok = 0;
+    let pendingCover = null;
     function clearCover() {
       coverEl.style.backgroundImage = '';
       coverEl.style.backgroundSize = '';
       coverEl.style.backgroundPosition = '';
       const svg = coverEl.querySelector('svg');
       if (svg) svg.style.display = '';
+      pendingCover = null;
     }
     function showCover(url) {
       coverEl.style.backgroundImage = 'url("' + url + '")';
@@ -421,6 +421,13 @@
       img.onload = () => { if (tok === coverTok) showCover(url); };
       img.onerror = () => { if (tok === coverTok) clearCover(); };
       img.src = url;
+    }
+    // 仅在真正开始播放时再加载封面图，避免一加载就盖住图标
+    function revealCover() {
+      if (!pendingCover) return;
+      const url = pendingCover;
+      pendingCover = null;
+      loadCover(url);
     }
 
     // m4a 为 faststart（moov 在文件头部），交给浏览器原生渐进式流式播放：
@@ -438,7 +445,7 @@
       buffer.style.width = '0%';
       timeEl.textContent = '00:00 / 00:00';
       renderList();
-      loadCover(song.cover);
+      pendingCover = song.cover || null;
       audio.src = song.src;
       audio.currentTime = 0;
       if (autoplay) { ld.started = true; audio.play().catch(() => {}); }
@@ -549,7 +556,7 @@
       updateTimeLabel();
     }
 
-    audio.addEventListener('play', () => { if (activeLoad) activeLoad.started = true; setPlayIcon(true); });
+    audio.addEventListener('play', () => { if (activeLoad) activeLoad.started = true; setPlayIcon(true); revealCover(); });
     audio.addEventListener('pause', () => setPlayIcon(false));
     audio.addEventListener('progress', updateBufferBar);
     audio.addEventListener('canplay', updateBufferBar);
