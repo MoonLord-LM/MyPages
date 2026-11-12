@@ -28,6 +28,8 @@ Static Site Generator
 页面生成后，按原目录结构，存放到 `/dist` 目录中，例如 `/pages/blog/post.md` → `/dist/blog/post.html`  
 静态资源，按原目录结构，复制到 `/dist` 目录中，例如 `/pages/assets/style/blog.css` → `/dist/assets/style/blog.css`  
 公共模板文件 `header.html` 和 `footer.html` 不复制  
+保留路径： `/dist/static`，构建过程不会清空这里面的文件，其它文件夹则会在构建时先清空  
+推荐将长期不修改的、或者很大的静态资源文件，放到 `/dist/static` 中，然后使用类似 `/static/*` 的 URL 访问  
 
 ### 静态资源
 

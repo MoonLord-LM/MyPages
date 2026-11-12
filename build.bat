@@ -60,10 +60,10 @@ set "hljs_js_url=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/hig
 REM 站点地图所使用的站点根地址（与 pages/robots.txt 中的 Sitemap 保持一致）
 set "site_url=https://www.moonlord.cc"
 
-set "temp_dir=!script_dir!tmp"
+set "temp_dir=%temp%\MyPages_%random%_%random%_%random%_%random%\"
+if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
 if not exist "!temp_dir!" ( mkdir "!temp_dir!" )
-set "temp_js=!temp_dir!\build.mjs"
-if exist "!temp_js!" ( del /f /q "!temp_js!" )
+set "temp_js=!temp_dir!build.mjs"
 
 
 
@@ -98,21 +98,22 @@ powershell -NoProfile -Command ^
 if !errorlevel! neq 0 (
     echo 错误：提取内嵌代码失败
     echo.
-    if exist "!temp_js!" ( del /f /q "!temp_js!" )
+    if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
     pause
     exit /b 1
 )
 if not exist "!temp_js!" (
     echo 错误：提取内嵌代码文件生成失败："!temp_js!"
     echo.
+    if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
     pause
     exit /b 1
 )
 
-if not exist "!temp_dir!\node_modules\markdown-it" (
+if not exist "!temp_dir!node_modules\markdown-it" (
     echo 正在安装 markdown-it 依赖
-    if exist "!temp_dir!\package.json" ( del /f /q "!temp_dir!\package.json" )
-    if exist "!temp_dir!\package-lock.json" ( del /f /q "!temp_dir!\package-lock.json" )
+    if exist "!temp_dir!package.json" ( del /f /q "!temp_dir!package.json" )
+    if exist "!temp_dir!package-lock.json" ( del /f /q "!temp_dir!package-lock.json" )
     pushd "!temp_dir!"
         call npm install markdown-it --no-audit --no-fund
         set "npm_error=!errorlevel!"
@@ -120,7 +121,7 @@ if not exist "!temp_dir!\node_modules\markdown-it" (
     if !npm_error! neq 0 (
         echo 错误：安装 markdown-it 失败
         echo.
-        if exist "!temp_js!" ( del /f /q "!temp_js!" )
+        if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
         pause
         exit /b 1
     )
@@ -148,11 +149,11 @@ if !build_ok! neq 1 (
     echo.
     echo 错误：构建生成失败
     echo.
-    if exist "!temp_js!" ( del /f /q "!temp_js!" )
+    if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
     pause
     exit /b 1
 )
-if exist "!temp_js!" ( del /f /q "!temp_js!" )
+if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
 
 
 
