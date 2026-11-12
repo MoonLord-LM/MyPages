@@ -848,6 +848,34 @@ body { overflow-x: clip; }
     track.addEventListener('pointerup', () => { dragging = false; });
     track.addEventListener('pointercancel', () => { dragging = false; });
 
+    // ---- 风格筛选 ----
+    const genreFilterEl = document.getElementById('genreFilter');
+    const genreBtns = Array.from(genreFilterEl.querySelectorAll('.genre-btn'));
+    let activeGenres = new Set();
+
+    function visibleIndices() {
+      if (activeGenres.size === 0) return songEls.map((_, i) => i);
+      const res = [];
+      songEls.forEach((li, i) => { if (activeGenres.has(li.dataset.genre)) res.push(i); });
+      return res;
+    }
+
+    function applyFilter() {
+      songEls.forEach((li) => {
+        const g = li.dataset.genre;
+        li.style.display = (activeGenres.size === 0 || activeGenres.has(g)) ? '' : 'none';
+      });
+    }
+
+    genreBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const g = btn.dataset.genre;
+        if (activeGenres.has(g)) { activeGenres.delete(g); btn.classList.remove('active'); }
+        else { activeGenres.add(g); btn.classList.add('active'); }
+        applyFilter();
+      });
+    });
+
     function loadSongs() {
       // 从 HTML 读取：.song-title=歌名，data-src=音频直链，.song-cover=封面直链
       songEls = Array.from(listEl.querySelectorAll('.song-item'));
