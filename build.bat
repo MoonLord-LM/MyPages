@@ -1047,7 +1047,9 @@ function buildNav(currentOutPath, descriptors) {
     if (indexRel === '') indexRel = './index.html';
     if (!/^(\.\.?\/|\/)/.test(indexRel)) indexRel = './' + indexRel;
     const homeItem = '    <li class="home"><a href="' + escapeAttr(indexRel) + '" title="返回目录首页" aria-label="返回目录首页">' + HOME_ICON + '</a></li>';
-    const items = descriptors.map((d) => {
+    // 按文本倒序排列（如按时间命名的页，时间较大的排在靠前位置）
+    const sorted = [...descriptors].sort((a, b) => b.displayName.localeCompare(a.displayName));
+    const items = sorted.map((d) => {
         let rel = path.relative(path.dirname(currentOutPath), d.outPath).split(path.sep).join('/');
         if (rel === '') rel = './' + path.basename(d.outPath);
         if (!/^(\.\.?\/|\/)/.test(rel)) rel = './' + rel;
@@ -1352,7 +1354,7 @@ for (const [dir, baseMap] of pageFilesByDir) {
             fileEntries.push({ label: path.basename(sf.full), link: dest, desc: '' });
         }
     }
-    fileEntries.sort((a, b) => a.label.localeCompare(b.label));
+    fileEntries.sort((a, b) => b.label.localeCompare(a.label));
     // 自动列表页没有源文件，取该目录下所有页面中最新的提交时间
     const newest = descriptors
         .map((d) => lastmodMap.get(d.outPath))
