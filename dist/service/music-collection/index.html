@@ -555,45 +555,19 @@ body { overflow-x: clip; }
       activeLoad = null;
     }
 
-    function concatChunks(chunks) {
-      let len = 0;
-      for (const c of chunks) len += c.length;
-      const out = new Uint8Array(len);
-      let o = 0;
-      for (const c of chunks) { out.set(c, o); o += c.length; }
-      return out;
-    }
-
-    // m4a 的 moov 原子含元数据：在前(faststart)可提前开播，在尾部需下载接近完成
-    function moovComplete(ld) {
-      const buf = concatChunks(ld.chunks);
-      let p = 0;
-      while (p + 8 <= buf.length) {
-        const size = (buf[p] << 24) | (buf[p + 1] << 16) | (buf[p + 2] << 8) | buf[p + 3];
-        const type = String.fromCharCode(buf[p + 4], buf[p + 5], buf[p + 6], buf[p + 7]);
-        if (type === 'moov') return (p + size) <= buf.length;
-        if (size <= 0) return false;
-        p += size;
-      }
-      return false;
-    }
-
     function updateDownload(ld) {
       const pct = ld.total ? ld.received / ld.total : 0;
       buffer.style.width = (pct * 100) + '%';
     }
 
-    // 原生流式：按 audio.buffered 更新缓冲条
-    function updateNativeBuffer() {
-      const ld = activeLoad;
-      if (!ld || !ld.native) return;
-      const b = audio.buffered;
-      if (b && b.length) {
-        const end = b.end(b.length - 1);
-        const total = audio.duration && isFinite(audio.duration) ? audio.duration : 0;
-        if (total) buffer.style.width = Math.min(1, end / total) * 100 + '%';
-        else buffer.style.width = '0%';
-      }
+    function mediaType(src) {
+      const s = src || '';
+      if (/\.(m4a|mp4|m4b)/i.test(s)) return 'audio/mp4';
+      if (/\.(mp3|mp2|mpa)/i.test(s)) return 'audio/mpeg';
+      if (/\.(ogg|oga|opus)/i.test(s)) return 'audio/ogg';
+      if (/\.(wav)/i.test(s)) return 'audio/wav';
+      if (/\.(flac)/i.test(s)) return 'audio/flac';
+      return 'audio/mp4';
     }
 
     // 封面：直接使用 list.json 中的预提取图片，秒出且可被浏览器缓存
@@ -620,93 +594,16 @@ body { overflow-x: clip; }
       img.src = url;
     }
 
-    function makeBlobUrl(ld) {
-      const blob = new Blob(ld.chunks, { type: 'audio/mp4' });
-      if (ld.objectUrl) { try { URL.revokeObjectURL(ld.objectUrl); } catch (e) {} }
-      ld.objectUrl = URL.createObjectURL(blob);
-      return ld.objectUrl;
-    }
-
-    function startPlayback(ld) {
-      ld.started = true;
-      ld.lastExtend = ld.received;
-      audio.src = makeBlobUrl(ld);
-      audio.currentTime = 0;
-      if (ld.playing) audio.play().catch(() => {});
-    }
-
-    function extendIfNeeded(ld, force) {
-      if (!ld.started || ld.extending || ld.complete) return;
-      const b = audio.buffered;
-      const bufferedEnd = (b && b.length) ? b.end(b.length - 1) : 0;
-      const needExtend = force || (bufferedEnd - audio.currentTime < 5 && ld.received - ld.lastExtend > 2 * 1048576);
-      if (!needExtend) return;
-      ld.extending = true;
-      ld.lastExtend = ld.received;
-      const t = audio.currentTime;
-      const wasPlaying = !audio.paused;
-      audio.src = makeBlobUrl(ld);
-      audio.addEventListener('loadedmetadata', function onMeta() {
-        audio.removeEventListener('loadedmetadata', onMeta);
-        ld.extending = false;
-        if (isFinite(t) && t < audio.duration) { try { audio.currentTime = t; } catch (e) {} }
-        if (wasPlaying) audio.play().catch(() => {});
-      });
-    }
-
-    function maybeStartOrExtend(ld) {
-      if (!ld.started) {
-        const doCheck = (ld.total && ld.received / ld.total > 0.9) ||
-                        (ld.received - (ld.lastMoovCheck || 0) > 2 * 1048576);
-        if (doCheck) {
-          ld.lastMoovCheck = ld.received;
-          if (moovComplete(ld)) { startPlayback(ld); return; }
-        }
-      } else {
-        extendIfNeeded(ld, false);
-      }
-    }
-
-    // 原生可流式格式：元数据在前、按帧解码，交给浏览器 <audio> 原生边下边播
-    function isNativeStreamable(src) {
-      return /\.(mp3|ogg|oga|opus|webm|wav|aac|flac)(?:[?#]|$)/i.test(src || '');
-    }
-
-    // 入口：原生可流式格式走浏览器，m4a/mp4 走 fetch 分块
-    function load(i, autoplay) {
-      if (isNativeStreamable(songs[i] && songs[i].src)) loadNative(i, autoplay);
-      else loadFetch(i, autoplay);
-    }
-
-    // 原生流式：直接设 audio.src，交给浏览器接管下载/解码/缓冲
-    function loadNative(i, autoplay) {
-      current = i;
-      const song = songs[i];
-      clearLoad();
-      clearCover();
-      titleEl.textContent = song.name;
-      fill.style.width = '0%';
-      thumb.style.left = '0%';
-      buffer.style.width = '0%';
-      timeEl.textContent = '00:00 / 00:00';
-      renderList();
-      activeLoad = { native: true, started: false };
-      loadCover(song.cover);
-      audio.src = song.src;
-      audio.currentTime = 0;
-      if (autoplay) { activeLoad.started = true; audio.play().catch(() => {}); }
-    }
-
-    // m4a/mp4：fetch 分块下载，moov 就绪即开播，否则下完再播
-    async function loadFetch(i, autoplay) {
+    // 积极缓冲：一次性把整段音频拉到本地再交给 <audio> 播放，
+    // 避免浏览器边下边播时网络波动导致的中途卡顿；缓冲条实时反映下载进度。
+    async function load(i, autoplay) {
       current = i;
       const song = songs[i];
       clearLoad();
       clearCover();
       const ld = {
         chunks: [], received: 0, total: 0, objectUrl: null,
-        started: false, complete: false, playing: !!autoplay,
-        lastExtend: 0, lastMoovCheck: 0, extending: false, controller: null,
+        started: false, complete: false, playing: !!autoplay, controller: null,
       };
       activeLoad = ld;
       titleEl.textContent = song.name;
@@ -730,12 +627,17 @@ body { overflow-x: clip; }
           ld.chunks.push(value);
           ld.received += value.length;
           updateDownload(ld);
-          maybeStartOrExtend(ld);
           if (activeLoad !== ld) return;
         }
         ld.complete = true;
-        if (!ld.started) startPlayback(ld);
-        else extendIfNeeded(ld, true);
+        if (activeLoad !== ld) return;
+        const blob = new Blob(ld.chunks, { type: mediaType(song.src) });
+        if (ld.objectUrl) { try { URL.revokeObjectURL(ld.objectUrl); } catch (e) {} }
+        ld.objectUrl = URL.createObjectURL(blob);
+        audio.src = ld.objectUrl;
+        audio.currentTime = 0;
+        ld.started = true;
+        if (ld.playing) audio.play().catch(() => {});
       } catch (e) {
         if (e && e.name === 'AbortError') return;
         titleEl.textContent = '加载失败：' + String(e && e.message ? e.message : e);
@@ -849,10 +751,8 @@ body { overflow-x: clip; }
 
     audio.addEventListener('play', () => { if (activeLoad) activeLoad.started = true; setPlayIcon(true); });
     audio.addEventListener('pause', () => setPlayIcon(false));
-    audio.addEventListener('progress', updateNativeBuffer);
-    audio.addEventListener('canplay', updateNativeBuffer);
     audio.addEventListener('error', () => {
-      if (activeLoad && activeLoad.native) titleEl.textContent = '加载失败';
+      if (activeLoad) titleEl.textContent = '加载失败';
     });
     audio.addEventListener('timeupdate', () => {
       if (dragging) return;
