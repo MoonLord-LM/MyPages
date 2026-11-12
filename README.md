@@ -21,7 +21,7 @@ Static Site Generator
 `/pages` 目录下存放 html 或 md 文件，视为页面文件  
 优先使用 html 文件生成页面，如果没有同名的 html 文件，则使用 md 文件进行生成  
 例如首页的内容就应该存放到 `/pages/index.html` 或 `/pages/index.md`  
-保留名：`header.html` 和 `footer.html`，视为公共模板文件，不视作页面文件  
+特殊文件名：`header.html` 和 `footer.html`，视为公共模板文件，不视作页面文件  
 
 ### 生成结果
 
@@ -29,7 +29,7 @@ Static Site Generator
 静态资源，按原目录结构，复制到 `/dist` 目录中，例如 `/pages/assets/style/blog.css` → `/dist/assets/style/blog.css`  
 公共模板文件 `header.html` 和 `footer.html` 不复制  
 构建时，默认会先清空 `/dist` 中的所有文件和文件夹，以保证和 `/pages` 一致  
-特殊路径： `/dist/static/`，构建过程不会清空，里面的文件完整保留  
+特殊路径： `/dist/static/`，构建过程不会清空，里面的文件只做新增、修改，不做删除  
 推荐将长期不修改的、较大的静态资源文件，命名为 `<名称>.<哈希值>.<扩展名>` 的格式，放到 `/dist/static/` 中  
 
 ### 静态资源
