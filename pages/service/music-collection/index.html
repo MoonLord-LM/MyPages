@@ -7,7 +7,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     .head {
-      display: flex; align-items: center; justify-content: flex-start;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 16px; margin-bottom: 24px; padding-bottom: .3em;
       border-bottom: 1px solid #d8dee4; flex-wrap: wrap;
     }
@@ -453,7 +453,7 @@
       if (svg) svg.style.display = 'none';
     }
 
-    // 全屏模糊氛围背景：用当前封面图的颜色铺满页面（双图层交叉淡入，避免切换白屏）
+    // 播放时以当前封面颜色铺满全屏模糊氛围背景
     const bgLayer = document.getElementById('bgLayer');
     const bgLayer2 = document.getElementById('bgLayer2');
     let bgShown = bgLayer, bgHidden = bgLayer2;
@@ -703,11 +703,19 @@
         if (activeGenres.has(g)) { activeGenres.delete(g); btn.classList.remove('active'); }
         else { activeGenres.add(g); btn.classList.add('active'); }
         applyFilter();
+        // 每次点击都检查：若当前播放的歌曲已不在限定范围内，自动切到选中风格的第一首
+        if (current >= 0) {
+          const vis = visibleIndices();
+          const curLi = songEls[current];
+          if (curLi && curLi.style.display === 'none' && vis.length) {
+            load(vis[0], true);
+          }
+        }
       });
     });
 
     function loadSongs() {
-      // 从 HTML 读取：.song-title=歌名，data-src=音频直链，.song-cover=封面直链
+      // 歌曲信息从页面列表 DOM 读取
       songEls = Array.from(listEl.querySelectorAll('.song-item'));
       durEls = songEls.map((li) => li.querySelector('.song-dur'));
       songs = songEls.map((li) => ({
