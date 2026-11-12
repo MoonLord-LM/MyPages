@@ -319,8 +319,11 @@ console.log('输出目录: ' + DIST);
 
 const md = new MarkdownIt({ html: true, linkify: false, typographer: false });
 
-fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST, { recursive: true });
+for (const entry of fs.readdirSync(DIST, { withFileTypes: true })) {
+    if (entry.name.toLowerCase() === 'static') continue;
+    fs.rmSync(path.join(DIST, entry.name), { recursive: true, force: true });
+}
 
 function findTemplate(dir, name) {
     let current = dir;
