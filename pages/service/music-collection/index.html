@@ -151,7 +151,7 @@
           <div class="player-title" id="title">未选择歌曲</div>
         </div>
         <div class="player-bottom">
-          <span class="time" id="time">00:00 / 00:00</span>
+          <span class="time" id="time"></span>
           <div class="progress-track" id="track">
             <div class="progress-buffer" id="buffer"></div>
             <div class="progress-fill" id="fill"></div>
@@ -474,7 +474,7 @@
       fill.style.width = '0%';
       thumb.style.left = '0%';
       buffer.style.width = '0%';
-      timeEl.textContent = '00:00 / 00:00';
+      timeEl.textContent = '';
       renderList();
       pendingCover = song.cover || null;
       audio.src = song.src;
