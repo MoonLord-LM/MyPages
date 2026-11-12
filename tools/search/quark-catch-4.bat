@@ -113,6 +113,7 @@ function Invoke-Pool([string]$WorkerScript, [System.Collections.Generic.Queue[st
     }
 }
 $httpGet = @'
+
 function Get-PageText([string]$url, [string]$accept) {
     $ok = $false; $text = ''; $message = ''; $finalUrl = ''
     $ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36'
@@ -145,6 +146,7 @@ function Get-PageText([string]$url, [string]$accept) {
     }
     return [pscustomobject]@{ Ok = $ok; Text = $text; Message = $message; FinalUrl = $finalUrl }
 }
+
 '@
 
 $sitemapWorker = @'

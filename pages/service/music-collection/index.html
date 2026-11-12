@@ -68,6 +68,10 @@
     .song-item:last-child { border-bottom: none; }
     .song-item:hover { background: #f6f8fb; }
     .song-item.active { color: #4a72c4; font-weight: 600; }
+    .song-cover {
+      width: 40px; height: 40px; border-radius: 8px; flex: 0 0 auto;
+      object-fit: cover; background: #eef2f8;
+    }
     .song-index { width: 22px; text-align: right; color: #8a949e; font-size: 13px; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
     .song-item.active .song-index { color: #4a72c4; }
     .song-title { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -163,161 +167,41 @@
         </button>
       </div>
     </div>
-    <ul class="song-list" id="list">
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2008%20郭静%20-%20爱情讯息.m4a">
-        <span class="song-index">1</span>
-        <span class="song-title">2008 郭静 - 爱情讯息.m4a</span>
-        <span class="song-dur" data-dur="0">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2009%20BY2%20-%20我知道.m4a">
-        <span class="song-index">2</span>
-        <span class="song-title">2009 BY2 - 我知道.m4a</span>
-        <span class="song-dur" data-dur="1">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2010%20金莎%20-%20星月神话.m4a">
-        <span class="song-index">3</span>
-        <span class="song-title">2010 金莎 - 星月神话.m4a</span>
-        <span class="song-dur" data-dur="2">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2012%20陈芳语%20-%20爱你.m4a">
-        <span class="song-index">4</span>
-        <span class="song-title">2012 陈芳语 - 爱你.m4a</span>
-        <span class="song-dur" data-dur="3">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2014%20童可可%20-%20萌萌哒.m4a">
-        <span class="song-index">5</span>
-        <span class="song-title">2014 童可可 - 萌萌哒.m4a</span>
-        <span class="song-dur" data-dur="4">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2015%20阿肆%20-%20直到你降临.m4a">
-        <span class="song-index">6</span>
-        <span class="song-title">2015 阿肆 - 直到你降临.m4a</span>
-        <span class="song-dur" data-dur="5">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2016%20任然%20-%20疑心病.m4a">
-        <span class="song-index">7</span>
-        <span class="song-title">2016 任然 - 疑心病.m4a</span>
-        <span class="song-dur" data-dur="6">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2018%20鞠婧祎%20-%20叹云兮.m4a">
-        <span class="song-index">8</span>
-        <span class="song-title">2018 鞠婧祎 - 叹云兮.m4a</span>
-        <span class="song-dur" data-dur="7">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2019%20刘梦妤Uu%20-%20那女孩对我说.m4a">
-        <span class="song-index">9</span>
-        <span class="song-title">2019 刘梦妤Uu - 那女孩对我说.m4a</span>
-        <span class="song-dur" data-dur="8">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2019%20司南%20-%20冬眠.m4a">
-        <span class="song-index">10</span>
-        <span class="song-title">2019 司南 - 冬眠.m4a</span>
-        <span class="song-dur" data-dur="9">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2019%20泠鸢yousa%20-%20勾指起誓.mp3">
-        <span class="song-index">11</span>
-        <span class="song-title">2019 泠鸢yousa - 勾指起誓.mp3</span>
-        <span class="song-dur" data-dur="10">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2019%20黄诗扶%20-%20九万字.m4a">
-        <span class="song-index">12</span>
-        <span class="song-title">2019 黄诗扶 - 九万字.m4a</span>
-        <span class="song-dur" data-dur="11">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2020%20傅梦彤%20-%20潮汐.m4a">
-        <span class="song-index">13</span>
-        <span class="song-title">2020 傅梦彤 - 潮汐.m4a</span>
-        <span class="song-dur" data-dur="12">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2020%20刘亦心%20-%20熬夜上瘾.m4a">
-        <span class="song-index">14</span>
-        <span class="song-title">2020 刘亦心 - 熬夜上瘾.m4a</span>
-        <span class="song-dur" data-dur="13">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2020%20江偌绮%20-%20是想你的声音啊.mp3">
-        <span class="song-index">15</span>
-        <span class="song-title">2020 江偌绮 - 是想你的声音啊.mp3</span>
-        <span class="song-dur" data-dur="14">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2020%20火羊瞌睡了%20-%20夏天的风.m4a">
-        <span class="song-index">16</span>
-        <span class="song-title">2020 火羊瞌睡了 - 夏天的风.m4a</span>
-        <span class="song-dur" data-dur="15">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2020%20王艳薇%20-%20离开我的依赖.m4a">
-        <span class="song-index">17</span>
-        <span class="song-title">2020 王艳薇 - 离开我的依赖.m4a</span>
-        <span class="song-dur" data-dur="16">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2020%20阿YueYue&amp;戾格&amp;小田音乐社%20-%20沈园外.m4a">
-        <span class="song-index">18</span>
-        <span class="song-title">2020 阿YueYue&amp;戾格&amp;小田音乐社 - 沈园外.m4a</span>
-        <span class="song-dur" data-dur="17">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2021%20Joysaaaa%20-%20你不明白.m4a">
-        <span class="song-index">19</span>
-        <span class="song-title">2021 Joysaaaa - 你不明白.m4a</span>
-        <span class="song-dur" data-dur="18">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20热恋冰淇淋.m4a">
-        <span class="song-index">20</span>
-        <span class="song-title">2021 yihuik苡慧 - 热恋冰淇淋.m4a</span>
-        <span class="song-dur" data-dur="19">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20致你.m4a">
-        <span class="song-index">21</span>
-        <span class="song-title">2021 yihuik苡慧 - 致你.m4a</span>
-        <span class="song-dur" data-dur="20">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2021%20刘梦妤Uu%20-%20气象站台.m4a">
-        <span class="song-index">22</span>
-        <span class="song-title">2021 刘梦妤Uu - 气象站台.m4a</span>
-        <span class="song-dur" data-dur="21">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2021%20戴羽彤%20-%20来迟.m4a">
-        <span class="song-index">23</span>
-        <span class="song-title">2021 戴羽彤 - 来迟.m4a</span>
-        <span class="song-dur" data-dur="22">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2021%20苏星婕%20-%20风吹过八千里.m4a">
-        <span class="song-index">24</span>
-        <span class="song-title">2021 苏星婕 - 风吹过八千里.m4a</span>
-        <span class="song-dur" data-dur="23">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2021%20陈子晴%20-%20偏向.m4a">
-        <span class="song-index">25</span>
-        <span class="song-title">2021 陈子晴 - 偏向.m4a</span>
-        <span class="song-dur" data-dur="24">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2022%20yihuik苡慧%20-%20麦浪.m4a">
-        <span class="song-index">26</span>
-        <span class="song-title">2022 yihuik苡慧 - 麦浪.m4a</span>
-        <span class="song-dur" data-dur="25">—</span>
-      </li>
-      <li class="song-item" data-src="https://cloudflare.moonlord.cc/static/music/2024%20庄东茹%20-%20又活了一天.m4a">
-        <span class="song-index">27</span>
-        <span class="song-title">2024 庄东茹 - 又活了一天.m4a</span>
-        <span class="song-dur" data-dur="26">—</span>
-      </li>
-    </ul>
+    <ul class="song-list" id="list"></ul>
     <audio id="audio" preload="metadata"></audio>
   </main>
   <script>
-    // 歌曲列表已写死在 HTML（#list 的 <li>），这里只从 DOM 读取播放所需数据
-    let songs = [];
-
-    function loadSongs() {
-      songs = songEls.map((li) => ({
-        name: li.querySelector('.song-title').textContent,
-        src: li.getAttribute('data-src')
-      })).filter(s => s.src);
-      renderList();
-      if (songs.length) {
-        load(0, true); // 默认进入页面直接播放第一首
-      } else {
-        titleEl.textContent = '列表为空';
-      }
-    }
+    // 歌曲数据：封面与音频直链直接来自 upload/static/list.json。
+    // 封面已预提取为独立图片，避免运行时解析音频元数据（原实现需额外下载 4MB 或等整首下完）。
+    const songs = [
+      { name: '2008 郭静 - 爱情讯息', cover: 'https://cloudflare.moonlord.cc/static/music/2008%20郭静%20-%20爱情讯息.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2008%20郭静%20-%20爱情讯息.m4a' },
+      { name: '2009 BY2 - 我知道', cover: 'https://cloudflare.moonlord.cc/static/music/2009%20BY2%20-%20我知道.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2009%20BY2%20-%20我知道.m4a' },
+      { name: '2010 金莎 - 星月神话', cover: 'https://cloudflare.moonlord.cc/static/music/2010%20金莎%20-%20星月神话.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2010%20金莎%20-%20星月神话.m4a' },
+      { name: '2012 陈芳语 - 爱你', cover: 'https://cloudflare.moonlord.cc/static/music/2012%20陈芳语%20-%20爱你.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2012%20陈芳语%20-%20爱你.m4a' },
+      { name: '2014 童可可 - 萌萌哒', cover: 'https://cloudflare.moonlord.cc/static/music/2014%20童可可%20-%20萌萌哒.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2014%20童可可%20-%20萌萌哒.m4a' },
+      { name: '2015 阿肆 - 直到你降临', cover: 'https://cloudflare.moonlord.cc/static/music/2015%20阿肆%20-%20直到你降临.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2015%20阿肆%20-%20直到你降临.m4a' },
+      { name: '2016 任然 - 疑心病', cover: 'https://cloudflare.moonlord.cc/static/music/2016%20任然%20-%20疑心病.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2016%20任然%20-%20疑心病.m4a' },
+      { name: '2018 鞠婧祎 - 叹云兮', cover: 'https://cloudflare.moonlord.cc/static/music/2018%20鞠婧祎%20-%20叹云兮.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2018%20鞠婧祎%20-%20叹云兮.m4a' },
+      { name: '2019 刘梦妤Uu - 那女孩对我说', cover: 'https://cloudflare.moonlord.cc/static/music/2019%20刘梦妤Uu%20-%20那女孩对我说.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2019%20刘梦妤Uu%20-%20那女孩对我说.m4a' },
+      { name: '2019 司南 - 冬眠', cover: 'https://cloudflare.moonlord.cc/static/music/2019%20司南%20-%20冬眠.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2019%20司南%20-%20冬眠.m4a' },
+      { name: '2019 泠鸢yousa - 勾指起誓', cover: 'https://cloudflare.moonlord.cc/static/music/2019%20泠鸢yousa%20-%20勾指起誓.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2019%20泠鸢yousa%20-%20勾指起誓.mp3' },
+      { name: '2019 黄诗扶 - 九万字', cover: 'https://cloudflare.moonlord.cc/static/music/2019%20黄诗扶%20-%20九万字.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2019%20黄诗扶%20-%20九万字.m4a' },
+      { name: '2020 傅梦彤 - 潮汐', cover: 'https://cloudflare.moonlord.cc/static/music/2020%20傅梦彤%20-%20潮汐.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2020%20傅梦彤%20-%20潮汐.m4a' },
+      { name: '2020 刘亦心 - 熬夜上瘾', cover: 'https://cloudflare.moonlord.cc/static/music/2020%20刘亦心%20-%20熬夜上瘾.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2020%20刘亦心%20-%20熬夜上瘾.m4a' },
+      { name: '2020 江偌绮 - 是想你的声音啊', cover: 'https://cloudflare.moonlord.cc/static/music/2020%20江偌绮%20-%20是想你的声音啊.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2020%20江偌绮%20-%20是想你的声音啊.mp3' },
+      { name: '2020 火羊瞌睡了 - 夏天的风', cover: 'https://cloudflare.moonlord.cc/static/music/2020%20火羊瞌睡了%20-%20夏天的风.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2020%20火羊瞌睡了%20-%20夏天的风.m4a' },
+      { name: '2020 王艳薇 - 离开我的依赖', cover: 'https://cloudflare.moonlord.cc/static/music/2020%20王艳薇%20-%20离开我的依赖.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2020%20王艳薇%20-%20离开我的依赖.m4a' },
+      { name: '2020 阿YueYue&戾格&小田音乐社 - 沈园外', cover: 'https://cloudflare.moonlord.cc/static/music/2020%20阿YueYue&戾格&小田音乐社%20-%20沈园外.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2020%20阿YueYue&戾格&小田音乐社%20-%20沈园外.m4a' },
+      { name: '2021 Joysaaaa - 你不明白', cover: 'https://cloudflare.moonlord.cc/static/music/2021%20Joysaaaa%20-%20你不明白.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2021%20Joysaaaa%20-%20你不明白.m4a' },
+      { name: '2021 yihuik苡慧 - 热恋冰淇淋', cover: 'https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20热恋冰淇淋.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20热恋冰淇淋.m4a' },
+      { name: '2021 yihuik苡慧 - 致你', cover: 'https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20致你.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2021%20yihuik苡慧%20-%20致你.m4a' },
+      { name: '2021 刘梦妤Uu - 气象站台', cover: 'https://cloudflare.moonlord.cc/static/music/2021%20刘梦妤Uu%20-%20气象站台.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2021%20刘梦妤Uu%20-%20气象站台.m4a' },
+      { name: '2021 戴羽彤 - 来迟', cover: 'https://cloudflare.moonlord.cc/static/music/2021%20戴羽彤%20-%20来迟.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2021%20戴羽彤%20-%20来迟.m4a' },
+      { name: '2021 苏星婕 - 风吹过八千里', cover: 'https://cloudflare.moonlord.cc/static/music/2021%20苏星婕%20-%20风吹过八千里.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2021%20苏星婕%20-%20风吹过八千里.m4a' },
+      { name: '2021 陈子晴 - 偏向', cover: 'https://cloudflare.moonlord.cc/static/music/2021%20陈子晴%20-%20偏向.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2021%20陈子晴%20-%20偏向.m4a' },
+      { name: '2022 yihuik苡慧 - 麦浪', cover: 'https://cloudflare.moonlord.cc/static/music/2022%20yihuik苡慧%20-%20麦浪.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2022%20yihuik苡慧%20-%20麦浪.m4a' },
+      { name: '2024 庄东茹 - 又活了一天', cover: 'https://cloudflare.moonlord.cc/static/music/2024%20庄东茹%20-%20又活了一天.jpg', src: 'https://cloudflare.moonlord.cc/static/music/2024%20庄东茹%20-%20又活了一天.m4a' }
+    ];
 
     const audio = document.getElementById('audio');
     const titleEl = document.getElementById('title');
@@ -331,8 +215,6 @@
     const prevBtn = document.getElementById('prev');
     const nextBtn = document.getElementById('next');
     const listEl = document.getElementById('list');
-    const songEls = Array.from(listEl.querySelectorAll('.song-item'));
-    songEls.forEach((li, i) => li.addEventListener('click', () => playIndex(i)));
     const coverEl = document.getElementById('cover');
     const muteBtn = document.getElementById('mute');
     const volIcon = document.getElementById('volIcon');
@@ -343,6 +225,8 @@
     const loopBtn = document.getElementById('loop');
     const loopIcon = document.getElementById('loopIcon');
 
+    let songEls = [];
+    let durEls = [];
     let current = -1;
     let dragging = false;
     let volDragging = false;
@@ -364,6 +248,38 @@
 
     function renderList() {
       songEls.forEach((li, i) => li.classList.toggle('active', i === current));
+    }
+
+    function renderSongList() {
+      listEl.innerHTML = '';
+      songEls = [];
+      durEls = [];
+      songs.forEach((s, i) => {
+        const li = document.createElement('li');
+        li.className = 'song-item';
+        const img = document.createElement('img');
+        img.className = 'song-cover';
+        img.src = s.cover;
+        img.alt = '';
+        img.loading = 'lazy';
+        const idx = document.createElement('span');
+        idx.className = 'song-index';
+        idx.textContent = String(i + 1);
+        const title = document.createElement('span');
+        title.className = 'song-title';
+        title.textContent = s.name;
+        const dur = document.createElement('span');
+        dur.className = 'song-dur';
+        dur.textContent = '—';
+        li.appendChild(img);
+        li.appendChild(idx);
+        li.appendChild(title);
+        li.appendChild(dur);
+        li.addEventListener('click', () => playIndex(i));
+        listEl.appendChild(li);
+        songEls.push(li);
+        durEls.push(dur);
+      });
     }
 
     function clearLoad() {
@@ -416,159 +332,28 @@
       }
     }
 
-    // 封面解析：MP3 读 ID3v2 APIC，M4A 读 MP4 covr；解析失败保留渐变占位
-    let coverUrl = null;
-    let coverToken = 0; // 切歌时自增，旧封面请求完成后比对，防止覆盖新歌封面
+    // 封面：直接使用 list.json 中的预提取图片，秒出且可被浏览器缓存
+    let coverTok = 0;
     function clearCover() {
-      if (coverUrl) { try { URL.revokeObjectURL(coverUrl); } catch (e) {} coverUrl = null; }
       coverEl.style.backgroundImage = '';
       coverEl.style.backgroundSize = '';
       coverEl.style.backgroundPosition = '';
       const svg = coverEl.querySelector('svg');
       if (svg) svg.style.display = '';
     }
-    function showCover(blob) {
-      if (!blob) return;
-      if (coverUrl) { try { URL.revokeObjectURL(coverUrl); } catch (e) {} }
-      coverUrl = URL.createObjectURL(blob);
-      coverEl.style.backgroundImage = 'url("' + coverUrl + '")';
+    function showCover(url) {
+      coverEl.style.backgroundImage = 'url("' + url + '")';
       coverEl.style.backgroundSize = 'cover';
       coverEl.style.backgroundPosition = 'center';
       const svg = coverEl.querySelector('svg');
       if (svg) svg.style.display = 'none';
     }
-    function synchsafe(a, b, c, d) {
-      return ((a & 0x7f) << 21) | ((b & 0x7f) << 14) | ((c & 0x7f) << 7) | (d & 0x7f);
-    }
-    function parseID3Cover(buf) {
-      if (buf.length < 10) return null;
-      if (String.fromCharCode(buf[0], buf[1], buf[2]) !== 'ID3') return null;
-      const major = buf[3];
-      const flags = buf[5];
-      let offset = 10;
-      if (flags & 0x40) {
-        if (major >= 4) offset += synchsafe(buf[10], buf[11], buf[12], buf[13]);
-        else offset += (buf[10] << 24) | (buf[11] << 16) | (buf[12] << 8) | buf[13];
-      }
-      const tagEnd = 10 + synchsafe(buf[6], buf[7], buf[8], buf[9]);
-      while (offset + 10 <= tagEnd && offset + 10 <= buf.length) {
-        let id, fsize, fstart;
-        if (major === 2) {
-          id = String.fromCharCode(buf[offset], buf[offset + 1], buf[offset + 2]);
-          fsize = (buf[offset + 3] << 16) | (buf[offset + 4] << 8) | buf[offset + 5];
-          fstart = offset + 6;
-        } else {
-          id = String.fromCharCode(buf[offset], buf[offset + 1], buf[offset + 2], buf[offset + 3]);
-          if (major >= 4) fsize = synchsafe(buf[offset + 4], buf[offset + 5], buf[offset + 6], buf[offset + 7]);
-          else fsize = (buf[offset + 4] << 24) | (buf[offset + 5] << 16) | (buf[offset + 6] << 8) | buf[offset + 7];
-          fstart = offset + 10;
-        }
-        if (fsize <= 0) break;
-        if (id === 'APIC' || id === 'PIC') return parseAPIC(buf.subarray(fstart, fstart + fsize), major);
-        offset = fstart + fsize;
-      }
-      return null;
-    }
-    function parseAPIC(data, major) {
-      let p = 0;
-      const enc = data[p++];
-      if (major === 2) {
-        p += 3;
-        p += 1;
-      } else {
-        let mimeEnd = p;
-        while (mimeEnd < data.length && data[mimeEnd] !== 0) mimeEnd++;
-        p = mimeEnd + 1;
-        p += 1;
-      }
-      if (enc === 1 || enc === 2) {
-        while (p + 1 < data.length && !(data[p] === 0 && data[p + 1] === 0)) p += 2;
-        p += 2;
-      } else {
-        while (p < data.length && data[p] !== 0) p++;
-        p += 1;
-      }
-      const img = data.subarray(p);
-      if (img.length < 8) return null;
-      let mime = 'image/jpeg';
-      if (img[0] === 0x89 && img[1] === 0x50) mime = 'image/png';
-      return new Blob([img], { type: mime });
-    }
-    function findMp4Cover(bytes) {
-      const v = bytes;
-      if (String.fromCharCode(v[4], v[5], v[6], v[7]) !== 'ftyp') return null;
-      const CONTAINERS = { moov: 1, trak: 1, mdia: 1, minf: 1, stbl: 1, edts: 1, udta: 1, meta: 1, ilst: 1 };
-      function walk(start, end) {
-        let off = start;
-        while (off + 8 <= end) {
-          let size = (v[off] << 24) | (v[off + 1] << 16) | (v[off + 2] << 8) | v[off + 3];
-          if (size === 0) size = end - off;
-          if (size === 1) break;
-          if (size < 8) break;
-          const type = String.fromCharCode(v[off + 4], v[off + 5], v[off + 6], v[off + 7]);
-          if (type === 'covr') return extractCovr(v, off + 8, off + size);
-          if (CONTAINERS[type]) {
-            let child = off + 8;
-            if (type === 'meta') child += 4;
-            const r = walk(child, off + size);
-            if (r) return r;
-          }
-          off += size;
-        }
-        return null;
-      }
-      return walk(0, bytes.length);
-    }
-    function extractCovr(v, start, end) {
-      let off = start;
-      while (off + 8 <= end) {
-        let size = (v[off] << 24) | (v[off + 1] << 16) | (v[off + 2] << 8) | v[off + 3];
-        if (size < 8) break;
-        const type = String.fromCharCode(v[off + 4], v[off + 5], v[off + 6], v[off + 7]);
-        if (type === 'data') {
-          const img = v.subarray(off + 16, off + size);
-          if (img.length > 8) {
-            let mime = 'image/jpeg';
-            if (img[0] === 0x89 && img[1] === 0x50) mime = 'image/png';
-            return new Blob([img], { type: mime });
-          }
-        }
-        off += size;
-      }
-      const raw = v.subarray(start, end);
-      if (raw.length > 8) {
-        let mime = 'image/jpeg';
-        if (raw[0] === 0x89) mime = 'image/png';
-        return new Blob([raw], { type: mime });
-      }
-      return null;
-    }
-    async function fetchMp3Cover(src, token) {
-      try {
-        // 静态托管可能不支持 Range（永远返回 200 全量），不依赖 206；
-        // 改为流式只读前 4MB 再取消连接，避免为封面下载整首文件。
-        const res = await fetch(src);
-        if (!res.ok || !res.body) return;
-        const reader = res.body.getReader();
-        const chunks = [];
-        let received = 0;
-        const MAX = 4 * 1048576;
-        while (received < MAX) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.length;
-        }
-        try { reader.cancel(); } catch (e) {}
-        if (token !== coverToken) return; // 已切歌，丢弃旧封面
-        let len = 0;
-        for (const c of chunks) len += c.length;
-        const buf = new Uint8Array(len);
-        let o = 0;
-        for (const c of chunks) { buf.set(c, o); o += c.length; }
-        const cover = parseID3Cover(buf);
-        if (cover) showCover(cover);
-      } catch (e) {}
+    function loadCover(url) {
+      const tok = ++coverTok;
+      const img = new Image();
+      img.onload = () => { if (tok === coverTok) showCover(url); };
+      img.onerror = () => { if (tok === coverTok) clearCover(); };
+      img.src = url;
     }
 
     function makeBlobUrl(ld) {
@@ -642,13 +427,9 @@
       timeEl.textContent = '00:00 / 00:00';
       renderList();
       activeLoad = { native: true, started: false };
+      loadCover(song.cover);
       audio.src = song.src;
       audio.currentTime = 0;
-      // 先保证播放流；封面图延后到浏览器空闲再拉，避免与音频开头下载抢带宽。
-      // 立即递增 token，使切歌发生在 idle 回调前也能让旧封面请求失效。
-      const coverTok = ++coverToken;
-      const idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 600); };
-      idle(function () { fetchMp3Cover(song.src, coverTok); }, { timeout: 2000 });
       if (autoplay) { activeLoad.started = true; audio.play().catch(() => {}); }
     }
 
@@ -670,6 +451,7 @@
       buffer.style.width = '0%';
       timeEl.textContent = '00:00 / 00:00';
       renderList();
+      loadCover(song.cover);
 
       const controller = new AbortController();
       ld.controller = controller;
@@ -690,8 +472,6 @@
         ld.complete = true;
         if (!ld.started) startPlayback(ld);
         else extendIfNeeded(ld, true);
-        const cover = findMp4Cover(concatChunks(ld.chunks));
-        if (cover) showCover(cover);
       } catch (e) {
         if (e && e.name === 'AbortError') return;
         titleEl.textContent = '加载失败：' + String(e && e.message ? e.message : e);
@@ -808,7 +588,7 @@
     audio.addEventListener('progress', updateNativeBuffer);
     audio.addEventListener('canplay', updateNativeBuffer);
     audio.addEventListener('error', () => {
-      if (activeLoad && activeLoad.native) titleEl.textContent = '加载失败：' + (audio.error ? audio.error.code : 'unknown');
+      if (activeLoad && activeLoad.native) titleEl.textContent = '加载失败';
     });
     audio.addEventListener('timeupdate', () => {
       if (dragging) return;
@@ -819,7 +599,7 @@
     });
     audio.addEventListener('loadedmetadata', () => {
       updateTimeLabel();
-      const durSpan = listEl.querySelector('[data-dur="' + current + '"]');
+      const durSpan = durEls[current];
       if (durSpan) durSpan.textContent = fmt(audio.duration);
     });
     audio.addEventListener('ended', () => {
@@ -847,6 +627,12 @@
     track.addEventListener('pointermove', (e) => { if (dragging) seekFromEvent(e); });
     track.addEventListener('pointerup', () => { dragging = false; });
     track.addEventListener('pointercancel', () => { dragging = false; });
+
+    function loadSongs() {
+      renderSongList();
+      if (songs.length) load(0, true); // 默认进入页面直接播放第一首
+      else titleEl.textContent = '列表为空';
+    }
 
     setVolume(0.5);
     updateLoopIcon();
