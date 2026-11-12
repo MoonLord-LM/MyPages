@@ -14,16 +14,15 @@
     }
     .controls { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
     .player-center { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-    .player-top { display: flex; align-items: center; gap: 14px; }
     .player-bottom { display: flex; align-items: center; gap: 6px; }
     .player-cover {
-      width: 56px; height: 56px; border-radius: 10px; flex: 0 0 auto;
+      width: 72px; height: 72px; border-radius: 14px; flex: 0 0 auto;
       background: linear-gradient(135deg, #bcd6f6, #d6c4f0);
       display: flex; align-items: center; justify-content: center; color: #6b8fc8;
       box-shadow: 0 4px 14px rgba(107,160,234,.18); overflow: hidden;
     }
-    .player-cover svg { width: 26px; height: 26px; }
-    .player-meta { flex: 1 1 auto; min-width: 0; }
+    .player-cover svg { width: 34px; height: 34px; }
+    .player-meta { flex: 1 1 auto; min-width: 0; text-align: center; }
     .player-title { font-size: 16px; font-weight: 600; color: #1f2328; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .progress-track {
       position: relative; flex: 1; height: 6px; border-radius: 3px;
@@ -391,19 +390,13 @@
       activeLoad = null;
     }
 
-    function updateDownload(ld) {
-      const pct = ld.total ? ld.received / ld.total : 0;
-      buffer.style.width = (pct * 100) + '%';
-    }
-
-    function mediaType(src) {
-      const s = src || '';
-      if (/\.(m4a|mp4|m4b)/i.test(s)) return 'audio/mp4';
-      if (/\.(mp3|mp2|mpa)/i.test(s)) return 'audio/mpeg';
-      if (/\.(ogg|oga|opus)/i.test(s)) return 'audio/ogg';
-      if (/\.(wav)/i.test(s)) return 'audio/wav';
-      if (/\.(flac)/i.test(s)) return 'audio/flac';
-      return 'audio/mp4';
+    // 缓冲条：反映 <audio> 原生已缓冲到的位置（≈已下载位置）
+    function updateBufferBar() {
+      const b = audio.buffered;
+      const total = audio.duration && isFinite(audio.duration) ? audio.duration : 0;
+      if (b && b.length && total) {
+        buffer.style.width = Math.min(1, b.end(b.length - 1) / total) * 100 + '%';
+      }
     }
 
     // 封面：直接使用 list.json 中的预提取图片，秒出且可被浏览器缓存
@@ -430,17 +423,14 @@
       img.src = url;
     }
 
-    // 积极缓冲：一次性把整段音频拉到本地再交给 <audio> 播放，
-    // 避免浏览器边下边播时网络波动导致的中途卡顿；缓冲条实时反映下载进度。
-    async function load(i, autoplay) {
+    // m4a 为 faststart（moov 在文件头部），交给浏览器原生渐进式流式播放：
+    // 下载到 moov + 初始 mdat 即可开播，其余在后台继续下载，浏览器自动续缓冲、可拖动、不会卡。
+    function load(i, autoplay) {
       current = i;
       const song = songs[i];
       clearLoad();
       clearCover();
-      const ld = {
-        chunks: [], received: 0, total: 0, objectUrl: null,
-        started: false, complete: false, playing: !!autoplay, controller: null,
-      };
+      const ld = { started: false, playing: !!autoplay };
       activeLoad = ld;
       titleEl.textContent = song.name;
       fill.style.width = '0%';
@@ -449,35 +439,9 @@
       timeEl.textContent = '00:00 / 00:00';
       renderList();
       loadCover(song.cover);
-
-      const controller = new AbortController();
-      ld.controller = controller;
-      try {
-        const res = await fetch(song.src, { signal: controller.signal });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        ld.total = parseInt(res.headers.get('Content-Length') || '0', 10) || 0;
-        const reader = res.body.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          ld.chunks.push(value);
-          ld.received += value.length;
-          updateDownload(ld);
-          if (activeLoad !== ld) return;
-        }
-        ld.complete = true;
-        if (activeLoad !== ld) return;
-        const blob = new Blob(ld.chunks, { type: mediaType(song.src) });
-        if (ld.objectUrl) { try { URL.revokeObjectURL(ld.objectUrl); } catch (e) {} }
-        ld.objectUrl = URL.createObjectURL(blob);
-        audio.src = ld.objectUrl;
-        audio.currentTime = 0;
-        ld.started = true;
-        if (ld.playing) audio.play().catch(() => {});
-      } catch (e) {
-        if (e && e.name === 'AbortError') return;
-        titleEl.textContent = '加载失败：' + String(e && e.message ? e.message : e);
-      }
+      audio.src = song.src;
+      audio.currentTime = 0;
+      if (autoplay) { ld.started = true; audio.play().catch(() => {}); }
     }
 
     function playIndex(i) {
@@ -587,6 +551,8 @@
 
     audio.addEventListener('play', () => { if (activeLoad) activeLoad.started = true; setPlayIcon(true); });
     audio.addEventListener('pause', () => setPlayIcon(false));
+    audio.addEventListener('progress', updateBufferBar);
+    audio.addEventListener('canplay', updateBufferBar);
     audio.addEventListener('error', () => {
       if (activeLoad) titleEl.textContent = '加载失败';
     });
