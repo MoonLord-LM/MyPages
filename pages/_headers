@@ -1,6 +1,7 @@
 # Cloudflare Pages 响应头规则
 
 /static/*
+  Cache-Control: public, max-age=31536000, immutable
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Access-Control-Allow-Origin: *
   Access-Control-Allow-Methods: GET,POST,OPTIONS,HEAD,PUT,DELETE
