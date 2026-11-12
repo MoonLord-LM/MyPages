@@ -336,7 +336,7 @@ body { overflow-x: clip; }
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-11-13 05:04:56 +08:00<br>
+<p>2026-11-13 07:35:45 +08:00<br>
 https://github.com/MoonLord-LM/MyPages</p>
 <hr>
 <h1>MyPages</h1>
@@ -354,11 +354,14 @@ https://github.com/MoonLord-LM/MyPages</p>
 <p><code>/pages</code> 目录下存放 html 或 md 文件，视为页面文件<br>
 优先使用 html 文件生成页面，如果没有同名的 html 文件，则使用 md 文件进行生成<br>
 例如首页的内容就应该存放到 <code>/pages/index.html</code> 或 <code>/pages/index.md</code><br>
-保留名：<code>header.html</code> 和 <code>footer.html</code>，视为公共模板文件，不视作页面文件</p>
+特殊文件名：<code>header.html</code> 和 <code>footer.html</code>，视为公共模板文件，不视作页面文件</p>
 <h3>生成结果</h3>
 <p>页面生成后，按原目录结构，存放到 <code>/dist</code> 目录中，例如 <code>/pages/blog/post.md</code> → <code>/dist/blog/post.html</code><br>
 静态资源，按原目录结构，复制到 <code>/dist</code> 目录中，例如 <code>/pages/assets/style/blog.css</code> → <code>/dist/assets/style/blog.css</code><br>
-公共模板文件 <code>header.html</code> 和 <code>footer.html</code> 不复制</p>
+公共模板文件 <code>header.html</code> 和 <code>footer.html</code> 不复制<br>
+构建时，默认会先清空 <code>/dist</code> 中的所有文件和文件夹，以保证和 <code>/pages</code> 一致<br>
+特殊路径： <code>/dist/static/</code>，构建过程不会清空，里面的文件只做新增、修改，不做删除<br>
+推荐将长期不修改的、较大的静态资源文件，命名为 <code>&lt;名称&gt;.&lt;哈希值&gt;.&lt;扩展名&gt;</code> 的格式，放到 <code>/dist/static/</code> 中</p>
 <h3>静态资源</h3>
 <p>推荐使用 <code>/assets</code> 目录，单独存放页面使用的视频、图片、js、css、字体等各种静态资源文件<br>
 <code>/pages</code> 目录下的所有文件，只要不是 html 或 md 文件，一律视为静态资源<br>
