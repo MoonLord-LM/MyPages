@@ -10,7 +10,7 @@
     .player {
       background: #fff; border: 1px solid #e3e8ef; border-radius: 16px;
       padding: 6px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.06); margin-bottom: 28px;
-      display: flex; align-items: center; gap: 14px;
+      display: flex; align-items: center; gap: 14px; transition: opacity .6s ease;
     }
     .controls { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
     .player-center { flex: 1 1 auto; min-width: 0; align-self: stretch; position: relative; margin: 0 14px; }
@@ -57,7 +57,7 @@
     .song-list {
       list-style: none; margin-top: 14px;
       border: 1px solid #e3e8ef; border-radius: 12px;
-      overflow: hidden; background: #fff;
+      overflow: hidden; background: #fff; transition: opacity .6s ease;
     }
     .song-item {
       display: flex; align-items: center; gap: 12px; padding: 2px 12px;
@@ -110,6 +110,16 @@
       display: flex; align-items: center; justify-content: center; padding: 0;
     }
     .loop-btn svg { width: 24px; height: 24px; }
+    /* 播放时的全屏模糊氛围背景（用当前封面图的颜色） */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background-size: cover; background-position: center;
+      filter: blur(60px) saturate(1.3); transform: scale(1.3);
+      opacity: 0; transition: opacity .6s ease;
+    }
+    /* 氛围背景开启时，播放器与列表半透明，避免被图片影响查看 */
+    body.ambient .player,
+    body.ambient .song-list { opacity: .5; }
     @media (max-width: 560px) {
       .player { flex-wrap: wrap; }
       .player-center { flex: 1 1 100%; order: -1; }
@@ -117,6 +127,7 @@
   </style>
 </head>
 <body>
+  <div class="bg-layer" id="bgLayer"></div>
   <main class="wrap">
     <h1>音乐推荐</h1>
     <div class="player">
@@ -415,6 +426,13 @@
       const svg = coverEl.querySelector('svg');
       if (svg) svg.style.display = 'none';
     }
+    // 全屏模糊氛围背景：用当前封面图的颜色铺满页面
+    const bgLayer = document.getElementById('bgLayer');
+    function setAmbient(url) {
+      bgLayer.style.backgroundImage = 'url("' + url + '")';
+      bgLayer.style.opacity = '1';
+      document.body.classList.add('ambient');
+    }
     function loadCover(url) {
       const tok = ++coverTok;
       const img = new Image();
@@ -427,6 +445,7 @@
       if (!pendingCover) return;
       const url = pendingCover;
       pendingCover = null;
+      setAmbient(url);
       loadCover(url);
     }
 
