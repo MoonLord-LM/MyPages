@@ -7,13 +7,12 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     .head {
-      display: flex; align-items: baseline; justify-content: space-between;
+      display: flex; align-items: center; justify-content: flex-start;
       gap: 16px; margin-bottom: 24px; padding-bottom: .3em;
       border-bottom: 1px solid #d8dee4; flex-wrap: wrap;
     }
     .head h1 { font-size: 28px; color: #1f2328; }
     .genre-filter { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #59636e; }
-    .genre-filter .label { color: #59636e; flex: 0 0 auto; }
     .genre-btn {
       border: 1px solid #d0d7de; background: #fff; color: #1f2328;
       padding: 4px 13px; border-radius: 999px; cursor: pointer; font-size: 13px;
@@ -314,7 +313,6 @@ body { overflow-x: clip; }
     <header class="head">
       <h1>音乐推荐</h1>
       <div class="genre-filter" id="genreFilter">
-        <span class="label">风格</span>
         <button class="genre-btn" data-genre="安静">安静</button>
         <button class="genre-btn" data-genre="忧伤">忧伤</button>
         <button class="genre-btn" data-genre="温暖">温暖</button>
