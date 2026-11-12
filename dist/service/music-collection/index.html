@@ -548,7 +548,9 @@ body { overflow-x: clip; }
     }
 
     function updateTimeLabel() {
-      timeEl.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+      const dur = audio.duration;
+      if (!isFinite(dur) || dur <= 0) { timeEl.textContent = ''; return; }
+      timeEl.textContent = fmt(audio.currentTime) + ' / ' + fmt(dur);
     }
 
     function renderList() {
