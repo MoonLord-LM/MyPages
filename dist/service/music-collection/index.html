@@ -841,10 +841,10 @@ body { overflow-x: clip; }
     track.addEventListener('pointercancel', () => { dragging = false; });
 
     // 风格筛选
-    // 安静：慢节奏，忧伤主题的歌词，以人声为主，没有明显的人声高音段落或大音量的乐器声
+    // 安静：慢节奏，忧伤主题的歌词，以单一人声为主，没有明显的高音段落，没有大音量的乐器声
     // 忧伤：忧伤主题的歌词
     // 温暖：快乐主题的歌词
-    // 欢快：快节奏，快乐主题的歌词，有明显的人声高音段落或大音量的乐器声
+    // 欢快：快节奏，快乐主题的歌词
     const genreFilterEl = document.getElementById('genreFilter');
     const genreBtns = Array.from(genreFilterEl.querySelectorAll('.genre-btn'));
     let activeGenres = new Set();
