@@ -26,8 +26,25 @@ set NO_PROXY=localhost,127.0.0.1
 
 
 
+set "temp_dir=%temp%\MyPages_%random%_%random%_%random%_%random%\"
+if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
+if not exist "!temp_dir!" ( mkdir "!temp_dir!" )
+pushd "!temp_dir!"
+if !errorlevel! neq 0 (
+    echo 错误：无法进入临时目录
+    echo.
+    pause
+    exit /b 1
+)
+
 call npx wrangler login
 call npx wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main"
+
+popd
+if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
+
+echo.
+echo 上传完成
 
 
 
