@@ -97,7 +97,7 @@ $headers = @{
 $cnOffset = [System.TimeSpan]::FromHours(8)
 $checkTime = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
 $nowCn = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).DateTime
-$skipHours = 72
+$skipHours = 0
 $threadCount = 50
 [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 $utf8 = [System.Text.UTF8Encoding]::new($false)
@@ -124,6 +124,8 @@ function Format-Size($value) {
     while ($size -ge 1024 -and $i -lt 4) { $size = $size / 1024; $i++ }
     return $size.ToString('0.00', [System.Globalization.CultureInfo]::InvariantCulture) + ' ' + $units[$i]
 }
+
+Write-Host '开始检查链接有效性'
 
 try {
     $raw = [System.IO.File]::ReadAllText($jsonPath, [System.Text.Encoding]::UTF8)
@@ -338,6 +340,9 @@ try {
     $pool.Dispose()
 }
 
+Write-Host ''
+Write-Host '开始生成站点搜索数据'
+
 try {
     $sorted = @($results | Sort-Object -Property $sortByTime)
     $checkedText = ConvertTo-Json -InputObject $sorted -Depth 5
@@ -357,7 +362,7 @@ try {
 
     $tempGzip = [System.IO.Path]::Combine($env:TEMP, 'quark-update-' + [guid]::NewGuid().ToString('N') + '.gz')
     if ($env:seven_zip) {
-        Write-Host '压缩方式：使用 7-Zip 压缩 gzip 格式' -ForegroundColor Green
+        Write-Host '压缩方式：使用 7-Zip 压缩 gzip 格式'
         $argLine = 'a -tgzip -mx=9 -mmt=on -mtc=off -mtm=off -mta=off -y "' + $tempGzip + '" -si' + $outFileName + '.json'
         $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
         $startInfo.FileName = $env:seven_zip
@@ -378,7 +383,7 @@ try {
         $gzipBytes = [System.IO.File]::ReadAllBytes($tempGzip)
         Remove-Item -Force -LiteralPath $tempGzip
     } else {
-        Write-Host '压缩方式：使用 PowerShell 内置的 GZipStream 压缩' -ForegroundColor Green
+        Write-Host '压缩方式：使用 PowerShell 内置的 GZipStream 压缩'
         Add-Type -AssemblyName System.IO.Compression
         $memStream = New-Object System.IO.MemoryStream
         $mode = [System.IO.Compression.CompressionMode]::Compress
@@ -407,10 +412,10 @@ try {
 
 Write-Host ('检查完成：共 ' + $records.Count + ' 条，跳过 ' + $skipped + ' 条，检查 ' + $checked + ' 条，检查有效 ' + $pass + ' 条，检查无效 ' + $fail + ' 条')
 Write-Host ('数据统计：共 ' + $records.Count + ' 条，有效数据共 ' + $siteList.Count + ' 条，无效数据共 ' + ($records.Count - $siteList.Count) + ' 条')
-Write-Host ('已写回检查结果: ' + $jsonPath)
-Write-Host ('已生成站点数据: ' + $outGzip)
-Write-Host ''
+Write-Host ('已写回检查结果: ' + $jsonPath) -ForegroundColor Green
+Write-Host ('已生成站点数据: ' + $outGzip) -ForegroundColor Green
 
+Write-Host ''
 Write-Host '开始生成资源收录页面'
 
 $total = $sorted.Count
