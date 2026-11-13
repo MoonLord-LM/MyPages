@@ -160,7 +160,7 @@ foreach ($site in $sites) {
                     if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add($lk) }
                 }
                 if ($r.links.Count -gt 0) {
-                    Write-Host ('页面 ' + $r.num + ' 采集到 ' + $r.links.Count + ' 条')
+                    Write-Host ('站点 ' + $site.Host + ' 第 ' + $r.num + ' 页，本页 ' + $r.links.Count + ' 条，累计 ' + $rawLinks.Count + ' 条')
                 } else {
                     Write-Host ('页面 ' + $r.num + ' 含百度链接')
                 }
