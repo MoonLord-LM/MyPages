@@ -35,12 +35,14 @@
 
 [https://netlify.moonlord.cc](https://netlify.moonlord.cc)  
 
-## 站点 Pretty URL 效果
+## 站点 Clean / Pretty URL 效果
 
 | 站点 | 完整文件路径 | / | /index | /index.html |
 | -- | -- | -- | -- | -- |
-| 主站 | [/about/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about/index](https://www.moonlord.cc/about/index) ❌ 404 报错 | [/about/index.html](https://www.moonlord.cc/about/index.html) ✅ |
+| 主站 | [/about/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about/index](https://www.moonlord.cc/about/index) ✅ | [/about/index.html](https://www.moonlord.cc/about/index.html) ✅ |
 | GitHub | [/about/mirror.html](https://github.moonlord.cc/about/mirror.html) ✅ | [/about/](https://github.moonlord.cc/about/) ✅ | [/about/index](https://github.moonlord.cc/about/index) ✅ | [/about/index.html](https://github.moonlord.cc/about/index.html) ✅ |
 | CloudFlare | [/about/mirror.html](https://cloudflare.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [/about/](https://cloudflare.moonlord.cc/about/) ✅ | [/about/index](https://cloudflare.moonlord.cc/about/index) ℹ️ 308 跳转 | [/about/index.html](https://cloudflare.moonlord.cc/about/index.html) ℹ️ 308 跳转 |
 | Vercel | [/about/mirror.html](https://vercel.moonlord.cc/about/mirror.html) ✅ | [/about/](https://vercel.moonlord.cc/about/) ✅ | [/about/index](https://vercel.moonlord.cc/about/index) ❌ 404 报错 | [/about/index.html](https://vercel.moonlord.cc/about/index.html) ✅ |
 | Netlify | [/about/mirror.html](https://netlify.moonlord.cc/about/mirror.html) ✅ | [/about/](https://netlify.moonlord.cc/about/) ✅ | [/about/index](https://netlify.moonlord.cc/about/index) ✅ | [/about/index.html](https://netlify.moonlord.cc/about/index.html) ✅ |
+
+## 站点 HTTP Range Requests / 206 Partial Content 效果
