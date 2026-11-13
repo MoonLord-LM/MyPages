@@ -11,7 +11,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 powershell -NoProfile -Command "Write-Host '检查 quark.json 中的夸克网盘资源链接，记录链接有效状态' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '已失效的，以及 3 天内已检查过是有效的，不做处理' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '按检查结果生成站点搜索数据 gz 文件，并按天生成资源收录页面' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '按检查结果生成站点搜索数据 gz 文件，并按天生成资源收录页面 md 文件' -ForegroundColor Green"
 echo.
 
 
@@ -40,8 +40,9 @@ if !errorlevel! neq 0 (
 
 
 set "json_file=!script_dir!data\quark.json"
-set "out_dir=!script_dir!..\..\dist\static\search"
 set "out_file_name=pan-quark-cn"
+set "check_skip_hours=72"
+set "out_dir=!script_dir!..\..\dist\static\search"
 set "page_dir=!script_dir!..\..\pages\service\internet-search\quark"
 if not exist "!json_file!" (
     echo 错误：未找到数据文件 "!json_file!"
@@ -100,7 +101,7 @@ $headers = @{
 $cnOffset = [System.TimeSpan]::FromHours(8)
 $checkTime = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
 $nowCn = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).DateTime
-$skipHours = 0
+$skipHours = $env:check_skip_hours
 $threadCount = 50
 [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 $utf8 = [System.Text.UTF8Encoding]::new($false)
@@ -344,7 +345,13 @@ try {
 }
 
 Write-Host ''
+$validCount = @($results | Where-Object { $_.check_valid }).Count
+Write-Host ('检查完成：跳过 ' + $skipped + ' 条，检查 ' + $checked + ' 条，检查有效 ' + $pass + ' 条，检查无效 ' + $fail + ' 条')
+Write-Host ('数据统计：共 ' + $records.Count + ' 条，有效数据 ' + $validCount + ' 条，无效数据 ' + ($records.Count - $validCount) + ' 条')
+
+Write-Host ''
 Write-Host '开始生成站点搜索数据'
+Write-Host ''
 
 try {
     $sorted = @($results | Sort-Object -Property $sortByTime)
@@ -420,13 +427,12 @@ try {
     exit 1
 }
 
-Write-Host ('检查完成：共 ' + $records.Count + ' 条，跳过 ' + $skipped + ' 条，检查 ' + $checked + ' 条，检查有效 ' + $pass + ' 条，检查无效 ' + $fail + ' 条')
-Write-Host ('数据统计：共 ' + $records.Count + ' 条，有效数据共 ' + $siteList.Count + ' 条，无效数据共 ' + ($records.Count - $siteList.Count) + ' 条')
 Write-Host ('已写回检查结果: ' + $jsonPath) -ForegroundColor Green
 Write-Host ('已生成站点数据: ' + $outGzip) -ForegroundColor Green
 
 Write-Host ''
 Write-Host '开始生成资源收录页面'
+Write-Host ''
 
 $total = $sorted.Count
 $sortByTitle = @(
@@ -489,6 +495,6 @@ try {
     exit 1
 }
 
-Write-Host ('生成完成：共 ' + $total + ' 条，有效 ' + $pageValid + ' 条，失效 ' + $pageInvalid + ' 条，跳过 ' + $pageSkipped + ' 条，生成 ' + $pages.Count + ' 个页面') -ForegroundColor Green
 Write-Host ('页面目录: ' + $pageDir)
+Write-Host ('生成完成：共 ' + $total + ' 条，有效 ' + $pageValid + ' 条，失效 ' + $pageInvalid + ' 条，跳过 ' + $pageSkipped + ' 条，生成 ' + $pages.Count + ' 个页面') -ForegroundColor Green
 -----END POWERSHELL CODE-----
