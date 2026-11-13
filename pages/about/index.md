@@ -7,7 +7,7 @@
 ## 内容索引
 
 [站点地图](../sitemap.xml)  
-[镜像部署](../about/mirror.html)  
+[站点镜像](../about/mirror.html)  
 [外链清单](../external-url.json)  
 [GitHub Repo 清单](../github/repos/index.html)  
 [CloudFlare 静态资源清单](https://cloudflare.moonlord.cc/static/list.json)  

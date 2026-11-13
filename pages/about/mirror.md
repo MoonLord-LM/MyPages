@@ -1,4 +1,4 @@
-# 镜像部署
+# 站点镜像
 
 ## 主站
 
@@ -18,12 +18,29 @@
 ## CloudFlare Pages 镜像站点
 
 部署在 CloudFlare Pages 上，使用 Cloudflare Wrangler 手动同步  
-由于带宽资源和存储空间整体较优，一些大的静态资源文件仅在这个站点部署  
 
 [https://cloudflare.moonlord.cc](https://cloudflare.moonlord.cc)  
+
+由于带宽资源和存储空间整体较优，一些大的静态资源文件仅在这个站点部署  
 
 ## Vercel 镜像站点
 
 部署在 Vercel 上，使用 GitHub App 自动同步  
 
 [https://vercel.moonlord.cc](https://vercel.moonlord.cc)  
+
+## Netlify 镜像站点
+
+部署在 Netlify 上，使用 GitHub App 自动同步  
+
+[https://netlify.moonlord.cc](https://netlify.moonlord.cc)  
+
+## 站点 Pretty URL 效果
+
+| 站点 | 完整文件路径 | / | /index | /index.html |
+| -- | -- | -- | -- | -- |
+| 主站 | [/about/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about/index](https://www.moonlord.cc/about/index) ❌ 404 报错 | [/about/index.html](https://www.moonlord.cc/about/index.html) ✅ |
+| GitHub | [/about/mirror.html](https://github.moonlord.cc/about/mirror.html) ✅ | [/about/](https://github.moonlord.cc/about/) ✅ | [/about/index](https://github.moonlord.cc/about/index) ✅ | [/about/index.html](https://github.moonlord.cc/about/index.html) ✅ |
+| CloudFlare | [/about/mirror.html](https://cloudflare.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [/about/](https://cloudflare.moonlord.cc/about/) ✅ | [/about/index](https://cloudflare.moonlord.cc/about/index) ℹ️ 308 跳转 | [/about/index.html](https://cloudflare.moonlord.cc/about/index.html) ℹ️ 308 跳转 |
+| Vercel | [/about/mirror.html](https://vercel.moonlord.cc/about/mirror.html) ✅ | [/about/](https://vercel.moonlord.cc/about/) ✅ | [/about/index](https://vercel.moonlord.cc/about/index) ❌ 404 报错 | [/about/index.html](https://vercel.moonlord.cc/about/index.html) ✅ |
+| Netlify | [/about/mirror.html](https://netlify.moonlord.cc/about/mirror.html) ✅ | [/about/](https://netlify.moonlord.cc/about/) ✅ | [/about/index](https://netlify.moonlord.cc/about/index) ℹ️ 301 跳转 | [/about/index.html](https://netlify.moonlord.cc/about/index.html) ✅ |
