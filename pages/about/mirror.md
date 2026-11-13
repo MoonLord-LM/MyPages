@@ -37,13 +37,13 @@
 
 ## 站点 Clean / Pretty URL 效果
 
-| 站点 | 完整文件路径 | / | /index | /index.html |
-| -- | -- | -- | -- | -- |
-| 主站 | [/about/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about/index](https://www.moonlord.cc/about/index) ✅ | [/about/index.html](https://www.moonlord.cc/about/index.html) ✅ |
-| GitHub | [/about/mirror.html](https://github.moonlord.cc/about/mirror.html) ✅ | [/about/](https://github.moonlord.cc/about/) ✅ | [/about/index](https://github.moonlord.cc/about/index) ✅ | [/about/index.html](https://github.moonlord.cc/about/index.html) ✅ |
-| CloudFlare | [/about/mirror.html](https://cloudflare.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [/about/](https://cloudflare.moonlord.cc/about/) ✅ | [/about/index](https://cloudflare.moonlord.cc/about/index) ℹ️ 308 跳转 | [/about/index.html](https://cloudflare.moonlord.cc/about/index.html) ℹ️ 308 跳转 |
-| Vercel | [/about/mirror.html](https://vercel.moonlord.cc/about/mirror.html) ✅ | [/about/](https://vercel.moonlord.cc/about/) ✅ | [/about/index](https://vercel.moonlord.cc/about/index) ❌ 404 报错 | [/about/index.html](https://vercel.moonlord.cc/about/index.html) ✅ |
-| Netlify | [/about/mirror.html](https://netlify.moonlord.cc/about/mirror.html) ✅ | [/about/](https://netlify.moonlord.cc/about/) ✅ | [/about/index](https://netlify.moonlord.cc/about/index) ✅ | [/about/index.html](https://netlify.moonlord.cc/about/index.html) ✅ |
+| 站点 | /文件路径 | /文件夹路径/ | /文件夹路径 | /index | /index.html |
+| -- | -- | -- | -- | -- | -- |
+| 主站 | [/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about](https://www.moonlord.cc/about) ✅ 301 跳转 | [/about/index](https://www.moonlord.cc/about/index) ✅ | [/about/index.html](https://www.moonlord.cc/about/index.html) ✅ |
+| GitHub | [/mirror.html](https://github.moonlord.cc/about/mirror.html) ✅ | [/about/](https://github.moonlord.cc/about/) ✅ | [/about](https://github.moonlord.cc/about) ✅ 301 跳转 | [/about/index](https://github.moonlord.cc/about/index) ✅ | [/about/index.html](https://github.moonlord.cc/about/index.html) ✅ |
+| CloudFlare | [/mirror.html](https://cloudflare.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [/about/](https://cloudflare.moonlord.cc/about/) ✅ | [/about](https://cloudflare.moonlord.cc/about) ✅ 308 跳转 | [/about/index](https://cloudflare.moonlord.cc/about/index) ℹ️ 308 跳转 | [/about/index.html](https://cloudflare.moonlord.cc/about/index.html) ℹ️ 308 跳转 |
+| Vercel | [/mirror.html](https://vercel.moonlord.cc/about/mirror.html) ✅ | [/about/](https://vercel.moonlord.cc/about/) ✅ | [/about](https://vercel.moonlord.cc/about) ℹ️ 200 无跳转 | [/about/index](https://vercel.moonlord.cc/about/index) ❌ 404 报错 | [/about/index.html](https://vercel.moonlord.cc/about/index.html) ✅ |
+| Netlify | [/mirror.html](https://netlify.moonlord.cc/about/mirror.html) ✅ | [/about/](https://netlify.moonlord.cc/about/) ✅ | [/about](https://netlify.moonlord.cc/about) ℹ️ 200 无跳转 | [/about/index](https://netlify.moonlord.cc/about/index) ✅ | [/about/index.html](https://netlify.moonlord.cc/about/index.html) ✅ |
 
 ## 站点 HTTP Range Requests / 206 Partial Content 效果
 
@@ -63,7 +63,7 @@
 
 | 站点 | 状态码 | 返回内容 |
 | -- | -- | -- |
-| 主站 | [/404/404/404.html](https://www.moonlord.cc/404/404/404.html) ✅ 404 | 提示信息：`404 Not Found: /404/404/404.html`，120 秒后返回首页 |
+| 主站 | [/404/404/404.html](https://www.moonlord.cc/404/404/404.html) ✅ 404 | 默认 404 页面 |
 | GitHub | [/404/404/404.html](https://github.moonlord.cc/404/404/404.html) ✅ 404 | GitHub 默认 404 页面 |
 | CloudFlare | [/404/404/404.html](https://cloudflare.moonlord.cc/404/404/404.html) ⚠️ 200 | 直接展示首页内容 |
 | Vercel | [/404/404/404.html](https://vercel.moonlord.cc/404/404/404.html) ✅ 404 | Vercel 默认 404 页面 |

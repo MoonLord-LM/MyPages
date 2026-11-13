@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - 页面不存在</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #1f2328;
+      background: #fafafa;
+      font-family: "Microsoft YaHei UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .error-page {
+      min-height: calc(100vh - 54px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .error-inner { width: 100%; max-width: 720px; }
+    .error-code {
+      margin: 0;
+      font-size: 72px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #6ba0ea;
+    }
+    .error-page h2 { margin: 8px 0 28px; font-size: 24px; font-weight: 600; }
+    .error-tip { margin: 0 0 8px; font-size: 14px; color: #59636e; }
+    .error-url {
+      margin: 0 auto 20px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-variant-ligatures: none;
+      color: #1f2328;
+      background: #f6f8fa;
+      border: 1px solid #d8dee4;
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+    }
+    .error-actions { margin-top: 28px; }
+    .error-btn, .error-link {
+      display: inline-block;
+      margin: 6px;
+      padding: 10px 20px;
+      font-family: inherit;
+      font-size: 16px;
+      line-height: 1.4;
+      border: 1px solid #d8dee4;
+      border-radius: 8px;
+      background: #fff;
+      color: #1f2328;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .error-btn {
+      border-color: transparent;
+      color: #fff;
+      background: linear-gradient(135deg, #6ba0ea, #9b6fe0);
+    }
+    .error-btn:hover { opacity: .92; }
+    .error-link:hover { border-color: #0969da; color: #0969da; }
+  </style>
+</head>
+<body>
+  <main class="error-page">
+    <div class="error-inner">
+      <h1 class="error-code">404</h1>
+      <h2>页面不存在</h2>
+
+      <p class="error-tip">请求的资源无法找到：</p>
+      <div class="error-url" id="url"></div>
+
+      <p class="error-tip">来源页面：</p>
+      <div class="error-url" id="referrer"></div>
+
+      <div class="error-actions">
+        <button type="button" class="error-btn" id="copyBtn">复制错误链接</button>
+        <a class="error-link" href="/">返回首页</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      document.getElementById('url').textContent = location.href;
+      document.getElementById('referrer').textContent =
+        document.referrer || '未知（直接访问或浏览器未提供）';
+
+      function legacyCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { }
+        document.body.removeChild(ta);
+        return ok ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(text).catch(function () { return legacyCopy(text); });
+        }
+        return legacyCopy(text);
+      }
+
+      var btn = document.getElementById('copyBtn');
+      var timer;
+      btn.addEventListener('click', function () {
+        copyText(location.href).then(function () {
+          btn.textContent = '已复制';
+        }, function () {
+          btn.textContent = '复制失败';
+        }).then(function () {
+          clearTimeout(timer);
+          timer = setTimeout(function () { btn.textContent = '复制错误链接'; }, 1600);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
