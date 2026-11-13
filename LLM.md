@@ -44,12 +44,6 @@
 目前，通过 header.html 注入的 `<style>` 会在 `<body>` 后面  
 虽然可以正常解析，但是不符合 HTML 规范  
 
-## 镜像站点可用性检查
-
-目前 [/about/mirror.md](https://www.moonlord.cc/about/mirror.html) 里面记录了镜像站点信息  
-但是不同镜像站点部署后的效果略有差异，最好进行充分的检查和对比  
-比如对于 206 Partial Content 的处理，以及 404 Not Found 的处理等  
-
 
 
 # 编码规范

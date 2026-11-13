@@ -47,15 +47,15 @@
 
 ## 站点 HTTP Range Requests / 206 Partial Content 效果
 
-以 /favicon.ico 为基准，发送四种 `Range` 请求头测试  
+以 /favicon.ico 为基准，发送三种 `Range` 请求头测试  
 
-| 站点 | 单段范围 `bytes=0-99` | 尾部范围 `bytes=-100` | 超出范围 `bytes=99999999-` | 多段范围 `bytes=0-9,20-29` |
-| -- | -- | -- | -- | -- |
-| 主站 | ✅ 206 Partial Content | ✅ 206 Partial Content | ✅ 416 + Content-Range | ✅ 206 multipart/byteranges |
-| GitHub | ✅ 206 Partial Content | ✅ 206 Partial Content | ✅ 416 + Content-Range | ℹ️ 200 返回全文 |
-| CloudFlare | ✅ 206 Partial Content | ✅ 206 Partial Content | ✅ 416 + Content-Range | ✅ 206 multipart/byteranges |
-| Vercel | ✅ 206 Partial Content | ✅ 206 Partial Content | ℹ️ 416 但响应体仍是全文 | ℹ️ 200 返回全文 |
-| Netlify | ✅ 206 Partial Content | ✅ 206 Partial Content | ℹ️ 缓存命中时 416（无 Content-Range），否则 200 全文 | ℹ️ 200 返回全文 |
+| 站点 | 单段范围 `bytes=0-99` | 尾部范围 `bytes=-100` | 多段范围 `bytes=0-9,20-29` |
+| -- | -- | -- | -- |
+| 主站 | ✅ 206 Partial Content | ✅ 206 Partial Content | ✅ 206 multipart/byteranges |
+| GitHub | ✅ 206 Partial Content | ✅ 206 Partial Content | ⚠️ 200 返回全文 |
+| CloudFlare | ✅ 206 Partial Content | ✅ 206 Partial Content | ✅ 206 multipart/byteranges |
+| Vercel | ✅ 206 Partial Content | ✅ 206 Partial Content | ⚠️ 200 返回全文 |
+| Netlify | ✅ 206 Partial Content | ✅ 206 Partial Content | ⚠️ 200 返回全文 |
 
 ## 站点 404 Not Found 效果
 
@@ -63,8 +63,8 @@
 
 | 站点 | 状态码 | 返回内容 |
 | -- | -- | -- |
-| 主站 | [/404/404/404.html](https://www.moonlord.cc/404/404/404.html) ❌ 404 | text/plain `404 Not Found: /404/404/404.html`，附 120 秒后跳回首页的 Refresh 头 |
-| GitHub | [/404/404/404.html](https://github.moonlord.cc/404/404/404.html) ❌ 404 | GitHub Pages 默认 404 页面（text/html） |
-| CloudFlare | [/404/404/404.html](https://cloudflare.moonlord.cc/404/404/404.html) ℹ️ 200 | 首页 HTML，状态码不是 404 |
-| Vercel | [/404/404/404.html](https://vercel.moonlord.cc/404/404/404.html) ❌ 404 | text/plain `The page could not be found`，另含 `NOT_FOUND` 与请求 ID |
-| Netlify | [/404/404/404.html](https://netlify.moonlord.cc/404/404/404.html) ❌ 404 | Netlify 默认 `Page not found` 页面（text/html） |
+| 主站 | [/404/404/404.html](https://www.moonlord.cc/404/404/404.html) ✅ 404 | 提示信息：`404 Not Found: /404/404/404.html`，120 秒后返回首页 |
+| GitHub | [/404/404/404.html](https://github.moonlord.cc/404/404/404.html) ✅ 404 | GitHub 默认 404 页面 |
+| CloudFlare | [/404/404/404.html](https://cloudflare.moonlord.cc/404/404/404.html) ⚠️ 200 | 直接展示首页内容 |
+| Vercel | [/404/404/404.html](https://vercel.moonlord.cc/404/404/404.html) ✅ 404 | Vercel 默认 404 页面 |
+| Netlify | [/404/404/404.html](https://netlify.moonlord.cc/404/404/404.html) ✅ 404 | Netlify 默认 404 页面 |
