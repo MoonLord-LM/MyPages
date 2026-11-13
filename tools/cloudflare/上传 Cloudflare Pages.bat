@@ -1,0 +1,36 @@
+@echo off
+chcp 65001 >nul
+setlocal disabledelayedexpansion
+set "script=%~0" & set "script_path=%~f0" & set "script_dir=%~dp0" & set "script_name=%~n0" & set "script_ext=%~x0" & set "script_name_ext=%~nx0"
+setlocal enabledelayedexpansion
+if /i "!cd!"=="!SystemRoot!\System32" ( cd /d "!script_dir!" )
+powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundColor Cyan" && echo.
+
+
+
+powershell -NoProfile -Command "Write-Host '上传静态资源文件到 Cloudflare Pages 的指定工程' -ForegroundColor Green"
+echo.
+
+
+
+REM 静态资源文件文件夹
+for %%i in ("!script_dir!..\..\dist") do set "static_dir=%%~fi"
+
+REM Cloudflare Pages 工程名
+set "cloudflare_project=moonlord"
+
+REM 网络代理设置
+set HTTP_PROXY=http://127.0.0.1:10809
+set HTTPS_PROXY=http://127.0.0.1:10809
+set NO_PROXY=localhost,127.0.0.1
+
+
+
+call npx wrangler login
+call npx wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main"
+
+
+
+echo.
+pause
+exit /b
