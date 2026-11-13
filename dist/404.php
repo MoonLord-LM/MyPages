@@ -10,14 +10,25 @@ $redirects = [
     '/service/network-proxy.html' => '/service/network-proxy/index.html',
 ];
 
-
-
 $path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '', PHP_URL_PATH);
 
 if ($path === '/404.php') {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode((object) $redirects, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), "\n";
     exit;
+}
+
+if (substr($path, -1) !== '/') {
+    $base_dir = realpath(__DIR__);
+    if ($base_dir !== false) {
+        $base_dir = $base_dir . DIRECTORY_SEPARATOR;
+        $try_html_file = realpath($base_dir . $path . '.html');
+        if ($try_html_file !== false && strpos($try_html_file, $base_dir) === 0 && is_file($try_html_file)) {
+            header('Content-Type: text/html; charset=utf-8');
+            readfile($try_html_file);
+            exit;
+        }
+    }
 }
 
 if (isset($redirects[$path])) {
