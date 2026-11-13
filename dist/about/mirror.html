@@ -337,6 +337,93 @@ body { overflow-x: clip; }
 </tbody>
 </table>
 <h2>站点 HTTP Range Requests / 206 Partial Content 效果</h2>
+<p>以 /favicon.ico 为基准，发送四种 <code>Range</code> 请求头测试</p>
+<table>
+<thead>
+<tr>
+<th>站点</th>
+<th>单段范围 <code>bytes=0-99</code></th>
+<th>尾部范围 <code>bytes=-100</code></th>
+<th>超出范围 <code>bytes=99999999-</code></th>
+<th>多段范围 <code>bytes=0-9,20-29</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主站</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 416 + Content-Range</td>
+<td>✅ 206 multipart/byteranges</td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 416 + Content-Range</td>
+<td>ℹ️ 200 返回全文</td>
+</tr>
+<tr>
+<td>CloudFlare</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 416 + Content-Range</td>
+<td>✅ 206 multipart/byteranges</td>
+</tr>
+<tr>
+<td>Vercel</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 206 Partial Content</td>
+<td>ℹ️ 416 但响应体仍是全文</td>
+<td>ℹ️ 200 返回全文</td>
+</tr>
+<tr>
+<td>Netlify</td>
+<td>✅ 206 Partial Content</td>
+<td>✅ 206 Partial Content</td>
+<td>ℹ️ 缓存命中时 416（无 Content-Range），否则 200 全文</td>
+<td>ℹ️ 200 返回全文</td>
+</tr>
+</tbody>
+</table>
+<h2>站点 404 Not Found 效果</h2>
+<p>请求不存在的路径 /404/404/404.html 测试</p>
+<table>
+<thead>
+<tr>
+<th>站点</th>
+<th>状态码</th>
+<th>返回内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主站</td>
+<td><a href="https://www.moonlord.cc/404/404/404.html" target="_blank" rel="noopener">/404/404/404.html</a> ❌ 404</td>
+<td>text/plain <code>404 Not Found: /404/404/404.html</code>，附 120 秒后跳回首页的 Refresh 头</td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td><a href="https://github.moonlord.cc/404/404/404.html" target="_blank" rel="noopener">/404/404/404.html</a> ❌ 404</td>
+<td>GitHub Pages 默认 404 页面（text/html）</td>
+</tr>
+<tr>
+<td>CloudFlare</td>
+<td><a href="https://cloudflare.moonlord.cc/404/404/404.html" target="_blank" rel="noopener">/404/404/404.html</a> ℹ️ 200</td>
+<td>首页 HTML，状态码不是 404</td>
+</tr>
+<tr>
+<td>Vercel</td>
+<td><a href="https://vercel.moonlord.cc/404/404/404.html" target="_blank" rel="noopener">/404/404/404.html</a> ❌ 404</td>
+<td>text/plain <code>The page could not be found</code>，另含 <code>NOT_FOUND</code> 与请求 ID</td>
+</tr>
+<tr>
+<td>Netlify</td>
+<td><a href="https://netlify.moonlord.cc/404/404/404.html" target="_blank" rel="noopener">/404/404/404.html</a> ❌ 404</td>
+<td>Netlify 默认 <code>Page not found</code> 页面（text/html）</td>
+</tr>
+</tbody>
+</table>
 
 </article>
 </div>
