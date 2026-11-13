@@ -26,6 +26,16 @@ set NO_PROXY=localhost,127.0.0.1
 
 
 
+set "exclude_name1=_redirects"
+set "exclude_name2=_headers"
+for /f "delims=" %%c in ('
+    powershell -NoProfile -Command ^
+        "[System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;" ^
+        "@(Get-ChildItem -LiteralPath $env:static_dir -File -Force -Recurse | Where-Object { $_.Name -ne $env:exclude_name1 -and $_.Name -ne $env:exclude_name2 }).Count"
+') do set "file_count=%%c"
+echo 文件总数：!file_count!
+echo.
+
 set "temp_dir=%temp%\MyPages_%random%_%random%_%random%_%random%\"
 if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
 if not exist "!temp_dir!" ( mkdir "!temp_dir!" )
@@ -38,7 +48,7 @@ if !errorlevel! neq 0 (
 )
 
 call npx wrangler login
-call npx wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main"
+call npx wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main" --commit-message "!file_count!"
 
 popd
 if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
