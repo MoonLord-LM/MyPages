@@ -28,8 +28,12 @@
 
 由于 GitHub 仓库大小有限制，因此一些大的静态资源，只在 CloudFlare Pages 上托管部署  
 手动上传网址 https://dash.cloudflare.com/2d295aefa3699c7b878cf0468beaf53e/pages/view/moonlord/deployments/new  
+手动上传脚本 [上传 Cloudflare Pages.bat](./tools/cloudflare/上传%20Cloudflare%20Pages.bat)  
 部署后，使用 https://cloudflare.moonlord.cc/static/* 的链接，访问静态资源文件  
-另外，手动维护了一份 [list.json](https://cloudflare.moonlord.cc/static/list.json) 静态资源清单文件  
+另外，还需要手动维护 [list.json](https://cloudflare.moonlord.cc/static/list.json) 静态资源清单文件  
+刷新清单脚本 [刷新 Cloudflare Pages 清单.bat](./tools/cloudflare/刷新%20list.json%20列表.bat)  
+
+
 
 # TODO
 
@@ -39,6 +43,12 @@
 
 目前，通过 header.html 注入的 `<style>` 会在 `<body>` 后面  
 虽然可以正常解析，但是不符合 HTML 规范  
+
+## 镜像站点可用性检查
+
+目前 [/about/mirror.md](https://www.moonlord.cc/about/mirror.html) 里面记录了镜像站点信息  
+但是不同镜像站点部署后的效果略有差异，最好进行充分的检查和对比  
+比如对于 206 Partial Content 的处理，以及 404 Not Found 的处理等  
 
 
 
