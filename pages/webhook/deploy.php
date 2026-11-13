@@ -10,9 +10,9 @@
 
 const REPO_URL    = 'https://github.com/MoonLord-LM/MyPages.git';
 const REPO_BRANCH = 'master';
-const RUN_LOCK    = '/tmp/deploy/MoonLord-LM/MyPages.lock';
-const REPO_DIR    = '/tmp/deploy/MoonLord-LM/MyPages';
-const LOG_FILE    = '/tmp/deploy/MoonLord-LM/deploy.log';
+const RUN_LOCK    = '/var/tmp/deploy/MoonLord-LM/MyPages.lock';
+const REPO_DIR    = '/var/tmp/deploy/MoonLord-LM/MyPages';
+const LOG_FILE    = '/var/tmp/deploy/MoonLord-LM/deploy.log';
 const RELEASES    = '/var/www/releases';
 const TARGET      = '/var/www/html';
 
