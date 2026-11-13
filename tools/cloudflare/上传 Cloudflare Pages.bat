@@ -47,8 +47,8 @@ if !errorlevel! neq 0 (
     exit /b 1
 )
 
-call npx wrangler login
-call npx wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main" --commit-message "!file_count!"
+call npx -y wrangler login
+call npx -y wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main" --commit-message "!file_count!"
 
 popd
 if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
