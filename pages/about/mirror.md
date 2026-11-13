@@ -1,4 +1,4 @@
-# 镜像站点
+# 镜像部署
 
 ## 主站
 
@@ -18,6 +18,12 @@
 ## CloudFlare Pages 镜像站点
 
 部署在 CloudFlare Pages 上，使用 Cloudflare Wrangler 手动同步  
-由于 CloudFlare Pages 的带宽资源和存储空间整体较优，一些大的静态资源文件仅在这里部署  
+由于带宽资源和存储空间整体较优，一些大的静态资源文件仅在这个站点部署  
 
 [https://cloudflare.moonlord.cc](https://cloudflare.moonlord.cc)  
+
+## Vercel 镜像站点
+
+部署在 Vercel 上，使用 GitHub App 自动同步  
+
+[https://vercel.moonlord.cc](https://vercel.moonlord.cc)  
