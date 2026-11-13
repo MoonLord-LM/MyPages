@@ -237,7 +237,8 @@ body { overflow-x: clip; }
   (function () {
     'use strict';
 
-    const DATA_URL = 'assets/pan-quark-cn.gz';
+    const LIST_URL = 'https://cloudflare.moonlord.cc/static/list.json';
+    const DATA_PREFIX = '/static/search/pan-quark-cn-';
     const PAGE_SIZE = 20;
 
     // 搜索字段的优先级：命中越靠前的字段，结果排得越前
@@ -397,9 +398,23 @@ body { overflow-x: clip; }
       if (items.length) search();
     }
 
+    // 文件名按字符串倒序，取排在最前的一条
+    async function latestDataUrl() {
+      const res = await fetch(LIST_URL);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const list = await res.json();
+      const files = (Array.isArray(list) ? list : []).filter((entry) => entry &&
+        typeof entry.file === 'string' && entry.file.startsWith(DATA_PREFIX) &&
+        entry.file.endsWith('.gz') && Array.isArray(entry.url) && entry.url[0]
+      ).sort((a, b) => (a.file < b.file ? 1 : a.file > b.file ? -1 : 0));
+      if (!files.length) throw new Error('未找到数据文件');
+      return files[0].url[0];
+    }
+
     function load() {
       if (!loadPromise) {
-        loadPromise = fetch(DATA_URL)
+        loadPromise = latestDataUrl()
+          .then((url) => fetch(url))
           .then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.arrayBuffer(); })
           .then(ungzipJson)
           .then((data) => {
