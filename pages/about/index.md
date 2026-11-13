@@ -11,4 +11,4 @@
 [GitHub Repo 清单](../github/repos/index.html)  
 [CloudFlare 静态资源清单](https://cloudflare.moonlord.cc/static/list.json)  
 [夸克网盘资源收录清单](../service/internet-search/quark/index.html)  
-[镜像站点](../mirror.html)  
+[镜像站点](../about/mirror.html)  
