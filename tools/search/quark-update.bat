@@ -85,6 +85,9 @@ exit /b
 [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
 $ProgressPreference = 'SilentlyContinue'
 
+Add-Type -AssemblyName Microsoft.VisualBasic
+Add-Type -AssemblyName System.IO.Compression
+
 $jsonPath = $env:json_file
 $outDir = [System.IO.Path]::GetFullPath($env:out_dir)
 $pageDir = [System.IO.Path]::GetFullPath($env:page_dir)
@@ -384,7 +387,6 @@ try {
         Remove-Item -Force -LiteralPath $tempGzip
     } else {
         Write-Host '压缩方式：使用 PowerShell 内置的 GZipStream 压缩'
-        Add-Type -AssemblyName System.IO.Compression
         $memStream = New-Object System.IO.MemoryStream
         $mode = [System.IO.Compression.CompressionMode]::Compress
         $gzipStream = New-Object System.IO.Compression.GzipStream($memStream, $mode)
@@ -405,6 +407,14 @@ try {
     [System.IO.Directory]::CreateDirectory($outDir) | Out-Null
     [System.IO.File]::WriteAllBytes($outGzip, $gzipBytes)
     if (-not (Test-Path -LiteralPath $outGzip)) { throw '压缩文件生成失败' }
+    $oldFiles = @(Get-ChildItem -LiteralPath $outDir -Filter ($outFileName + '-*.gz') -File |
+        Sort-Object -Property Name -Descending | Select-Object -Skip 10)
+    foreach ($oldFile in $oldFiles) {
+        [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($oldFile.FullName, 'OnlyErrorDialogs', 'SendToRecycleBin')
+    }
+    if ($oldFiles.Count -gt 0) {
+        Write-Host ('已清理旧数据: ' + $oldFiles.Count + ' 个')
+    }
 } catch {
     Write-Host ('错误：写入结果失败 - ' + $_.Exception.Message) -ForegroundColor Red
     exit 1
@@ -469,7 +479,7 @@ foreach ($day in ($groups.Keys | Sort-Object)) {
 try {
     [System.IO.Directory]::CreateDirectory($pageDir) | Out-Null
     foreach ($file in [System.IO.Directory]::GetFiles($pageDir, '*.md')) {
-        [System.IO.File]::Delete($file)
+        [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($file, 'OnlyErrorDialogs', 'SendToRecycleBin')
     }
     foreach ($page in $pages) {
         [System.IO.File]::WriteAllText([System.IO.Path]::Combine($pageDir, $page.Name), $page.Text, $utf8)
