@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>镜像部署</title>
+<title>站点镜像</title>
 <style>
 :root { color-scheme: light; }
 body {
@@ -267,7 +267,7 @@ body { overflow-x: clip; }
 
 <div class="wrap">
 <article class="markdown-body">
-<h1>镜像部署</h1>
+<h1>站点镜像</h1>
 <h2>主站</h2>
 <p>部署在自建服务器上，使用 GitHub Webhooks 自动同步</p>
 <p><a href="https://www.moonlord.cc" target="_blank" rel="noopener">https://www.moonlord.cc</a><br>
@@ -278,12 +278,64 @@ body { overflow-x: clip; }
 <p>部署在 GitHub Pages 上，使用 GitHub Actions 自动同步</p>
 <p><a href="https://github.moonlord.cc" target="_blank" rel="noopener">https://github.moonlord.cc</a></p>
 <h2>CloudFlare Pages 镜像站点</h2>
-<p>部署在 CloudFlare Pages 上，使用 Cloudflare Wrangler 手动同步<br>
-由于带宽资源和存储空间整体较优，一些大的静态资源文件仅在这个站点部署</p>
+<p>部署在 CloudFlare Pages 上，使用 Cloudflare Wrangler 手动同步</p>
 <p><a href="https://cloudflare.moonlord.cc" target="_blank" rel="noopener">https://cloudflare.moonlord.cc</a></p>
+<p>由于带宽资源和存储空间整体较优，一些大的静态资源文件仅在这个站点部署</p>
 <h2>Vercel 镜像站点</h2>
 <p>部署在 Vercel 上，使用 GitHub App 自动同步</p>
 <p><a href="https://vercel.moonlord.cc" target="_blank" rel="noopener">https://vercel.moonlord.cc</a></p>
+<h2>Netlify 镜像站点</h2>
+<p>部署在 Netlify 上，使用 GitHub App 自动同步</p>
+<p><a href="https://netlify.moonlord.cc" target="_blank" rel="noopener">https://netlify.moonlord.cc</a></p>
+<h2>站点 Pretty URL 效果</h2>
+<table>
+<thead>
+<tr>
+<th>站点</th>
+<th>完整文件路径</th>
+<th>/</th>
+<th>/index</th>
+<th>/index.html</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主站</td>
+<td><a href="https://www.moonlord.cc/about/mirror.html" target="_blank" rel="noopener">/about/mirror.html</a> ✅</td>
+<td><a href="https://www.moonlord.cc/about/" target="_blank" rel="noopener">/about/</a> ✅</td>
+<td><a href="https://www.moonlord.cc/about/index" target="_blank" rel="noopener">/about/index</a> ❌ 404 报错</td>
+<td><a href="https://www.moonlord.cc/about/index.html" target="_blank" rel="noopener">/about/index.html</a> ✅</td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td><a href="https://github.moonlord.cc/about/mirror.html" target="_blank" rel="noopener">/about/mirror.html</a> ✅</td>
+<td><a href="https://github.moonlord.cc/about/" target="_blank" rel="noopener">/about/</a> ✅</td>
+<td><a href="https://github.moonlord.cc/about/index" target="_blank" rel="noopener">/about/index</a> ✅</td>
+<td><a href="https://github.moonlord.cc/about/index.html" target="_blank" rel="noopener">/about/index.html</a> ✅</td>
+</tr>
+<tr>
+<td>CloudFlare</td>
+<td><a href="https://cloudflare.moonlord.cc/about/mirror.html" target="_blank" rel="noopener">/about/mirror.html</a> ℹ️ 308 跳转</td>
+<td><a href="https://cloudflare.moonlord.cc/about/" target="_blank" rel="noopener">/about/</a> ✅</td>
+<td><a href="https://cloudflare.moonlord.cc/about/index" target="_blank" rel="noopener">/about/index</a> ℹ️ 308 跳转</td>
+<td><a href="https://cloudflare.moonlord.cc/about/index.html" target="_blank" rel="noopener">/about/index.html</a> ℹ️ 308 跳转</td>
+</tr>
+<tr>
+<td>Vercel</td>
+<td><a href="https://vercel.moonlord.cc/about/mirror.html" target="_blank" rel="noopener">/about/mirror.html</a> ✅</td>
+<td><a href="https://vercel.moonlord.cc/about/" target="_blank" rel="noopener">/about/</a> ✅</td>
+<td><a href="https://vercel.moonlord.cc/about/index" target="_blank" rel="noopener">/about/index</a> ❌ 404 报错</td>
+<td><a href="https://vercel.moonlord.cc/about/index.html" target="_blank" rel="noopener">/about/index.html</a> ✅</td>
+</tr>
+<tr>
+<td>Netlify</td>
+<td><a href="https://netlify.moonlord.cc/about/mirror.html" target="_blank" rel="noopener">/about/mirror.html</a> ✅</td>
+<td><a href="https://netlify.moonlord.cc/about/" target="_blank" rel="noopener">/about/</a> ✅</td>
+<td><a href="https://netlify.moonlord.cc/about/index" target="_blank" rel="noopener">/about/index</a> ℹ️ 301 跳转</td>
+<td><a href="https://netlify.moonlord.cc/about/index.html" target="_blank" rel="noopener">/about/index.html</a> ✅</td>
+</tr>
+</tbody>
+</table>
 
 </article>
 </div>
