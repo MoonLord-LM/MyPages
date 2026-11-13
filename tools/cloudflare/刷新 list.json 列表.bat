@@ -55,8 +55,8 @@ exit /b
 -----BEGIN POWERSHELL CODE-----
 [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
 
-$scanDir = $env:static_dir;
-$outputFile = [System.IO.Path]::Combine($env:static_dir, 'list.json');
+$scanDir = (Get-Item -LiteralPath $env:static_dir).FullName;
+$outputFile = [System.IO.Path]::Combine($scanDir, 'list.json');
 $excludeNames = @($env:script_name_ext, 'upload.bat', 'list.json');
 $pathPrefix = '/static/';
 $urlPrefixCloudflare = $env:cloudflare_url_prefix1;
