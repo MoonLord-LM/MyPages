@@ -400,7 +400,7 @@ try {
     } finally {
         $sha.Dispose()
     }
-    $dateTag = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).ToString('yyyy-MM-dd')
+    $dateTag = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).ToString('yyyyMMddHHmmss')
     $outGzip = [System.IO.Path]::Combine($outDir, $outFileName + '-' + $dateTag + '.' + $fingerprint + '.gz')
     [System.IO.Directory]::CreateDirectory($outDir) | Out-Null
     [System.IO.File]::WriteAllBytes($outGzip, $gzipBytes)
