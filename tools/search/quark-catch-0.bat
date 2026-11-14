@@ -72,21 +72,22 @@ $extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
 $txtFiles = @([System.IO.Directory]::GetFiles($env:work_dir, '*.txt'))
 if ($txtFiles.Count -eq 0) {
-    Write-Host '未找到 txt 文件'
-    exit 0
+    Write-Host '错误：未找到 txt 文件' -ForegroundColor Red
+    exit 1
 }
 
 $rawLinks = [System.Collections.Generic.List[string]]::new()
-foreach ($file in $txtFiles) {
-    try {
+try {
+    foreach ($file in $txtFiles) {
         $content = [System.IO.File]::ReadAllText($file, [System.Text.Encoding]::UTF8)
-    } catch {
-        continue
+        $matches = [regex]::Matches($content, $extractPattern)
+        foreach ($m in $matches) {
+            [void]$rawLinks.Add($m.Value)
+        }
     }
-    $matches = [regex]::Matches($content, $extractPattern)
-    foreach ($m in $matches) {
-        [void]$rawLinks.Add($m.Value)
-    }
+} catch {
+    Write-Host '错误：文件解析失败' -ForegroundColor Red
+    exit 1
 }
 if ($rawLinks.Count -eq 0) {
     Write-Host '未提取到夸克资源链接'

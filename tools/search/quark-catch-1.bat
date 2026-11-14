@@ -19,7 +19,7 @@ echo.
 
 set "json_file=!script_dir!data\quark.json"
 set "invalid_json_file=!script_dir!data\quark-invalid.json"
-set "csv_url=https://www.quarke.cc/pixiu.csv"
+set "resource_url=https://www.quarke.cc/pixiu.csv"
 
 
 
@@ -57,7 +57,6 @@ exit /b
 $ProgressPreference = 'SilentlyContinue'
 
 $jsonPath = $env:json_file
-$csvUrl = $env:csv_url
 $api = 'https://drive-h.quark.cn/1/clouddrive/share/sharepage'
 $headers = @{
     'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36';
@@ -68,26 +67,26 @@ if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
     [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 }
 $urlPattern = '^https://pan\.quark\.cn/s/([A-Za-z0-9]+)$'
+$extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
 try {
     $webClient = [System.Net.WebClient]::new()
     $webClient.Headers.Add('User-Agent', $headers['User-Agent'])
-    $csvBytes = $webClient.DownloadData($csvUrl)
+    $resourceBytes = $webClient.DownloadData($env:resource_url)
     $webClient.Dispose()
+    $content = [System.Text.Encoding]::UTF8.GetString($resourceBytes)
 } catch {
     Write-Host '错误：采集数据下载失败' -ForegroundColor Red
     exit 1
 }
 
-try {
-    $csvText = [System.Text.Encoding]::UTF8.GetString($csvBytes).TrimStart([char]0xFEFF)
-    $csvRows = @(ConvertFrom-Csv -InputObject $csvText)
-} catch {
-    Write-Host '错误：采集数据解析失败' -ForegroundColor Red
-    exit 1
+$rawLinks = [System.Collections.Generic.List[string]]::new()
+$matches = [regex]::Matches($content, $extractPattern)
+foreach ($m in $matches) {
+    [void]$rawLinks.Add($m.Value)
 }
-if ($csvRows.Count -eq 0) {
-    Write-Host '采集数据为空'
+if ($rawLinks.Count -eq 0) {
+    Write-Host '未提取到夸克资源链接'
     exit 0
 }
 
@@ -136,27 +135,25 @@ foreach ($rec in $invalidRecords) {
 
 $candidates = [System.Collections.Generic.List[object]]::new()
 $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-foreach ($row in $csvRows) {
-    $values = @($row.PSObject.Properties | ForEach-Object { $_.Value })
-    if ($values.Count -lt 3) { continue }
-    $url = ([string]$values[1]).Trim()
+foreach ($rawUrl in $rawLinks) {
+    $url = ([string]$rawUrl).Trim()
     if ($url -notmatch $urlPattern) { continue }
     if ($existing.Contains($url)) { continue }
     if (-not $seen.Add($url)) { continue }
     $candidates.Add([pscustomobject]@{
         Index = $candidates.Count + 1
         Url   = $url
-        Title = [string]$values[0]
-        Time  = [string]$values[2]
+        Title = ''
+        Time  = ''
     })
 }
 
 if ($candidates.Count -eq 0) {
-    Write-Host ('采集完成：采集 ' + $csvRows.Count + ' 条，无新增链接') -ForegroundColor Green
+    Write-Host ('采集完成：解析 ' + $rawLinks.Count + ' 条，无新增链接') -ForegroundColor Green
     exit 0
 }
 
-Write-Host ('采集 ' + $csvRows.Count + ' 条，已有 ' + $existing.Count + ' 条，待验证 ' + $candidates.Count + ' 条')
+Write-Host ('采集 ' + $rawLinks.Count + ' 条，已有 ' + $existing.Count + ' 条，待验证 ' + $candidates.Count + ' 条')
 
 $workerScript = @'
     param($item)
