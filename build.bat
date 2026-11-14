@@ -800,20 +800,13 @@ function parseEncSource(markdown, srcRel) {
     if (!cfg || typeof cfg.password !== 'string' || cfg.password.length === 0) {
         throw new Error('密码保护页面缺少 password 配置：' + srcRel);
     }
-    let iterations = ENC_ITERATIONS;
-    if (cfg.iterations !== undefined) {
-        iterations = Number(cfg.iterations);
-        if (!Number.isInteger(iterations) || iterations < 1) {
-            throw new Error('密码保护页面 iterations 配置无效：' + srcRel);
-        }
-    }
-    return { password: cfg.password, iterations: iterations, markdown: lines.slice(1).join('\n') };
+    return { password: cfg.password, markdown: lines.slice(1).join('\n') };
 }
 
-function encryptHtml(plainHtml, password, iterations) {
+function encryptHtml(plainHtml, password) {
     const salt = crypto.randomBytes(ENC_SALT_LEN);
     const iv = crypto.randomBytes(ENC_IV_LEN);
-    const key = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, iterations, ENC_KEY_LEN, 'sha512');
+    const key = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, ENC_ITERATIONS, ENC_KEY_LEN, 'sha512');
     const gzip = zlib.gzipSync(Buffer.from(plainHtml, 'utf8'), {
         level: zlib.constants.Z_BEST_COMPRESSION, memLevel: 9
     });
@@ -846,12 +839,12 @@ const UNLOCK_CSS = `
 .unlock-status.err { color: #b3261e; }
 `;
 
-function unlockScript(encFileName, iterations) {
+function unlockScript(encFileName) {
     // 该脚本在浏览器运行：密码由用户输入，页面里不含任何密钥信息
     return [
         "(function () {",
         "  'use strict';",
-        "  var ITER = " + iterations + ";",
+        "  var ITER = " + ENC_ITERATIONS + ";",
         "  var SALT_LEN = " + ENC_SALT_LEN + ", IV_LEN = " + ENC_IV_LEN +
             ", TAG_LEN = " + ENC_TAG_LEN + ", HEADER_LEN = " + ENC_HEADER_LEN + ";",
         "  var ENC_FILE = " + JSON.stringify(encFileName) + ";",
@@ -925,7 +918,7 @@ function unlockScript(encFileName, iterations) {
     ].join('\n');
 }
 
-function renderUnlockPage(encFileName, iterations) {
+function renderUnlockPage(encFileName) {
     const html = [
         '<!DOCTYPE html>',
         '<html lang="zh-CN">',
@@ -952,7 +945,7 @@ function renderUnlockPage(encFileName, iterations) {
         '<script src="-----HIGHLIGHTJS JS URL-----"></script>',
         '<script>' + CODE_COPY_JS + '</script>',
         '<script>',
-        unlockScript(encFileName, iterations),
+        unlockScript(encFileName),
         '</script>',
         '</body>',
         '</html>'
@@ -971,14 +964,7 @@ function refreshUnlockShell(srcDir, baseName) {
     const srcEnc = path.join(srcDir, encName);
     if (!fs.existsSync(srcEnc)) return;
 
-    // 迭代次数必须与密文配套：优先沿用现有骨架里的 ITER，骨架缺失时回退默认值
-    let iterations = ENC_ITERATIONS;
-    try {
-        const m = fs.readFileSync(srcShell, 'utf8').match(/\bvar\s+ITER\s*=\s*(\d+)\s*;/);
-        if (m) iterations = Number(m[1]);
-    } catch (e) { }
-
-    const html = renderUnlockPage(encName, iterations);
+    const html = renderUnlockPage(encName);
     // 内容不变就不写盘，避免无意义的文件改动反复触发 CI 提交
     let prev = '';
     try { prev = fs.readFileSync(srcShell, 'utf8'); } catch (e) { }
@@ -1013,8 +999,8 @@ async function processEncryptedPage(srcFile) {
     // 否则 decrypt 后注入的 HTML 不会经过 injectCanonical 的 normalizeLinkTargets，导致与普通页面行为不一致
     const normalizedBody = normalizeLinkTargets(bodyHtml);
     console.log('正在加密: ' + srcRel);
-    const encBytes = encryptHtml(normalizedBody, cfg.password, cfg.iterations);
-    const shellHtml = renderUnlockPage(encName, cfg.iterations);
+    const encBytes = encryptHtml(normalizedBody, cfg.password);
+    const shellHtml = renderUnlockPage(encName);
 
     fs.mkdirSync(path.dirname(distShell), { recursive: true });
     fs.writeFileSync(srcShell, shellHtml, 'utf8');
