@@ -10,7 +10,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 powershell -NoProfile -Command "Write-Host '检查 quark.json 中的夸克网盘资源链接，记录链接有效状态' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '已失效的，以及 3 天内已检查过是有效的，不做处理' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '每次随机选择起点，向后连续处理最多 3000 条记录' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '按检查结果生成站点搜索数据 gz 文件，并按天生成资源收录页面 md 文件' -ForegroundColor Green"
 echo.
 
@@ -41,7 +41,6 @@ if !errorlevel! neq 0 (
 
 set "json_file=!script_dir!data\quark.json"
 set "out_file_name=pan-quark-cn"
-set "check_skip_hours=72"
 set "out_dir=!script_dir!..\..\dist\static\search"
 set "page_dir=!script_dir!..\..\pages\service\internet-search\quark"
 if not exist "!json_file!" (
@@ -99,9 +98,6 @@ $headers = @{
     'Referer' = 'https://pan.quark.cn/'
 }
 $cnOffset = [System.TimeSpan]::FromHours(8)
-$checkTime = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
-$nowCn = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).DateTime
-$skipHours = $env:check_skip_hours
 $threadCount = 50
 [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 $utf8 = [System.Text.UTF8Encoding]::new($false)
@@ -272,35 +268,25 @@ $sortByTime = @(
 $pass = 0
 $fail = 0
 $checked = 0
-$skipped = 0
-$index = 0
+
+$allRecords = @($records)
+$batchLimit = 3000
+$maxStart = $allRecords.Count - $batchLimit
+if ($maxStart -lt 0) { $maxStart = 0 }
+$random = [System.Random]::new()
+$start = $random.Next(0, $maxStart + 1)
+if ($start -lt 0 -or $start -gt $maxStart) {
+    Write-Host '错误：起始位置无效' -ForegroundColor Red
+    exit 1
+}
+$batchSize = [System.Math]::Min($batchLimit, $allRecords.Count - $start)
+Write-Host ('本次处理：从第 ' + ($start + 1) + ' 条开始，共 ' + $batchSize + ' / ' + $allRecords.Count + ' 条')
 
 $pending = [System.Collections.Generic.List[object]]::new()
-foreach ($rec in $records) {
-    $index++
-
-    $validProp = $rec.PSObject.Properties['check_valid']
-    if ($null -ne $validProp -and $validProp.Value -eq $false) {
-        $skipped++
-        continue
-    }
-    if ($null -ne $validProp -and $validProp.Value -eq $true) {
-        $timeProp = $rec.PSObject.Properties['check_time']
-        if ($null -ne $timeProp) {
-            $lastCheck = [datetime]::MinValue
-            if ([datetime]::TryParseExact([string]$timeProp.Value, 'yyyy-MM-dd HH:mm',
-                    [System.Globalization.CultureInfo]::InvariantCulture,
-                    [System.Globalization.DateTimeStyles]::None, [ref]$lastCheck)) {
-                if ([System.Math]::Abs(($nowCn - $lastCheck).TotalHours) -lt $skipHours) {
-                    $skipped++
-                    continue
-                }
-            }
-        }
-    }
-
+for ($offset = 0; $offset -lt $batchSize; $offset++) {
+    $rec = $allRecords[$start + $offset]
     $pending.Add([pscustomobject]@{
-        Index = $index
+        Index = $start + $offset + 1
         Url   = [string]$rec.url
         Title = [string]$rec.title
         Time  = [string]$rec.time
@@ -356,14 +342,13 @@ try {
         $newRecord = [ordered]@{
             url         = $result.Url
             check_valid = $result.Valid
-            check_time  = $checkTime
             title       = $result.Title
             time        = $result.Time
             author      = $result.Author
             file_count  = $result.FileCount
             file_size   = $result.FileSize
         }
-        if (-not [string]::IsNullOrEmpty($result.Desc)) { $newRecord.Insert(4, 'desc', $result.Desc) }
+        if (-not [string]::IsNullOrEmpty($result.Desc)) { $newRecord.Insert(3, 'desc', $result.Desc) }
         $results[$result.Index - 1] = [pscustomobject]$newRecord
 
         $tag = '[{0}/{1}]' -f $result.Index, $records.Count
@@ -396,7 +381,7 @@ try {
 
 Write-Host ''
 $validCount = @($results | Where-Object { $_.check_valid }).Count
-Write-Host ('检查完成：跳过 ' + $skipped + ' 条，检查 ' + $checked + ' 条，检查有效 ' + $pass + ' 条，检查无效 ' + $fail + ' 条')
+Write-Host ('检查完成：检查 ' + $checked + ' 条，检查有效 ' + $pass + ' 条，检查无效 ' + $fail + ' 条')
 Write-Host ('数据统计：共 ' + $records.Count + ' 条，有效数据 ' + $validCount + ' 条，无效数据 ' + ($records.Count - $validCount) + ' 条')
 
 Write-Host ''
@@ -516,7 +501,14 @@ foreach ($rec in $pageRecords) {
     $count = [string]$rec.file_count
     if ([string]::IsNullOrWhiteSpace($count)) { $count = '—' }
     $size = Format-Size $rec.file_size
-    $groups[$day].Add('- ' + $mark + ' [' + (Escape-Md $title) + '](' + $url + ')（文件数 ' + $count + '，大小 ' + $size + '）')
+    $line = '- ' + $mark + ' [' + (Escape-Md $title) + '](' + $url + ')（文件数 ' + $count + '，大小 ' + $size + '）'
+    if (-not [string]::IsNullOrWhiteSpace($rec.desc)) {
+        $line += '  '
+        foreach ($descLine in ([string]$rec.desc -split "`r`n|`n|`r")) {
+            $line += "`r`n" + (Escape-Md $descLine) + '  '
+        }
+    }
+    $groups[$day].Add($line)
     if ($mark -eq '✅') { $pageValid++ } else { $pageInvalid++ }
 }
 
