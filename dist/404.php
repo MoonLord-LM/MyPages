@@ -45,10 +45,15 @@ if (substr($path, -1) !== '/' && substr($path, -5) !== '.html') {
 # 优先展示 404.html
 http_response_code(404);
 
-if (is_file('404.html')) {
-    header('Content-Type: text/html; charset=utf-8');
-    readfile('404.html');
-    exit;
+$base_dir = realpath(__DIR__);
+if ($base_dir !== false) {
+    $base_dir = $base_dir . DIRECTORY_SEPARATOR;
+    $try_404_file = realpath($base_dir . '404.html');
+    if ($try_404_file !== false && strpos($try_404_file, $base_dir) === 0 && is_file($try_404_file)) {
+        header('Content-Type: text/html; charset=utf-8');
+        readfile($try_404_file);
+        exit;
+    }
 }
 
 header('Content-Type: text/plain; charset=utf-8');
