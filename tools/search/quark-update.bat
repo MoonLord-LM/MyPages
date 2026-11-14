@@ -159,6 +159,7 @@ $workerScript = @'
     $author = $null
     $fileCount = $null
     $fileSize = $null
+    $desc = $null
     $reason = ''
 
     if ($url -match '^https://pan\.quark\.cn/s/([A-Za-z0-9]+)') {
@@ -194,6 +195,52 @@ $workerScript = @'
             } else {
                 $valid = $true
             }
+
+            if ($valid) {
+                try {
+                    $descNames = [System.Collections.Generic.List[string]]::new()
+                    $getItems = {
+                        param([string]$pdirFid, [object]$first)
+                        $all = [System.Collections.Generic.List[object]]::new()
+                        $page = 1
+                        $resp = $first
+                        while ($true) {
+                            if ($null -eq $resp) {
+                                $childUri = $api + '/detail?pr=ucd&fr=pc&pwd_id=' + $pwdId + '&stoken=' + $stoken `
+                                    + '&pdir_fid=' + $pdirFid + '&force=0&_page=' + $page + '&_size=50&_fetch_banner=1&_fetch_share=1'
+                                try {
+                                    $resp = ConvertFrom-Json -InputObject (Invoke-WebRequest -Uri $childUri -Headers $headers -TimeoutSec 20 -UseBasicParsing).Content
+                                } catch {
+                                    break
+                                }
+                            }
+                            if ([int]$resp.code -ne 0) { break }
+                            $items = @()
+                            if ($null -ne $resp.data.list) { $items = @($resp.data.list) }
+                            foreach ($it in $items) { [void]$all.Add($it) }
+                            $total = 0
+                            if ($resp.metadata -and $resp.metadata._total) { $total = [int]$resp.metadata._total }
+                            if ($items.Count -eq 0 -or $all.Count -ge $total) { break }
+                            $page++
+                            $resp = $null
+                        }
+                        return $all
+                    }
+                    foreach ($rootDir in @(& $getItems '0' $detail)) {
+                        if (-not $rootDir.dir) { continue }
+                        foreach ($childItem in @(& $getItems ([string]$rootDir.fid) $null)) {
+                            if (-not $childItem.dir) { continue }
+                            $childName = [string]$childItem.file_name
+                            if (-not [string]::IsNullOrWhiteSpace($childName)) { [void]$descNames.Add($childName) }
+                        }
+                    }
+                    if ($descNames.Count -gt 0) {
+                        $desc = (@($descNames | Sort-Object -Unique)) -join "`r`n"
+                    }
+                } catch {
+                    $desc = $null
+                }
+            }
         } catch {
             $message = $_.Exception.Message
             if ($message -match '\(404\)') { $reason = '链接已失效' }
@@ -207,6 +254,7 @@ $workerScript = @'
         Index     = $item.Index
         Url       = $url
         Title     = $title
+        Desc      = $desc
         Time      = $time
         Author    = $author
         FileCount = $fileCount
@@ -305,7 +353,7 @@ try {
             }
         }
 
-        $results[$result.Index - 1] = [pscustomobject][ordered]@{
+        $newRecord = [ordered]@{
             url         = $result.Url
             check_valid = $result.Valid
             check_time  = $checkTime
@@ -315,6 +363,8 @@ try {
             file_count  = $result.FileCount
             file_size   = $result.FileSize
         }
+        if (-not [string]::IsNullOrEmpty($result.Desc)) { $newRecord.Insert(4, 'desc', $result.Desc) }
+        $results[$result.Index - 1] = [pscustomobject]$newRecord
 
         $tag = '[{0}/{1}]' -f $result.Index, $records.Count
         if ($result.Valid) {
@@ -359,13 +409,15 @@ try {
     [System.IO.File]::WriteAllText($jsonPath, $checkedText + "`n", $utf8)
 
     $siteList = @($sorted | Where-Object { $_.check_valid } | ForEach-Object {
-        [pscustomobject][ordered]@{
+        $siteRecord = [ordered]@{
             url        = $_.url
             title      = $_.title
             time       = $_.time
             file_count = $_.file_count
             file_size  = $_.file_size
         }
+        if (-not [string]::IsNullOrEmpty($_.desc)) { $siteRecord.Insert(2, 'desc', $_.desc) }
+        [pscustomobject]$siteRecord
     })
     $siteText = if ($siteList.Count -eq 0) { '[]' } else { ConvertTo-Json -InputObject $siteList -Depth 5 -Compress }
     $siteBytes = $utf8.GetBytes($siteText)

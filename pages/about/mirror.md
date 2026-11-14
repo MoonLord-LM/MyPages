@@ -46,7 +46,7 @@ Vercel 的效果依赖于 `vercel.json` 文件的配置
 | 主站 | [链接](https://www.moonlord.cc/about/mirror.html) ✅ | [链接](https://www.moonlord.cc/about/) ✅ | [链接](https://www.moonlord.cc/about) ✅ 301 跳转 | [链接](https://www.moonlord.cc/about/index) ✅ | [链接](https://www.moonlord.cc/about/index.html) ✅ |
 | GitHub | [链接](https://github.moonlord.cc/about/mirror.html) ✅ | [链接](https://github.moonlord.cc/about/) ✅ | [链接](https://github.moonlord.cc/about) ✅ 301 跳转 | [链接](https://github.moonlord.cc/about/index) ✅ | [链接](https://github.moonlord.cc/about/index.html) ✅ |
 | CloudFlare | [链接](https://cloudflare.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [链接](https://cloudflare.moonlord.cc/about/) ✅ | [链接](https://cloudflare.moonlord.cc/about) ✅ 308 跳转 | [链接](https://cloudflare.moonlord.cc/about/index) ℹ️ 308 跳转 | [链接](https://cloudflare.moonlord.cc/about/index.html) ℹ️ 308 跳转 |
-| Vercel | [链接](https://vercel.moonlord.cc/about/mirror.html) ✅ | [链接](https://vercel.moonlord.cc/about/) ✅ | [链接](https://vercel.moonlord.cc/about) ℹ️ 200 无跳转 | [链接](https://vercel.moonlord.cc/about/index) ❌ 404 报错 | [链接](https://vercel.moonlord.cc/about/index.html) ✅ |
+| Vercel | [链接](https://vercel.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [链接](https://vercel.moonlord.cc/about/) ✅ | [链接](https://vercel.moonlord.cc/about) ✅ 308 跳转 | [链接](https://vercel.moonlord.cc/about/index) ℹ️ 308 跳转 | [链接](https://vercel.moonlord.cc/about/index.html) ✅ |
 | Netlify | [链接](https://netlify.moonlord.cc/about/mirror.html) ✅ | [链接](https://netlify.moonlord.cc/about/) ✅ | [链接](https://netlify.moonlord.cc/about) ℹ️ 200 无跳转 | [链接](https://netlify.moonlord.cc/about/index) ✅ | [链接](https://netlify.moonlord.cc/about/index.html) ✅ |
 
 ## 站点 HTTP Range Requests / 206 Partial Content 效果
@@ -70,7 +70,7 @@ Vercel 的效果依赖于 `vercel.json` 文件的配置
 | 主站 | [/404/404/404.html](https://www.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.php、/404.html 文件，或 Nginx 默认 404 页面 |
 | GitHub | [/404/404/404.html](https://github.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.html 文件，或 GitHub 默认 404 页面 |
 | CloudFlare | [/404/404/404.html](https://cloudflare.moonlord.cc/404/404/404.html) ✅ 404 / ⚠️ 200 | 展示 /404.html 文件（404），或展示首页（200） |
-| Vercel | [/404/404/404.html](https://vercel.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.html 文件，或 Vercel 默认 404 页面 |
+| Vercel | [/404/404/404.html](https://vercel.moonlord.cc/404/404/404.html) ⚠️ 308 + ✅ 404 | 先跳转到 /404/404/404/，新路径展示 /404.html 文件，或 Vercel 默认 404 页面 |
 | Netlify | [/404/404/404.html](https://netlify.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.html 文件，或 Netlify 默认 404 页面 |
 
 CloudFlare 存在 [Single-page application (SPA) rendering](https://developers.cloudflare.com/pages/configuration/serving-pages/) 机制，因此存在差异  
