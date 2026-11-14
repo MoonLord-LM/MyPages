@@ -148,7 +148,8 @@
     body.ambient .song-list { background: rgba(255,255,255,.9); }
     @media (max-width: 560px) {
       .player { flex-wrap: wrap; }
-      .player-center { flex: 1 1 100%; order: -1; }
+      /* 换行后中间区独占一行，子元素均为绝对定位，需显式高度撑起整行 */
+      .player-center { flex: 1 1 100%; order: -1; height: 100px; }
     }
   </style>
 </head>

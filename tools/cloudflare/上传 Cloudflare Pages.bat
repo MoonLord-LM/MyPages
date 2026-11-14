@@ -13,6 +13,30 @@ echo.
 
 
 
+REM 检查 Node.js 组件
+call node -v >nul 2>&1
+if !errorlevel! neq 0 (
+    echo 错误：缺少 Node.js 组件 & REM
+    echo 请从 https://nodejs.org/en/download 下载，并完成安装 & REM
+    "explorer.exe" "https://nodejs.org/en/download"
+    echo.
+    pause
+    exit /b 1
+)
+
+REM 检查 npx 组件
+call npx -v >nul 2>&1
+if !errorlevel! neq 0 (
+    echo 错误：缺少 npx 组件 & REM
+    echo 请从 https://nodejs.org/en/download 下载，并完成安装 & REM
+    "explorer.exe" "https://nodejs.org/en/download"
+    echo.
+    pause
+    exit /b 1
+)
+
+
+
 REM 静态资源文件文件夹
 for %%i in ("!script_dir!..\..\dist") do set "static_dir=%%~fi"
 
@@ -39,7 +63,8 @@ echo.
 set "temp_dir=%temp%\MyPages_%random%_%random%_%random%_%random%\"
 if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
 if not exist "!temp_dir!" ( mkdir "!temp_dir!" )
-pushd "!temp_dir!"
+
+cd "!temp_dir!"
 if !errorlevel! neq 0 (
     echo 错误：无法进入临时目录
     echo.
@@ -48,13 +73,17 @@ if !errorlevel! neq 0 (
 )
 
 call npx -y wrangler login
-call npx -y wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main" --commit-message "!file_count!"
 
-popd
-if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
+:loop
 
-echo.
-echo 上传完成
+    call npx -y wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main" --commit-message "!file_count!"
+
+    echo.
+    echo 上传完成，请选择按 Enter 键重新上传，或者关闭窗口结束运行
+    echo.
+    pause
+
+goto loop
 
 
 
