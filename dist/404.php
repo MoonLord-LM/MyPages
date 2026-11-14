@@ -44,11 +44,12 @@ if (substr($path, -1) !== '/' && substr($path, -5) !== '.html') {
 
 # 优先展示 404.html
 http_response_code(404);
-header('Content-Type: text/plain; charset=utf-8');
 
 if (is_file('404.html')) {
+    header('Content-Type: text/html; charset=utf-8');
     readfile('404.html');
     exit;
 }
 
+header('Content-Type: text/plain; charset=utf-8');
 echo '404 Not Found: ' . $path;
