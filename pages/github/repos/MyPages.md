@@ -1,4 +1,4 @@
-2026-11-14 16:00:10 +08:00  
+2026-11-14 16:44:35 +08:00  
 https://github.com/MoonLord-LM/MyPages  
 
 ---
@@ -38,12 +38,12 @@ Static Site Generator
 
 ### 静态资源
 
-推荐使用 `/assets` 目录，单独存放页面使用的视频、图片、js、css、字体等各种静态资源文件  
-`/pages` 目录下的所有文件，只要不是 html 或 md 文件，一律视为静态资源  
+推荐使用 `assets` 目录，单独存放页面使用的视频、图片、js、css、字体等各种静态资源文件  
 静态资源会被原样复制到 `/dist` 中对应的路径下，目录结构与 `/pages` 保持一致  
+`/pages` 目录下的所有文件，只要不是 html 或 md 文件，一律视为静态资源  
 例如 `/pages/favicon.ico` → `/dist/favicon.ico`  
 页面中引用静态资源时，必须使用相对路径，例如 `./assets/image/logo.png`  
-如果 Markdown 中使用远程图片链接（`http(s)://`），自动下载并保存到页面所在目录的 `assets/`，并改写为本地相对路径  
+如果 Markdown 中使用远程图片链接（`http(s)://`），生成时，会自动下载到 `assets` 目录，并改写为相对路径  
 
 ### 公共模板
 
@@ -51,7 +51,7 @@ Static Site Generator
 `header.html` 的拼接位置在原始 html 的 `<body>` 标签后面，紧挨着的位置  
 `footer.html` 的拼接位置在原始 html 的 `</body>` 标签前面，紧挨着的位置  
 自动尝试向同级或上级目录，寻找最临近的 `header.html` 和 `footer.html` 文件，两者独立处理，缺失某个则仅省略该模板  
-模板中的静态资源引用，按模板文件的位置写相对路径，但是生成时，需要根据最终文件的位置，自动调整相对路径  
+模板中的静态资源引用，按模板文件的位置写相对路径，但是生成时，会根据最终文件的位置，自动调整相对路径  
 自动调整相对路径，支持 `src`、`href`、`url()` 写法  
 
 ### 密码保护
@@ -76,15 +76,16 @@ Static Site Generator
 ### 站点地图
 
 自动列举 `/dist` 中所有的 html、php 文件，生成站点地图，存放到 `/dist/sitemap.xml` 中  
-站点地图需要精确到文件名，例如 `index.html` 和 `index.php` 是两个不同的文件，都列举出来  
+站点地图精确到文件名，例如 `index.html` 和 `index.php` 是两个不同的文件，都列举出来  
 去除重复，对链接按字母做排序  
+特殊路径： `/404.php`、`/404.html`、`*/webhook/*` 匹配的文件，不列举到站点地图中  
 
 ### 外链清单
 
 尝试扫描 `/dist` 中所有的 html、php 文件，将引用的外部站点的链接清单，存放到 `/dist/external-url.json` 中  
-需要包含完整的 URL 链接和参数，例如 `index.html?q=1` 和 `index.html?q=2` 是两个不同的链接，都列举出来  
-对于密码保护的页面，不采集外部链接，保证安全  
+包含完整的 URL 链接和参数，例如 `index.html?q=1` 和 `index.html?q=2` 是两个不同的链接，都列举出来  
 去除重复，对链接按字母做排序  
+由于密码保护的页面已加密，实际内容中的链接无法采集，不会列举到外链清单中  
 
 ## [工程结构]
 
@@ -98,7 +99,7 @@ MyPages/
 │   │   ├── github-profile.bat            # 采集 GitHub 用户资料
 │   │   ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
 │   └── search/                           # 搜索功能相关工具
-│       ├── quark-update.bat              # 处理夸克网盘资源链接，生成站点搜索数据与收录页面
+│       ├── quark-update-all.bat          # 处理夸克网盘资源链接，生成站点搜索数据与收录页面
 ├── build.bat                             # 构建脚本
 ├── LLM.md                                # 提示信息
 └── README.md                             # 工程说明
