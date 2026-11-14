@@ -305,7 +305,7 @@ body { overflow-x: clip; }
     const AES_GCM_IV_LEN = 12;
     const AES_GCM_TAG_LEN = 16;
     const HEADER_LEN = PBKDF2_SALT_LEN + AES_GCM_IV_LEN + AES_GCM_TAG_LEN;
-    const ITERATIONS = 10000000; // 1000 万，与本地批处理脚本保持一致
+    const ITERATIONS = 10000000;
     const KEY_LEN = 32;
 
     const $ = (id) => document.getElementById(id);
