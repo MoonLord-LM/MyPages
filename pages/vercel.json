@@ -8,16 +8,8 @@
       }
     },
     { "handle": "filesystem" },
-    {
-      "src": "^/(.*[^/])$",
-      "dest": "/$1/index.html",
-      "check": true,
-      "status": 301,
-      "headers": {
-        "Location": "/$1/"
-      }
-    },
     { "src": "^/(.*)$", "dest": "/$1.html", "check": true },
+    { "src": "^/(.*)$", "dest": "/$1/index.html", "check": true },
     { "src": "^/.*$", "status": 404, "dest": "/404.html" }
   ]
 }
