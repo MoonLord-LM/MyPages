@@ -253,6 +253,28 @@
       if (items.length) search();
     }
 
+    // 流式下载，按 Content-Length 计算百分比；拿不到长度时退化为一次性读取
+    async function fetchWithProgress(url, onProgress) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const total = Number(res.headers.get('Content-Length')) || 0;
+      if (!total || !res.body) return res.arrayBuffer();
+      const reader = res.body.getReader();
+      const chunks = [];
+      let received = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        onProgress(received, total);
+      }
+      const buffer = new Uint8Array(received);
+      let offset = 0;
+      for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.length; }
+      return buffer;
+    }
+
     // 文件名按字符串倒序，取排在最前的一条
     async function latestDataUrl() {
       const res = await fetch(LIST_URL);
@@ -269,8 +291,9 @@
     function load() {
       if (!loadPromise) {
         loadPromise = latestDataUrl()
-          .then((url) => fetch(url))
-          .then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.arrayBuffer(); })
+          .then((url) => fetchWithProgress(url, (done, total) => {
+            setStatus('正在加载数据… ' + (done / total * 100).toFixed(1) + '%');
+          }))
           .then(ungzipJson)
           .then((data) => {
             items = toRecords(data).map(normalize).filter(Boolean)
