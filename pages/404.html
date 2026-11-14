@@ -16,7 +16,7 @@
       line-height: 1.6;
     }
     .error-page {
-      min-height: calc(100vh - 54px);
+      min-height: calc(66.6667vh - 108px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -78,8 +78,10 @@
       <p class="error-tip">请求的资源无法找到：</p>
       <div class="error-url" id="url"></div>
 
-      <p class="error-tip">来源页面：</p>
-      <div class="error-url" id="referrer"></div>
+      <div id="referrerBlock" hidden>
+        <p class="error-tip">来源页面：</p>
+        <div class="error-url" id="referrer"></div>
+      </div>
 
       <div class="error-actions">
         <button type="button" class="error-btn" id="copyBtn">复制错误链接</button>
@@ -91,8 +93,10 @@
   <script>
     (function () {
       document.getElementById('url').textContent = location.href;
-      document.getElementById('referrer').textContent =
-        document.referrer || '未知（直接访问或浏览器未提供）';
+      if (document.referrer) {
+        document.getElementById('referrer').textContent = document.referrer;
+        document.getElementById('referrerBlock').hidden = false;
+      }
 
       function legacyCopy(text) {
         var ta = document.createElement('textarea');
