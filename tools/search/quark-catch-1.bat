@@ -66,7 +66,6 @@ $threadCount = 50
 if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
     [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 }
-$urlPattern = '^https://pan\.quark\.cn/s/([A-Za-z0-9]+)$'
 $extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
 try {
@@ -137,7 +136,6 @@ $candidates = [System.Collections.Generic.List[object]]::new()
 $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($rawUrl in $rawLinks) {
     $url = ([string]$rawUrl).Trim()
-    if ($url -notmatch $urlPattern) { continue }
     if ($existing.Contains($url)) { continue }
     if (-not $seen.Add($url)) { continue }
     $candidates.Add([pscustomobject]@{

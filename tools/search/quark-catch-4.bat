@@ -67,7 +67,6 @@ $threadCount = 50
 if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
     [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 }
-$urlPattern = '^https://pan\.quark\.cn/s/([A-Za-z0-9]+)$'
 $pageLog = 500
 
 function Invoke-Pool([string]$WorkerScript, [System.Collections.Generic.Queue[string]]$Queue, [scriptblock]$OnDone) {
@@ -326,7 +325,6 @@ foreach ($rec in $invalidRecords) {
 
 $candidates = [System.Collections.Generic.List[string]]::new()
 foreach ($url in $quarkSeen) {
-    if ($url -notmatch $urlPattern) { continue }
     if ($existing.Contains($url)) { continue }
     $candidates.Add($url)
 }
