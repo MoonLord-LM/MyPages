@@ -1207901,12 +1207901,12 @@
     },
     {
         "url":  "https://pan.quark.cn/s/4f5d17050806",
-        "check_valid":  true,
+        "check_valid":  false,
         "title":  "89.笼中凤（44集）",
         "time":  "2026-06-29 18:22",
-        "author":  "烟好*",
-        "file_count":  46,
-        "file_size":  536526976
+        "author":  null,
+        "file_count":  null,
+        "file_size":  null
     },
     {
         "url":  "https://pan.quark.cn/s/551fb1cc3fb5",
@@ -1726645,12 +1726645,12 @@
     },
     {
         "url":  "https://pan.quark.cn/s/82b5aa531e10",
-        "check_valid":  true,
+        "check_valid":  false,
         "title":  "给z阿z嬷z的z情z书 (2026) 4K 60帧 HDR",
         "time":  "2026-09-30 11:46",
-        "author":  "心地*良的青竹",
-        "file_count":  1,
-        "file_size":  13825647551
+        "author":  null,
+        "file_count":  null,
+        "file_size":  null
     },
     {
         "url":  "https://pan.quark.cn/s/63efec786dd1",
@@ -1876713,8 +1876713,8 @@
         "title":  "兴安岭猎人传：我带全家喝酒吃肉",
         "time":  "2026-10-17 01:02",
         "author":  "爱短*",
-        "file_count":  621,
-        "file_size":  2208757520
+        "file_count":  619,
+        "file_size":  2208757395
     },
     {
         "url":  "https://pan.quark.cn/s/4f37bdfbf1f7",
@@ -1884595,8 +1884595,8 @@
         "title":  "错位少年归家业焕生机",
         "time":  "2026-10-18 00:17",
         "author":  "爱短*",
-        "file_count":  140,
-        "file_size":  571988311
+        "file_count":  138,
+        "file_size":  571988186
     },
     {
         "url":  "https://pan.quark.cn/s/f699a6df49c3",
@@ -2131632,15 +2131632,6 @@
         "file_size":  5776086779
     },
     {
-        "url":  "https://pan.quark.cn/s/f5b6996f3e44",
-        "check_valid":  true,
-        "title":  "10.15-大力",
-        "time":  "2026-11-14 10:28",
-        "author":  "安适*平的袋鼠",
-        "file_count":  12,
-        "file_size":  1022759355
-    },
-    {
         "url":  "https://pan.quark.cn/s/7057d2ef357d",
         "check_valid":  true,
         "title":  "周六 打望",
@@ -2131794,5 +2131785,14 @@
         "author":  "儒雅*考拉",
         "file_count":  17,
         "file_size":  88743974245
+    },
+    {
+        "url":  "https://pan.quark.cn/s/f5b6996f3e44",
+        "check_valid":  true,
+        "title":  "10.15-大力",
+        "time":  "2026-11-14 16:51",
+        "author":  "安适*平的袋鼠",
+        "file_count":  1,
+        "file_size":  97755744
     }
 ]
