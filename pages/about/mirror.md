@@ -39,7 +39,7 @@
 
 GitHub 倾向于兼容所有链接  
 CloudFlare 倾向于使用最短链接  
-Vercel 的效果依赖于 vercel.json 文件的配置  
+Vercel 的效果依赖于 `vercel.json` 文件的配置  
 
 | 站点 | /文件 | /文件夹/ | /文件夹 | /index | /index.html |
 | -- | -- | -- | -- | -- | -- |
