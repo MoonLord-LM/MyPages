@@ -6,6 +6,7 @@ ini_set('default_charset', 'UTF-8');
 
 
 
+# 重定向设置
 $redirects = [
     '/service/network-proxy.html' => '/service/network-proxy/index.html',
 ];
@@ -18,7 +19,15 @@ if ($path === '/404.php') {
     exit;
 }
 
-if (substr($path, -1) !== '/') {
+if (isset($redirects[$path])) {
+    header('Location: ' . $redirects[$path], true, 301);
+    exit;
+}
+
+
+
+# 兼容 Clean URL / Pretty URL
+if (substr($path, -1) !== '/' && substr($path, -5) !== '.html') {
     $base_dir = realpath(__DIR__);
     if ($base_dir !== false) {
         $base_dir = $base_dir . DIRECTORY_SEPARATOR;
@@ -31,14 +40,15 @@ if (substr($path, -1) !== '/') {
     }
 }
 
-if (isset($redirects[$path])) {
-    header('Location: ' . $redirects[$path], true, 301);
+
+
+# 优先展示 404.html
+http_response_code(404);
+header('Content-Type: text/plain; charset=utf-8');
+
+if (is_file('404.html')) {
+    readfile('404.html');
     exit;
 }
 
-
-
-http_response_code(404);
-header('Content-Type: text/plain; charset=utf-8');
-header('Refresh: 120; url=/');
 echo '404 Not Found: ' . $path;
