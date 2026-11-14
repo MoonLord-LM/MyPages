@@ -9,7 +9,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 powershell -NoProfile -Command "Write-Host '从指定的 Telegram 频道中，采集夸克网盘资源链接' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '采集数据源 https://t.me/s/kduanju https://t.me/s/yoyokuakeduanju https://t.me/s/Quark_Movies' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '采集数据源 https://t.me/s/kduanju https://t.me/s/yoyokuakeduanju https://t.me/s/Quark_Movies https://t.me/s/QuarkFree' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '有效的完整信息保存到 quark.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '在 quark.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
@@ -68,7 +68,7 @@ if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
 $urlPattern = '^https://pan\.quark\.cn/s/([A-Za-z0-9]+)$'
 $extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
-$tgChannels = @('kduanju', 'yoyokuakeduanju', 'Quark_Movies')
+$tgChannels = @('kduanju', 'yoyokuakeduanju', 'Quark_Movies', 'Quark_Movies', 'QuarkFree')
 $tgMaxPages = 100
 
 $rawLinks = [System.Collections.Generic.List[string]]::new()
