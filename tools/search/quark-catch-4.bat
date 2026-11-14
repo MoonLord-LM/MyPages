@@ -63,8 +63,6 @@ $headers = @{
     'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36';
     'Referer' = 'https://pan.quark.cn/'
 }
-$cnOffset = [System.TimeSpan]::FromHours(8)
-$checkTime = [System.DateTimeOffset]::UtcNow.ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
 $threadCount = 50
 if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
     [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
@@ -477,7 +475,6 @@ try {
             $added.Add([pscustomobject][ordered]@{
                 url         = $result.Url
                 check_valid = $true
-                check_time  = $checkTime
                 title       = $result.Title
                 time        = $result.Time
                 author      = $result.Author
