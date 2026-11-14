@@ -41,13 +41,13 @@ GitHub 倾向于兼容所有链接
 CloudFlare 倾向于使用最短链接  
 Vercel 的效果依赖于 `vercel.json` 文件的配置  
 
-| 站点 | /文件 | /文件夹/ | /文件夹 | /index | /index.html |
+| 站点 | /mirror.html | /about/ | /about | /index | /index.html |
 | -- | -- | -- | -- | -- | -- |
-| 主站 | [/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about](https://www.moonlord.cc/about) ✅ 301 跳转 | [/about/index](https://www.moonlord.cc/about/index) ✅ | [/index.html](https://www.moonlord.cc/about/index.html) ✅ |
-| GitHub | [/mirror.html](https://github.moonlord.cc/about/mirror.html) ✅ | [/about/](https://github.moonlord.cc/about/) ✅ | [/about](https://github.moonlord.cc/about) ✅ 301 跳转 | [/about/index](https://github.moonlord.cc/about/index) ✅ | [/index.html](https://github.moonlord.cc/about/index.html) ✅ |
-| CloudFlare | [/mirror.html](https://cloudflare.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [/about/](https://cloudflare.moonlord.cc/about/) ✅ | [/about](https://cloudflare.moonlord.cc/about) ✅ 308 跳转 | [/about/index](https://cloudflare.moonlord.cc/about/index) ℹ️ 308 跳转 | [/index.html](https://cloudflare.moonlord.cc/about/index.html) ℹ️ 308 跳转 |
-| Vercel | [/mirror.html](https://vercel.moonlord.cc/about/mirror.html) ✅ | [/about/](https://vercel.moonlord.cc/about/) ✅ | [/about](https://vercel.moonlord.cc/about) ℹ️ 200 无跳转 | [/about/index](https://vercel.moonlord.cc/about/index) ❌ 404 报错 | [/index.html](https://vercel.moonlord.cc/about/index.html) ✅ |
-| Netlify | [/mirror.html](https://netlify.moonlord.cc/about/mirror.html) ✅ | [/about/](https://netlify.moonlord.cc/about/) ✅ | [/about](https://netlify.moonlord.cc/about) ℹ️ 200 无跳转 | [/about/index](https://netlify.moonlord.cc/about/index) ✅ | [/index.html](https://netlify.moonlord.cc/about/index.html) ✅ |
+| 主站 | [链接](https://www.moonlord.cc/about/mirror.html) ✅ | [链接](https://www.moonlord.cc/about/) ✅ | [链接](https://www.moonlord.cc/about) ✅ 301 跳转 | [链接](https://www.moonlord.cc/about/index) ✅ | [链接](https://www.moonlord.cc/about/index.html) ✅ |
+| GitHub | [链接](https://github.moonlord.cc/about/mirror.html) ✅ | [链接](https://github.moonlord.cc/about/) ✅ | [链接](https://github.moonlord.cc/about) ✅ 301 跳转 | [链接](https://github.moonlord.cc/about/index) ✅ | [链接](https://github.moonlord.cc/about/index.html) ✅ |
+| CloudFlare | [链接](https://cloudflare.moonlord.cc/about/mirror.html) ℹ️ 308 跳转 | [链接](https://cloudflare.moonlord.cc/about/) ✅ | [链接](https://cloudflare.moonlord.cc/about) ✅ 308 跳转 | [链接](https://cloudflare.moonlord.cc/about/index) ℹ️ 308 跳转 | [链接](https://cloudflare.moonlord.cc/about/index.html) ℹ️ 308 跳转 |
+| Vercel | [链接](https://vercel.moonlord.cc/about/mirror.html) ✅ | [链接](https://vercel.moonlord.cc/about/) ✅ | [链接](https://vercel.moonlord.cc/about) ℹ️ 200 无跳转 | [链接](https://vercel.moonlord.cc/about/index) ❌ 404 报错 | [链接](https://vercel.moonlord.cc/about/index.html) ✅ |
+| Netlify | [链接](https://netlify.moonlord.cc/about/mirror.html) ✅ | [链接](https://netlify.moonlord.cc/about/) ✅ | [链接](https://netlify.moonlord.cc/about) ℹ️ 200 无跳转 | [链接](https://netlify.moonlord.cc/about/index) ✅ | [链接](https://netlify.moonlord.cc/about/index.html) ✅ |
 
 ## 站点 HTTP Range Requests / 206 Partial Content 效果
 
