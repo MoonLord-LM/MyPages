@@ -456,7 +456,7 @@ body { overflow-x: clip; }
       if (!loadPromise) {
         loadPromise = latestDataUrl()
           .then((url) => fetchWithProgress(url, (done, total) => {
-            setStatus('正在加载数据… ' + (done / total * 100).toFixed(1) + '%');
+            if (done < total) setStatus('正在加载数据… ' + (done / total * 100).toFixed(1) + '%');
           }))
           .then(ungzipJson)
           .then((data) => {
