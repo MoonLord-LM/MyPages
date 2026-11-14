@@ -72,14 +72,14 @@ Static Site Generator
 ### 站点地图
 
 自动列举 `/dist` 中所有的 html、php 文件，生成站点地图，存放到 `/dist/sitemap.xml` 中  
-站点地图需要精确到文件名，例如 `index.html` 和 `index.php` 是两个不同的文件，都列举出来  
+站点地图精确到文件名，例如 `index.html` 和 `index.php` 是两个不同的文件，都列举出来  
 去除重复，对链接按字母做排序  
 特殊路径： `/404.php`、`/404.html`、`*/webhook/*` 匹配的文件，不列举到站点地图中  
 
 ### 外链清单
 
 尝试扫描 `/dist` 中所有的 html、php 文件，将引用的外部站点的链接清单，存放到 `/dist/external-url.json` 中  
-需要包含完整的 URL 链接和参数，例如 `index.html?q=1` 和 `index.html?q=2` 是两个不同的链接，都列举出来  
+包含完整的 URL 链接和参数，例如 `index.html?q=1` 和 `index.html?q=2` 是两个不同的链接，都列举出来  
 对于密码保护的页面，不采集外部链接，保证安全  
 去除重复，对链接按字母做排序  
 
