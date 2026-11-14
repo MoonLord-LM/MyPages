@@ -344,13 +344,24 @@ body { overflow-x: clip; }
       return item;
     }
 
+    // 搜索仍匹配完整 desc，但只展示命中的那些行，避免长描述占满卡片
+    function descForDisplay(desc) {
+      if (!desc || !terms.length) return desc;
+      const hits = desc.split(/\r\n|\n|\r/).filter((line) => {
+        const lower = line.toLowerCase();
+        return terms.some((t) => lower.includes(t));
+      });
+      return hits.length ? hits.join('\n') : desc;
+    }
+
     function itemHtml(item) {
       const safeUrl = /^https?:\/\/\S+$/i.test(item.url) ? escapeHtml(item.url) : '';
       const titleTag = safeUrl
         ? '<a class="result-title" href="' + safeUrl + '" target="_blank" rel="noopener">' + highlight(item.title) + '</a>'
         : '<span class="result-title">' + highlight(item.title) + '</span>';
-      const desc = item.desc
-        ? '<div class="result-desc">' + highlight(item.desc) + '</div>'
+      const shownDesc = descForDisplay(item.desc);
+      const desc = shownDesc
+        ? '<div class="result-desc">' + highlight(shownDesc) + '</div>'
         : '';
       const meta = '<div class="result-meta">' +
         '<span>时间：' + highlight(item.time) + '</span>' +
