@@ -74,6 +74,7 @@ Static Site Generator
 自动列举 `/dist` 中所有的 html、php 文件，生成站点地图，存放到 `/dist/sitemap.xml` 中  
 站点地图需要精确到文件名，例如 `index.html` 和 `index.php` 是两个不同的文件，都列举出来  
 去除重复，对链接按字母做排序  
+特殊路径： `/404.php`、`/404.html`、`*/webhook/*` 匹配的文件，不列举到站点地图中  
 
 ### 外链清单
 
