@@ -37,7 +37,7 @@
 
 ## 站点 Clean / Pretty URL 效果
 
-| 站点 | /文件路径 | /文件夹路径/ | /文件夹路径 | /index | /index.html |
+| 站点 | /文件 | /文件夹/ | /文件夹 | /index | /index.html |
 | -- | -- | -- | -- | -- | -- |
 | 主站 | [/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about](https://www.moonlord.cc/about) ✅ 301 跳转 | [/about/index](https://www.moonlord.cc/about/index) ✅ | [/index.html](https://www.moonlord.cc/about/index.html) ✅ |
 | GitHub | [/mirror.html](https://github.moonlord.cc/about/mirror.html) ✅ | [/about/](https://github.moonlord.cc/about/) ✅ | [/about](https://github.moonlord.cc/about) ✅ 301 跳转 | [/about/index](https://github.moonlord.cc/about/index) ✅ | [/index.html](https://github.moonlord.cc/about/index.html) ✅ |
