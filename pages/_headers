@@ -9,7 +9,9 @@
   X-Content-Type-Options: nosniff
 
 /static/*.json
+  ! Cache-Control
   Cache-Control: no-store, no-cache, must-revalidate
 
 /static/*.html
+  ! Cache-Control
   Cache-Control: no-store, no-cache, must-revalidate
