@@ -12,7 +12,7 @@
       "src": "^/(.*[^/])$",
       "dest": "/$1/index.html",
       "check": true,
-      "status": 308,
+      "status": 301,
       "headers": {
         "Location": "/$1/"
       }
