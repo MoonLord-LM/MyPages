@@ -65,6 +65,8 @@
 | -- | -- | -- |
 | 主站 | [/404/404/404.html](https://www.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.php、/404.html 文件，或 Nginx 默认 404 页面 |
 | GitHub | [/404/404/404.html](https://github.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.html 文件，或 GitHub 默认 404 页面 |
-| CloudFlare | [/404/404/404.html](https://cloudflare.moonlord.cc/404/404/404.html) ⚠️ 200 | 直接展示首页内容 |
+| CloudFlare | [/404/404/404.html](https://cloudflare.moonlord.cc/404/404/404.html) ✅ 404 / ⚠️ 200 | 展示 /404.html 文件（404），或展示首页（200） |
 | Vercel | [/404/404/404.html](https://vercel.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.html 文件，或 Vercel 默认 404 页面 |
 | Netlify | [/404/404/404.html](https://netlify.moonlord.cc/404/404/404.html) ✅ 404 | 展示 /404.html 文件，或 Netlify 默认 404 页面 |
+
+CloudFlare 存在 [Single-page application (SPA) rendering](https://developers.cloudflare.com/pages/configuration/serving-pages/) 机制，因此存在差异  
