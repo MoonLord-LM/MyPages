@@ -1,6 +1,5 @@
 {
   "cleanUrls": true,
-  "trailingSlash": true,
   "redirects": [
     {
       "source": "// Vercel 配置文件",
