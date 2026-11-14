@@ -1210,6 +1210,9 @@ function buildSitemap() {
             const ext = path.extname(entry.name).toLowerCase();
             if (ext !== '.html' && ext !== '.php') continue;
             const rel = path.relative(DIST, full).split(path.sep).join('/');
+            // 特殊路径不列入站点地图：/404.php、/404.html、*/webhook/*
+            if (rel === '404.php' || rel === '404.html') continue;
+            if (/(^|\/)webhook\//.test(rel)) continue;
             // 优先取 pages 源文件的最后提交时间；取不到时回退到产物文件时间
             let mtime = lastmodMap.get(full) || null;
             if (!mtime) {
