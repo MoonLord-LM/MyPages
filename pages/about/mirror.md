@@ -35,7 +35,7 @@
 
 [https://netlify.moonlord.cc](https://netlify.moonlord.cc)  
 
-## 站点 Clean / Pretty URL 效果
+## 站点 Clean URL / Pretty URL 效果
 
 GitHub 倾向于兼容所有链接  
 CloudFlare 倾向于使用最短链接  
