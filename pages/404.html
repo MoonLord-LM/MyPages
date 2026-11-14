@@ -120,15 +120,11 @@
       }
 
       var btn = document.getElementById('copyBtn');
-      var timer;
       btn.addEventListener('click', function () {
         copyText(location.href).then(function () {
           btn.textContent = '已复制';
         }, function () {
           btn.textContent = '复制失败';
-        }).then(function () {
-          clearTimeout(timer);
-          timer = setTimeout(function () { btn.textContent = '复制错误链接'; }, 1600);
         });
       });
     })();

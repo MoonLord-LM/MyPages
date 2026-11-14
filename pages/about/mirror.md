@@ -37,6 +37,8 @@
 
 ## 站点 Clean / Pretty URL 效果
 
+GitHub 倾向于兼容所有链接，CloudFlare 倾向于使用最短路径  
+
 | 站点 | /文件 | /文件夹/ | /文件夹 | /index | /index.html |
 | -- | -- | -- | -- | -- | -- |
 | 主站 | [/mirror.html](https://www.moonlord.cc/about/mirror.html) ✅ | [/about/](https://www.moonlord.cc/about/) ✅ | [/about](https://www.moonlord.cc/about) ✅ 301 跳转 | [/about/index](https://www.moonlord.cc/about/index) ✅ | [/index.html](https://www.moonlord.cc/about/index.html) ✅ |
