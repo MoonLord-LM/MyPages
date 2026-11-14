@@ -47,7 +47,7 @@
 
 ## 站点 HTTP Range Requests / 206 Partial Content 效果
 
-发送三种 `Range` 请求头，测试 `/favicon.ico`
+发送 3 种 `Range` 请求头，测试 `/favicon.ico`
 
 | 站点 | 单段范围 `bytes=0-99` | 尾部范围 `bytes=-100` | 多段范围 `bytes=0-9,20-29` |
 | -- | -- | -- | -- |
