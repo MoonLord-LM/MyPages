@@ -1,0 +1,724 @@
+@echo off
+chcp 65001 >nul
+setlocal disabledelayedexpansion
+set "script=%~0" & set "script_path=%~f0" & set "script_dir=%~dp0" & set "script_name=%~n0" & set "script_ext=%~x0" & set "script_name_ext=%~nx0"
+setlocal enabledelayedexpansion
+if /i "!cd!"=="!SystemRoot!\System32" ( cd /d "!script_dir!" )
+powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundColor Cyan" && echo.
+
+
+
+powershell -NoProfile -Command "Write-Host '从指定的网站的 /sitemap.xml 列出的网页中，采集夸克网盘资源链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '采集数据源 https://www.gequhai.com' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '有效的完整信息保存到 quark.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '在 quark.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
+echo.
+
+
+
+set "json_file=!script_dir!data\quark.json"
+set "invalid_json_file=!script_dir!data\quark-invalid.json"
+
+
+
+REM 从自身文件末尾的 -----BEGIN POWERSHELL CODE----- / -----END POWERSHELL CODE----- 之间提取 PowerShell 代码
+set "begin_marker=-----BEGIN POWERSHELL CODE-----"
+set "end_marker=-----END POWERSHELL CODE-----"
+powershell -NoProfile -Command ^
+    "[System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;" ^
+    "$lines = Get-Content -Encoding UTF8 -LiteralPath $env:script_path;" ^
+    "$begin = [array]::IndexOf($lines, $env:begin_marker) + 1;" ^
+    "$end = [array]::IndexOf($lines, $env:end_marker);" ^
+    "if ($begin -lt 1 -or $end -lt $begin) {" ^
+    "    Write-Host '错误：未找到内嵌的 PowerShell 代码块' -ForegroundColor Red;" ^
+    "    exit 1;" ^
+    "};" ^
+    "$code = $lines[$begin..($end - 1)] -join [System.Environment]::NewLine;" ^
+    "Invoke-Expression $code"
+if !errorlevel! neq 0 (
+    echo 错误：处理失败
+    echo.
+    pause
+    exit /b 1
+)
+
+
+
+echo.
+pause
+exit /b
+
+
+
+-----BEGIN POWERSHELL CODE-----
+[System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
+$ProgressPreference = 'SilentlyContinue'
+
+$jsonPath = $env:json_file
+$api = 'https://drive-h.quark.cn/1/clouddrive/share/sharepage'
+$headers = @{
+    'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36';
+    'Referer' = 'https://pan.quark.cn/'
+}
+$threadCount = 1
+if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
+    [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
+}
+$extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
+$staticExt = @(
+    'mp4','mkv','ts','avi','wmv','flv','rmvb','rm','vob','mpg','mpeg','3gp','m4v','f4v','mov','webm',
+    'flac','m4a','mp3','wav','ogg','aac','opus','wma','alac','ac3','eac3','mp2',
+    'jpg','jpeg','png','webp','bmp','gif','tif','tiff','avif','heic','heif','jfif','psd','ico',
+    'srt','ass',
+    'ttf','otf','woff2','woff','eot',
+    '7z','zip','rar','tar','gz','bz2','xz','tgz','tbz2','zst','cab','lz4','iso','exe','001',
+    'doc','docx','xls','xlsx','ppt','pptx','pdf','csv',
+    'css','js','ejs','svg','svgz','eps','pict','mid','midi','ps','pls','swf','class','jar','apk','dmg','bin'
+)
+$staticSet = [System.Collections.Generic.HashSet[string]]::new([string[]]$staticExt, [System.StringComparer]::OrdinalIgnoreCase)
+$badEscape = @('%60', '%22', '%27', '%00', '%0A', '%0D')
+
+$sites = @(
+    @{ Host = 'gequhai.com';   Root = 'https://www.gequhai.com/' }
+)
+$pageLogStep = 10
+$logDir = [System.IO.Path]::GetDirectoryName($jsonPath)
+$logEncoding = [System.Text.UTF8Encoding]::new($false)
+
+$validUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+$invalidUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+if ([System.IO.File]::Exists($env:json_file)) {
+    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($env:json_file, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
+        [void]$validUrlSet.Add($urlMatch.Groups[1].Value.Trim())
+    }
+}
+if ([System.IO.File]::Exists($env:invalid_json_file)) {
+    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($env:invalid_json_file, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
+        [void]$invalidUrlSet.Add($urlMatch.Groups[1].Value.Trim())
+    }
+}
+
+function Set-Fastest-Proxy([string]$testUrl, [object]$testHeaders, [int]$count) {
+    $probeTimeout = 5
+    $modes = @(
+        @{ Name = '代理'; UseProxy = $true },
+        @{ Name = '直连';     UseProxy = $false }
+    )
+    $results = @()
+    foreach ($mode in $modes) {
+        if ($mode.UseProxy) {
+            [System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()
+        } else {
+            [System.Net.WebRequest]::DefaultWebProxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
+        }
+        $okTimes = [System.Collections.Generic.List[double]]::new()
+        $fail = 0
+        for ($i = 0; $i -lt $count; $i++) {
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            try {
+                $null = Invoke-WebRequest -Uri $testUrl -Headers $testHeaders -TimeoutSec $probeTimeout -UseBasicParsing -ErrorAction Stop
+                $sw.Stop()
+                [void]$okTimes.Add($sw.Elapsed.TotalMilliseconds)
+            } catch {
+                $sw.Stop()
+                $fail++
+            }
+        }
+        $ok = $okTimes.Count
+        $avg = if ($ok -gt 0) { ($okTimes | Measure-Object -Average).Average } else { 0.0 }
+        $results += [pscustomobject]@{ Name = $mode.Name; UseProxy = $mode.UseProxy; Ok = $ok; Fail = $fail; Avg = $avg }
+    }
+    $best = $results | Sort-Object -Property @{ Expression = { -$_.Ok } }, @{ Expression = { $_.Avg } } | Select-Object -First 1
+    if ($best.UseProxy) {
+        [System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()
+    } else {
+        [System.Net.WebRequest]::DefaultWebProxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
+    }
+    return [pscustomobject]@{
+        Name      = $best.Name
+        ProxyOk   = ($results | Where-Object UseProxy).Ok
+        ProxyAvg  = ($results | Where-Object UseProxy).Avg
+        DirectOk  = ($results | Where-Object { -not $_.UseProxy }).Ok
+        DirectAvg = ($results | Where-Object { -not $_.UseProxy }).Avg
+    }
+}
+
+function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
+    $unitSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $invalidCount = 0
+    $validCount = 0
+    foreach ($link in $Links) {
+        $url = ([string]$link).Trim()
+        if (-not $url -or -not $unitSeen.Add($url)) { continue }
+        if ($validUrlSet.Contains($url)) { $validCount++ }
+        elseif ($invalidUrlSet.Contains($url)) { $invalidCount++ }
+    }
+    $known = $invalidCount + $validCount
+    if ($known -eq 0) {
+        $rate = 'NA'
+    } else {
+        $percent = 100.0 * $validCount / $known
+        $rate = ('{0:0.00}%（{1}/{2}）' -f $percent, $validCount, $known)
+    }
+    Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate)
+}
+
+$rawLinks = [System.Collections.Generic.List[string]]::new()
+$collectedSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+$collectScript = {
+    param($item, $headers, $extractPattern, $cookieSeed, $cookieDomain)
+    [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $ProgressPreference = 'SilentlyContinue'
+
+    $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    foreach ($name in $cookieSeed.Keys) {
+        try { $session.Cookies.Add([System.Net.Cookie]::new([string]$name, [string]$cookieSeed[$name], '/', $cookieDomain)) } catch { }
+    }
+
+    $result = [pscustomobject]@{
+        Url     = $item.Url
+        Kind    = $item.Kind
+        Ok      = $false
+        Locs    = [System.Collections.Generic.List[string]]::new()
+        Links   = [System.Collections.Generic.List[string]]::new()
+        Hrefs   = [System.Collections.Generic.List[string]]::new()
+        Message = ''
+    }
+    try {
+        $resp = Invoke-WebRequest -Uri $item.Url -Headers $headers -TimeoutSec 30 -UseBasicParsing -WebSession $session -ErrorAction Stop
+        $html = [string]$resp.Content
+        if ([int]$resp.StatusCode -ne 200) {
+            $result.Message = '状态码 ' + $resp.StatusCode + ' 非 200'
+        } elseif ($item.Kind -eq 'sitemap') {
+            foreach ($m in [regex]::Matches($html, '<(?:\w+:)?loc>\s*([^<]+?)\s*</(?:\w+:)?loc>')) {
+                [void]$result.Locs.Add($m.Groups[1].Value.Trim())
+            }
+            if ($result.Locs.Count -eq 0) { $result.Message = '200 但无 loc' }
+            else { $result.Ok = $true }
+        } else {
+            $m = [regex]::Matches($html, $extractPattern)
+            foreach ($x in $m) { [void]$result.Links.Add($x.Value) }
+            $hrefSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            foreach ($h in [regex]::Matches($html, '(?is)href\s*=\s*(?:"([^"]*)"|''([^'']*)''|([^\s>]+))')) {
+                $v = $h.Groups[1].Value
+                if (-not $v) { $v = $h.Groups[2].Value }
+                if (-not $v) { $v = $h.Groups[3].Value }
+                $v = $v.Trim()
+                if ($v -and $hrefSeen.Add($v)) { [void]$result.Hrefs.Add($v) }
+            }
+            $result.Ok = $true
+        }
+    } catch {
+        $result.Message = $_.Exception.Message
+    }
+    return $result
+}
+
+function Save-Page-Log([string]$path, [object]$pages) {
+    [System.IO.File]::WriteAllLines($path, [string[]]$pages.ToArray(), $logEncoding)
+}
+
+function Resolve-Page-Url([System.Uri]$base, [string]$raw, [string]$rootPrefix) {
+    $abs = $null
+    try {
+        $abs = [System.Uri]::new($base, [System.Net.WebUtility]::HtmlDecode($raw).Trim()).AbsoluteUri
+    } catch { return $null }
+    if (-not $abs.StartsWith($rootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) { return $null }
+    foreach ($bad in $badEscape) {
+        if ($abs.IndexOf($bad, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) { return $null }
+    }
+    $abs = $abs -replace '[#?].*$', ''
+    $dot = $abs.LastIndexOf('.')
+    if ($dot -ge 0 -and $staticSet.Contains($abs.Substring($dot + 1))) { return $null }
+    return $abs
+}
+
+function Receive-Collect-Result([object]$queue, [object]$inFlight, [string]$kind) {
+    while ($inFlight.Count -lt $threadCount -and $queue.Count -gt 0) {
+        $url = $queue.Dequeue()
+        $item = [pscustomobject]@{ Url = $url; Kind = $kind }
+        $ps = [powershell]::Create()
+        $ps.RunspacePool = $pool
+        [void]$ps.AddScript($collectScript).AddArgument($item).AddArgument($headers).AddArgument($extractPattern).AddArgument($cookieSeed).AddArgument($cookieDomain)
+        [void]$inFlight.Add([pscustomobject]@{ Pipe = $ps; Handle = $ps.BeginInvoke(); Item = $item })
+    }
+    $done = $null
+    foreach ($job in $inFlight) {
+        if ($job.Handle.IsCompleted) { $done = $job; break }
+    }
+    if ($null -eq $done) { return $null }
+    [void]$inFlight.Remove($done)
+    $res = $null
+    try {
+        $out = $done.Pipe.EndInvoke($done.Handle)
+        if ($out.Count -gt 0) { $res = $out[$out.Count - 1] }
+    } catch {
+        $res = $null
+    } finally {
+        $done.Pipe.Dispose()
+    }
+    if ($null -eq $res) {
+        $res = [pscustomobject]@{ Url = $done.Item.Url; Kind = $done.Item.Kind; Ok = $false; Locs = [System.Collections.Generic.List[string]]::new(); Links = [System.Collections.Generic.List[string]]::new(); Hrefs = [System.Collections.Generic.List[string]]::new(); Message = '处理失败' }
+    }
+    return $res
+}
+
+$pool = [runspacefactory]::CreateRunspacePool(1, $threadCount)
+$pool.Open()
+
+foreach ($site in $sites) {
+    $root = [System.Uri]::new($site.Root)
+    $rootPrefix = [string]$site.Root
+    $logPath = [System.IO.Path]::Combine($logDir, $site.Host + '.txt')
+    $sitemapSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $pageSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $collectedPages = [System.Collections.Generic.List[string]]::new()
+    $sitemapQueue = [System.Collections.Generic.Queue[string]]::new()
+    $pageQueue = [System.Collections.Generic.Queue[string]]::new()
+    $sitemapDone = 0
+    $sitemapFail = 0
+    $pageOk = 0
+    $pageFail = 0
+    $unitLinks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+    $startUrl = [System.Uri]::new($root, 'sitemap.xml').AbsoluteUri
+    [void]$sitemapSeen.Add($startUrl)
+    $sitemapQueue.Enqueue($startUrl)
+    $displayLogPath = $logPath
+    if ($env:script_dir -and $logPath.StartsWith($env:script_dir, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $displayLogPath = '/' + $logPath.Substring($env:script_dir.Length).Replace('\', '/')
+    }
+    $lastLogLinks = $rawLinks.Count
+    Write-Host ('开始采集站点 ' + $site.Root)
+    Write-Host ('页面清单保存到 ' + $displayLogPath)
+
+    $probe = Set-Fastest-Proxy $site.Root $headers 3
+    $proxyText = if ($probe.ProxyOk -gt 0) { [string][math]::Round($probe.ProxyAvg) + ' ms' } else { '超时' }
+    $directText = if ($probe.DirectOk -gt 0) { [string][math]::Round($probe.DirectAvg) + ' ms' } else { '超时' }
+    Write-Host ('网络检测（访问首页平均耗时）：代理 ' + $proxyText + '，直连 ' + $directText)
+    if ($probe.ProxyOk -eq 0 -and $probe.DirectOk -eq 0) {
+        Write-Host '错误：网络不可用' -ForegroundColor Red
+        exit 1
+    }
+    Write-Host ('采用' + $probe.Name)
+
+    $cookieSeed = @{}
+    $cookieDomain = $root.Host
+    $warmSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    try {
+        $null = Invoke-WebRequest -Uri $site.Root -Headers $headers -TimeoutSec 30 -UseBasicParsing -WebSession $warmSession -ErrorAction Stop
+    } catch { }
+    foreach ($cookie in $warmSession.Cookies.GetCookies($site.Root)) {
+        $cookieSeed[$cookie.Name] = $cookie.Value
+    }
+
+    $inFlight = [System.Collections.Generic.List[object]]::new()
+    while ($sitemapQueue.Count -gt 0 -or $inFlight.Count -gt 0) {
+        $res = Receive-Collect-Result $sitemapQueue $inFlight 'sitemap'
+        if ($null -eq $res) { Start-Sleep -Milliseconds 20; continue }
+        if (-not $res.Ok) {
+            $sitemapFail++
+            Write-Host ('sitemap ' + $res.Url + ' 解析失败：' + $res.Message)
+            continue
+        }
+        $sitemapDone++
+        $newPage = 0
+        foreach ($loc in $res.Locs) {
+            $abs = $null
+            try {
+                $abs = [System.Uri]::new($root, [System.Net.WebUtility]::HtmlDecode($loc)).AbsoluteUri
+            } catch { continue }
+            if ($abs -match '\.xml($|\?)') {
+                if ($sitemapSeen.Add($abs)) { $sitemapQueue.Enqueue($abs) }
+                continue
+            }
+            $pageUrl = Resolve-Page-Url $root $loc $rootPrefix
+            if ($null -eq $pageUrl) { continue }
+            if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl); $newPage++ }
+        }
+        Write-Host ($res.Url + ' 提取页面链接 ' + $newPage + ' 个，累计 ' + $pageSeen.Count + ' 个')
+    }
+
+    $inFlight = [System.Collections.Generic.List[object]]::new()
+    while ($pageQueue.Count -gt 0 -or $inFlight.Count -gt 0) {
+        $res = Receive-Collect-Result $pageQueue $inFlight 'page'
+        if ($null -eq $res) { Start-Sleep -Milliseconds 20; continue }
+        if ($res.Ok) {
+            $pageOk++
+            [void]$collectedPages.Add($res.Url)
+            foreach ($lk in $res.Links) {
+                [void]$unitLinks.Add($lk)
+                if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add($lk) }
+            }
+            $pageBase = $null
+            try { $pageBase = [System.Uri]::new($res.Url) } catch { $pageBase = $root }
+            foreach ($href in $res.Hrefs) {
+                $pageUrl = Resolve-Page-Url $pageBase $href $rootPrefix
+                if ($null -eq $pageUrl) { continue }
+                if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl) }
+            }
+        } else {
+            $pageFail++
+        }
+        $donePages = $pageOk + $pageFail
+        if (($donePages % $pageLogStep) -eq 0) {
+            Save-Page-Log $logPath $collectedPages
+            $foundLinks = $rawLinks.Count - $lastLogLinks
+            $lastLogLinks = $rawLinks.Count
+            Write-Host ('站点 ' + $site.Host + ' 已采集 ' + $donePages + ' / ' + $pageSeen.Count + ' 页，已失败 ' + $pageFail + ' 页，发现 ' + $foundLinks + ' 条，累计 ' + $rawLinks.Count + ' 条')
+        }
+    }
+
+    Save-Page-Log $logPath $collectedPages
+    Write-Host ('站点 ' + $site.Host + ' 采集完成，累计 ' + $rawLinks.Count + ' 条')
+    Write-Estimated-Rate $site.Host '网站' $unitLinks
+    Write-Host ''
+}
+
+$pool.Close()
+$pool.Dispose()
+Write-Host ('全部站点采集结束，累计 ' + $rawLinks.Count + ' 条夸克资源链接')
+Write-Host ''
+if ($rawLinks.Count -eq 0) {
+    Write-Host '未提取到夸克资源链接'
+    exit 0
+}
+
+$emptyJson = "[]`n"
+$emptyEncoding = [System.Text.UTF8Encoding]::new($false)
+
+$records = @()
+if ([System.IO.File]::Exists($jsonPath)) {
+    try {
+        $raw = [System.IO.File]::ReadAllText($jsonPath, [System.Text.Encoding]::UTF8)
+        $records = ConvertFrom-Json -InputObject $raw
+    } catch {
+        Write-Host '错误：数据文件解析失败' -ForegroundColor Red
+        exit 1
+    }
+} else {
+    [System.IO.File]::WriteAllText($jsonPath, $emptyJson, $emptyEncoding)
+}
+
+$invalidRecords = [System.Collections.Generic.List[object]]::new()
+if ([System.IO.File]::Exists($env:invalid_json_file)) {
+    try {
+        $invalidRaw = [System.IO.File]::ReadAllText($env:invalid_json_file, [System.Text.Encoding]::UTF8)
+        $invalidParsed = ConvertFrom-Json -InputObject $invalidRaw
+        foreach ($rec in $invalidParsed) {
+            $url = [string]$rec.url
+            if ($url) { [void]$invalidRecords.Add([pscustomobject][ordered]@{ url = $url }) }
+        }
+    } catch {
+        Write-Host '错误：无效数据文件解析失败' -ForegroundColor Red
+        exit 1
+    }
+} else {
+    [System.IO.File]::WriteAllText($env:invalid_json_file, $emptyJson, $emptyEncoding)
+}
+
+$existing = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($rec in $records) {
+    $url = [string]$rec.url
+    if ($url) { [void]$existing.Add($url) }
+}
+foreach ($rec in $invalidRecords) {
+    $url = [string]$rec.url
+    if ($url) { [void]$existing.Add($url) }
+}
+
+$candidates = [System.Collections.Generic.List[object]]::new()
+$seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($rawUrl in $rawLinks) {
+    $url = ([string]$rawUrl).Trim()
+    if ($existing.Contains($url)) { continue }
+    if (-not $seen.Add($url)) { continue }
+    $candidates.Add([pscustomobject]@{
+        Index = $candidates.Count + 1
+        Url   = $url
+        Title = ''
+        Time  = ''
+    })
+}
+
+if ($candidates.Count -eq 0) {
+    Write-Host ('采集完成：解析 ' + $rawLinks.Count + ' 条，无新增链接') -ForegroundColor Green
+    exit 0
+}
+
+Write-Host ('采集 ' + $rawLinks.Count + ' 条，已有 ' + $existing.Count + ' 条，待验证 ' + $candidates.Count + ' 条')
+
+$workerScript = @'
+    param($item)
+    [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
+    $ProgressPreference = 'SilentlyContinue'
+
+    $api = 'https://drive-h.quark.cn/1/clouddrive/share/sharepage'
+    $headers = @{
+        'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36';
+        'Referer' = 'https://pan.quark.cn/'
+    }
+    $cnOffset = [System.TimeSpan]::FromHours(8)
+    $url = [string]$item.Url
+    $title = [string]$item.Title
+    $time = [string]$item.Time
+    $valid = $false
+    $skip = $false
+    $stage = 'req'
+    $author = $null
+    $fileCount = $null
+    $fileSize = $null
+    $desc = $null
+    $reason = ''
+
+    if ($url -match '^https://pan\.quark\.cn/s/([A-Za-z0-9]+)') {
+        $pwdId = $Matches[1]
+        try {
+            $body = '{"pwd_id":"' + $pwdId + '","passcode":""}'
+            $tokenRaw = Invoke-WebRequest -Uri ($api + '/token?pr=ucd&fr=pc') -Method Post -Body $body `
+                -ContentType 'application/json' -Headers $headers -TimeoutSec 20 -UseBasicParsing
+            $stage = 'res'
+            $token = ConvertFrom-Json -InputObject $tokenRaw.Content
+            if ([int]$token.code -ne 0) {
+                throw ('分享接口返回 code=' + $token.code + ' ' + $token.message)
+            }
+            $stoken = [System.Uri]::EscapeDataString([string]$token.data.stoken)
+            $uri = $api + '/detail?pr=ucd&fr=pc&pwd_id=' + $pwdId + '&stoken=' + $stoken `
+                + '&pdir_fid=0&force=0&_page=1&_size=50&_fetch_banner=1&_fetch_share=1'
+            $stage = 'req'
+            $detailRaw = Invoke-WebRequest -Uri $uri -Headers $headers -TimeoutSec 20 -UseBasicParsing
+            $stage = 'res'
+            $detail = ConvertFrom-Json -InputObject $detailRaw.Content
+            if ([int]$detail.code -ne 0) {
+                throw ('详情接口返回 code=' + $detail.code + ' ' + $detail.message)
+            }
+            $share = $detail.data.share
+            if ($null -eq $share -or $null -eq $share.status -or $null -eq $share.expired_at) { throw }
+            $author = [string]$token.data.author.nick_name
+            $fileCount = [int64]$share.file_only_num
+            $fileSize = [int64]$share.size
+            $title = [string]$share.title
+            $fileTime = if ($share.first_file -and $share.first_file.updated_at) { $share.first_file.updated_at } else { $share.created_at }
+            $time = [System.DateTimeOffset]::FromUnixTimeMilliseconds([int64]$fileTime).ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
+            $expiredAt = [int64]$share.expired_at
+            if ($expiredAt -gt 0 -and $expiredAt -lt [System.DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) {
+                $reason = '链接已过期'
+            } elseif ([int64]$share.status -ne 1) {
+                $reason = '链接已失效'
+            } else {
+                $valid = $true
+            }
+
+            if ($valid) {
+                try {
+                    $descNames = [System.Collections.Generic.List[string]]::new()
+                    $getItems = {
+                        param([string]$pdirFid, [object]$first)
+                        $all = [System.Collections.Generic.List[object]]::new()
+                        $page = 1
+                        $resp = $first
+                        while ($true) {
+                            if ($null -eq $resp) {
+                                $childUri = $api + '/detail?pr=ucd&fr=pc&pwd_id=' + $pwdId + '&stoken=' + $stoken `
+                                    + '&pdir_fid=' + $pdirFid + '&force=0&_page=' + $page + '&_size=50&_fetch_banner=1&_fetch_share=1'
+                                try {
+                                    $resp = ConvertFrom-Json -InputObject (Invoke-WebRequest -Uri $childUri -Headers $headers -TimeoutSec 20 -UseBasicParsing).Content
+                                } catch {
+                                    break
+                                }
+                            }
+                            if ([int]$resp.code -ne 0) { break }
+                            $items = @()
+                            if ($null -ne $resp.data.list) { $items = @($resp.data.list) }
+                            foreach ($it in $items) { [void]$all.Add($it) }
+                            $total = 0
+                            if ($resp.metadata -and $resp.metadata._total) { $total = [int]$resp.metadata._total }
+                            if ($items.Count -eq 0 -or $all.Count -ge $total) { break }
+                            $page++
+                            $resp = $null
+                        }
+                        return $all
+                    }
+                    foreach ($rootDir in @(& $getItems '0' $detail)) {
+                        if (-not $rootDir.dir) { continue }
+                        foreach ($childItem in @(& $getItems ([string]$rootDir.fid) $null)) {
+                            if (-not $childItem.dir) { continue }
+                            $childName = [string]$childItem.file_name
+                            if (-not [string]::IsNullOrWhiteSpace($childName)) { [void]$descNames.Add($childName) }
+                        }
+                    }
+                    if ($descNames.Count -gt 0) {
+                        $desc = (@($descNames | Sort-Object -Unique)) -join "`r`n"
+                    }
+                } catch {
+                    $desc = $null
+                }
+            }
+        } catch {
+            $message = $_.Exception.Message
+            if ($message -match '\(404\)') {
+                $reason = '链接已失效'
+            } else {
+                $skip = $true
+                if ($stage -eq 'res') { $reason = '响应异常' } else { $reason = '请求失败' }
+            }
+        }
+    } else {
+        $reason = '链接格式错误'
+    }
+
+    return [pscustomobject]@{
+        Index     = $item.Index
+        Url       = $url
+        Title     = $title
+        Desc      = $desc
+        Time      = $time
+        Author    = $author
+        FileCount = $fileCount
+        FileSize  = $fileSize
+        Valid     = $valid
+        Skip      = $skip
+        Reason    = $reason
+    }
+'@
+
+$added = [System.Collections.Generic.List[object]]::new()
+$invalidAdded = [System.Collections.Generic.List[object]]::new()
+$pass = 0
+$fail = 0
+$skipped = 0
+
+$pool = [runspacefactory]::CreateRunspacePool(1, $threadCount)
+$pool.Open()
+$queue = [System.Collections.Generic.Queue[object]]::new()
+foreach ($item in $candidates) { $queue.Enqueue($item) }
+$active = [System.Collections.Generic.List[object]]::new()
+
+try {
+    while ($queue.Count -gt 0 -or $active.Count -gt 0) {
+        while ($active.Count -lt $threadCount -and $queue.Count -gt 0) {
+            $item = $queue.Dequeue()
+            $ps = [powershell]::Create()
+            $ps.RunspacePool = $pool
+            [void]$ps.AddScript($workerScript).AddArgument($item)
+            $active.Add([pscustomobject]@{ Pipe = $ps; Handle = $ps.BeginInvoke(); Item = $item })
+        }
+
+        $done = $null
+        foreach ($job in $active) {
+            if ($job.Handle.IsCompleted) { $done = $job; break }
+        }
+        if ($null -eq $done) { Start-Sleep -Milliseconds 20; continue }
+        [void]$active.Remove($done)
+
+        $result = $null
+        try {
+            $output = $done.Pipe.EndInvoke($done.Handle)
+            if ($output.Count -gt 0) { $result = $output[$output.Count - 1] }
+        } catch {
+            $result = $null
+        } finally {
+            $done.Pipe.Dispose()
+        }
+        if ($null -eq $result) {
+            $result = [pscustomobject]@{
+                Index     = $done.Item.Index
+                Url       = $done.Item.Url
+                Title     = $done.Item.Title
+                Time      = $done.Item.Time
+                Author    = $null
+                FileCount = $null
+                FileSize  = $null
+                Valid     = $false
+                Skip      = $true
+                Reason    = '处理失败'
+            }
+        }
+
+        $tag = '[{0}/{1}]' -f $result.Index, $candidates.Count
+        if ($result.Skip) {
+            Write-Host ($tag + ' 跳过  ' + $result.Reason)
+            $skipped++
+            continue
+        }
+        if ($result.Valid) {
+            $newRecord = [ordered]@{
+                url         = $result.Url
+                check_valid = $true
+                title       = $result.Title
+                time        = $result.Time
+                author      = $result.Author
+                file_count  = $result.FileCount
+                file_size   = $result.FileSize
+            }
+            if (-not [string]::IsNullOrEmpty($result.Desc)) { $newRecord.Insert(3, 'desc', $result.Desc) }
+            $added.Add([pscustomobject]$newRecord)
+            Write-Host ($tag + ' 通过  ' + $result.Title) -ForegroundColor Green
+            $pass++
+        } else {
+            $invalidAdded.Add([pscustomobject][ordered]@{
+                url = $result.Url
+            })
+            Write-Host ($tag + ' 失败  ' + $result.Title + '  ' + $result.Reason) -ForegroundColor Red
+            $fail++
+        }
+    }
+} finally {
+    foreach ($job in $active) { $job.Pipe.Dispose() }
+    $pool.Close()
+    $pool.Dispose()
+}
+
+Write-Host ('验证完成：待验证 ' + $candidates.Count + ' 条，有效 ' + $pass + ' 条，无效 ' + $fail + ' 条，跳过 ' + $skipped + ' 条')
+
+if ($added.Count -eq 0 -and $invalidAdded.Count -eq 0) {
+    Write-Host '无新增记录，数据文件未修改' -ForegroundColor Green
+    exit 0
+}
+
+$sortByTime = @(
+    @{ Expression = { [string]$_.time } },
+    @{ Expression = { [string]$_.url } }
+)
+$sortByUrl = @(
+    @{ Expression = { [string]$_.url } }
+)
+
+function Save-Quark-Data([string]$FilePath, [object]$BaseRecords, [object]$NewRecords, [object]$SortRule) {
+    $enc = [System.Text.UTF8Encoding]::new($false)
+    $all = [System.Collections.Generic.List[object]]::new()
+    foreach ($rec in $BaseRecords) { [void]$all.Add($rec) }
+    foreach ($rec in $NewRecords) { [void]$all.Add($rec) }
+    $sorted = @($all | Sort-Object -Property $SortRule)
+    $text = ConvertTo-Json -InputObject $sorted -Depth 5
+    $verified = ConvertFrom-Json -InputObject $text
+    if (@($verified).Count -ne $all.Count) { throw 'count' }
+    [System.IO.File]::WriteAllText($FilePath, $text + "`n", $enc)
+    return @($verified).Count
+}
+
+if ($added.Count -gt 0) {
+    try {
+        $validTotal = Save-Quark-Data $jsonPath $records $added $sortByTime
+    } catch {
+        Write-Host '错误：写入 quark.json 失败' -ForegroundColor Red
+        exit 1
+    }
+    Write-Host ('已写回: ' + $jsonPath + '（新增 ' + $added.Count + ' 条，共 ' + $validTotal + ' 条）')
+}
+
+if ($invalidAdded.Count -gt 0) {
+    try {
+        $invalidTotal = Save-Quark-Data $env:invalid_json_file $invalidRecords $invalidAdded $sortByUrl
+    } catch {
+        Write-Host '错误：写入 quark-invalid.json 失败' -ForegroundColor Red
+        exit 1
+    }
+    Write-Host ('已写回: ' + $env:invalid_json_file + '（新增 ' + $invalidAdded.Count + ' 条，共 ' + $invalidTotal + ' 条）')
+}
+
+Write-Host ('采集完成：新增有效 ' + $added.Count + ' 条，新增无效 ' + $invalidAdded.Count + ' 条，跳过 ' + $skipped + ' 条') -ForegroundColor Green
+exit 0
+-----END POWERSHELL CODE-----
