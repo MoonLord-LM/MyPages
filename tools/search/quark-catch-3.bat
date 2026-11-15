@@ -9,7 +9,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 powershell -NoProfile -Command "Write-Host '从指定的网站的 /sitemap.xml 列出的网页中，采集夸克网盘资源链接' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '采集数据源 https://www.soquark.com 、 https://www.jisoju.com 、 https://www.panseeker.com' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '采集数据源 https://www.soquark.com https://www.jisoju.com https://www.panseeker.com' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '有效的完整信息保存到 quark.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '在 quark.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
@@ -90,6 +90,7 @@ $collectScript = {
         Ok      = $false
         Locs    = [System.Collections.Generic.List[string]]::new()
         Links   = [System.Collections.Generic.List[string]]::new()
+        Hrefs   = [System.Collections.Generic.List[string]]::new()
         Message = ''
     }
     try {
@@ -106,6 +107,14 @@ $collectScript = {
         } else {
             $m = [regex]::Matches($html, $extractPattern)
             foreach ($x in $m) { [void]$result.Links.Add($x.Value) }
+            $hrefSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            foreach ($h in [regex]::Matches($html, '(?is)href\s*=\s*(?:"([^"]*)"|''([^'']*)''|([^\s>]+))')) {
+                $v = $h.Groups[1].Value
+                if (-not $v) { $v = $h.Groups[2].Value }
+                if (-not $v) { $v = $h.Groups[3].Value }
+                $v = $v.Trim()
+                if ($v -and $hrefSeen.Add($v)) { [void]$result.Hrefs.Add($v) }
+            }
             $result.Ok = $true
         }
     } catch {
@@ -118,6 +127,50 @@ function Save-Page-Log([string]$path, [object]$pages) {
     [System.IO.File]::WriteAllLines($path, [string[]]$pages.ToArray(), $logEncoding)
 }
 
+function Resolve-Page-Url([System.Uri]$base, [string]$raw, [string]$hostPattern) {
+    $abs = $null
+    try {
+        $abs = [System.Uri]::new($base, [System.Net.WebUtility]::HtmlDecode($raw).Trim()).AbsoluteUri
+    } catch { return $null }
+    if ($abs -notmatch '^https?://') { return $null }
+    $abs = $abs -replace '[#?].*$', ''
+    if ($abs -notmatch '\.html$') { return $null }
+    $uriHost = $null
+    try { $uriHost = ([System.Uri]$abs).Host } catch { return $null }
+    if ($uriHost -notmatch $hostPattern) { return $null }
+    return $abs
+}
+
+function Receive-Collect-Result([object]$queue, [object]$inFlight, [string]$kind) {
+    while ($inFlight.Count -lt $threadCount -and $queue.Count -gt 0) {
+        $url = $queue.Dequeue()
+        $item = [pscustomobject]@{ Url = $url; Kind = $kind }
+        $ps = [powershell]::Create()
+        $ps.RunspacePool = $pool
+        [void]$ps.AddScript($collectScript).AddArgument($item).AddArgument($headers).AddArgument($extractPattern)
+        [void]$inFlight.Add([pscustomobject]@{ Pipe = $ps; Handle = $ps.BeginInvoke(); Item = $item })
+    }
+    $done = $null
+    foreach ($job in $inFlight) {
+        if ($job.Handle.IsCompleted) { $done = $job; break }
+    }
+    if ($null -eq $done) { return $null }
+    [void]$inFlight.Remove($done)
+    $res = $null
+    try {
+        $out = $done.Pipe.EndInvoke($done.Handle)
+        if ($out.Count -gt 0) { $res = $out[$out.Count - 1] }
+    } catch {
+        $res = $null
+    } finally {
+        $done.Pipe.Dispose()
+    }
+    if ($null -eq $res) {
+        $res = [pscustomobject]@{ Url = $done.Item.Url; Kind = $done.Item.Kind; Ok = $false; Locs = [System.Collections.Generic.List[string]]::new(); Links = [System.Collections.Generic.List[string]]::new(); Hrefs = [System.Collections.Generic.List[string]]::new(); Message = '处理失败' }
+    }
+    return $res
+}
+
 $pool = [runspacefactory]::CreateRunspacePool(1, $threadCount)
 $pool.Open()
 
@@ -128,7 +181,8 @@ foreach ($site in $sites) {
     $sitemapSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $pageSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $collectedPages = [System.Collections.Generic.List[string]]::new()
-    $queue = [System.Collections.Generic.Queue[object]]::new()
+    $sitemapQueue = [System.Collections.Generic.Queue[string]]::new()
+    $pageQueue = [System.Collections.Generic.Queue[string]]::new()
     $sitemapDone = 0
     $sitemapFail = 0
     $pageOk = 0
@@ -136,72 +190,59 @@ foreach ($site in $sites) {
 
     $startUrl = [System.Uri]::new($root, 'sitemap.xml').AbsoluteUri
     [void]$sitemapSeen.Add($startUrl)
-    $queue.Enqueue([pscustomobject]@{ Url = $startUrl; Kind = 'sitemap' })
-    Write-Host ('开始采集站点 ' + $site.Root + '（' + $startUrl + '）')
-    Write-Host ('页面清单保存到 ' + $logPath)
+    $sitemapQueue.Enqueue($startUrl)
+    $displayLogPath = $logPath
+    if ($env:script_dir -and $logPath.StartsWith($env:script_dir, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $displayLogPath = '/' + $logPath.Substring($env:script_dir.Length).Replace('\', '/')
+    }
+    $lastLogLinks = $rawLinks.Count
+    Write-Host ('开始采集站点 ' + $site.Root)
+    Write-Host ('页面清单保存到 ' + $displayLogPath)
 
     $inFlight = [System.Collections.Generic.List[object]]::new()
-    while ($queue.Count -gt 0 -or $inFlight.Count -gt 0) {
-        while ($inFlight.Count -lt $threadCount -and $queue.Count -gt 0) {
-            $item = $queue.Dequeue()
-            $ps = [powershell]::Create()
-            $ps.RunspacePool = $pool
-            [void]$ps.AddScript($collectScript).AddArgument($item).AddArgument($headers).AddArgument($extractPattern)
-            [void]$inFlight.Add([pscustomobject]@{ Pipe = $ps; Handle = $ps.BeginInvoke(); Item = $item })
-        }
-        $done = $null
-        foreach ($job in $inFlight) {
-            if ($job.Handle.IsCompleted) { $done = $job; break }
-        }
-        if ($null -eq $done) { Start-Sleep -Milliseconds 20; continue }
-        [void]$inFlight.Remove($done)
-        $res = $null
-        try {
-            $out = $done.Pipe.EndInvoke($done.Handle)
-            if ($out.Count -gt 0) { $res = $out[$out.Count - 1] }
-        } catch {
-            $res = $null
-        } finally {
-            $done.Pipe.Dispose()
-        }
-        if ($null -eq $res) {
-            $res = [pscustomobject]@{ Url = $done.Item.Url; Kind = $done.Item.Kind; Ok = $false; Locs = [System.Collections.Generic.List[string]]::new(); Links = [System.Collections.Generic.List[string]]::new(); Message = '处理失败' }
-        }
-
-        if ($res.Kind -eq 'sitemap') {
-            if (-not $res.Ok) {
-                $sitemapFail++
-                Write-Host ('sitemap ' + $res.Url + ' 解析失败：' + $res.Message)
-                continue
-            }
-            $sitemapDone++
-            $newXml = 0
-            $newPage = 0
-            foreach ($loc in $res.Locs) {
-                $abs = $null
-                try {
-                    $abs = [System.Uri]::new($root, [System.Net.WebUtility]::HtmlDecode($loc)).AbsoluteUri
-                } catch { continue }
-                if ($abs -match '\.xml($|\?)') {
-                    if ($sitemapSeen.Add($abs)) { $queue.Enqueue([pscustomobject]@{ Url = $abs; Kind = 'sitemap' }); $newXml++ }
-                    continue
-                }
-                $abs = $abs -replace '[#?].*$', ''
-                if ($abs -notmatch '\.html$') { continue }
-                $uriHost = $null
-                try { $uriHost = ([System.Uri]$abs).Host } catch { continue }
-                if ($uriHost -notmatch $hostPattern) { continue }
-                if ($pageSeen.Add($abs)) { $queue.Enqueue([pscustomobject]@{ Url = $abs; Kind = 'page' }); $newPage++ }
-            }
-            Write-Host ('sitemap ' + $res.Url + ' 解析 ' + $res.Locs.Count + ' 条，新增子 sitemap ' + $newXml + ' 个，新增页面 ' + $newPage + ' 个，累计页面 ' + $pageSeen.Count + ' 个')
+    while ($sitemapQueue.Count -gt 0 -or $inFlight.Count -gt 0) {
+        $res = Receive-Collect-Result $sitemapQueue $inFlight 'sitemap'
+        if ($null -eq $res) { Start-Sleep -Milliseconds 20; continue }
+        if (-not $res.Ok) {
+            $sitemapFail++
+            Write-Host ('sitemap ' + $res.Url + ' 解析失败：' + $res.Message)
             continue
         }
+        $sitemapDone++
+        $newPage = 0
+        foreach ($loc in $res.Locs) {
+            $abs = $null
+            try {
+                $abs = [System.Uri]::new($root, [System.Net.WebUtility]::HtmlDecode($loc)).AbsoluteUri
+            } catch { continue }
+            if ($abs -match '\.xml($|\?)') {
+                if ($sitemapSeen.Add($abs)) { $sitemapQueue.Enqueue($abs) }
+                continue
+            }
+            $pageUrl = Resolve-Page-Url $root $loc $hostPattern
+            if ($null -eq $pageUrl) { continue }
+            if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl); $newPage++ }
+        }
+        Write-Host ($res.Url + ' 提取页面链接 ' + $newPage + ' 个，累计 ' + $pageSeen.Count + ' 个')
+    }
 
+    $inFlight = [System.Collections.Generic.List[object]]::new()
+    while ($pageQueue.Count -gt 0 -or $inFlight.Count -gt 0) {
+        $res = Receive-Collect-Result $pageQueue $inFlight 'page'
+        if ($null -eq $res) { Start-Sleep -Milliseconds 20; continue }
         if ($res.Ok) {
             $pageOk++
             [void]$collectedPages.Add($res.Url)
             foreach ($lk in $res.Links) {
                 if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add($lk) }
+            }
+            $pageBase = $null
+            try { $pageBase = [System.Uri]::new($res.Url) } catch { $pageBase = $root }
+            foreach ($href in $res.Hrefs) {
+                $pageUrl = Resolve-Page-Url $pageBase $href $hostPattern
+                if ($null -eq $pageUrl) { continue }
+                if (-not $pageUrl.StartsWith($site.Root, [System.StringComparison]::OrdinalIgnoreCase)) { continue }
+                if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl) }
             }
         } else {
             $pageFail++
@@ -209,7 +250,9 @@ foreach ($site in $sites) {
         $donePages = $pageOk + $pageFail
         if (($donePages % $pageLogStep) -eq 0) {
             Save-Page-Log $logPath $collectedPages
-            Write-Host ('站点 ' + $site.Host + ' 已采集 ' + $donePages + ' 页（已发现 ' + $pageSeen.Count + ' 个，队列 ' + $queue.Count + ' 个），失败 ' + $pageFail + ' 页，夸克链接 ' + $rawLinks.Count + ' 条')
+            $foundLinks = $rawLinks.Count - $lastLogLinks
+            $lastLogLinks = $rawLinks.Count
+            Write-Host ('站点 ' + $site.Host + ' 已采集 ' + $donePages + ' / ' + $pageSeen.Count + ' 页，失败 ' + $pageFail + ' 页，发现 ' + $foundLinks + ' 条，累计 ' + $rawLinks.Count + ' 条')
         }
     }
 
@@ -220,7 +263,7 @@ foreach ($site in $sites) {
 
 $pool.Close()
 $pool.Dispose()
-Write-Host ('全部站点采集结束，累计提取 ' + $rawLinks.Count + ' 条夸克资源链接')
+Write-Host ('全部站点采集结束，累计 ' + $rawLinks.Count + ' 条夸克资源链接')
 Write-Host ''
 if ($rawLinks.Count -eq 0) {
     Write-Host '未提取到夸克资源链接'
