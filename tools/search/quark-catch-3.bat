@@ -302,7 +302,7 @@ foreach ($site in $sites) {
     }
 
     Save-Page-Log $logPath $collectedPages
-    Write-Host ('站点 ' + $site.Root + ' 采集完成：sitemap ' + $sitemapDone + ' 个（失败 ' + $sitemapFail + ' 个），页面成功 ' + $pageOk + ' 页、失败 ' + $pageFail + ' 页，已保存 ' + $collectedPages.Count + ' 个页面链接，累计 ' + $rawLinks.Count + ' 条')
+    Write-Host ('站点 ' + $site.Host + ' 采集完成，累计 ' + $rawLinks.Count + ' 条')
     Write-Estimated-Rate $site.Host '网站' $unitLinks
     Write-Host ''
 }
