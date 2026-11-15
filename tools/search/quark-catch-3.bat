@@ -99,6 +99,51 @@ if ([System.IO.File]::Exists($env:invalid_json_file)) {
     }
 }
 
+function Set-Fastest-Proxy([string]$testUrl, [object]$testHeaders, [int]$count) {
+    $probeTimeout = 10
+    $modes = @(
+        @{ Name = '代理'; UseProxy = $true },
+        @{ Name = '直连';     UseProxy = $false }
+    )
+    $results = @()
+    foreach ($mode in $modes) {
+        if ($mode.UseProxy) {
+            [System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()
+        } else {
+            [System.Net.WebRequest]::DefaultWebProxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
+        }
+        $okTimes = [System.Collections.Generic.List[double]]::new()
+        $fail = 0
+        for ($i = 0; $i -lt $count; $i++) {
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            try {
+                $null = Invoke-WebRequest -Uri $testUrl -Headers $testHeaders -TimeoutSec $probeTimeout -UseBasicParsing -ErrorAction Stop
+                $sw.Stop()
+                [void]$okTimes.Add($sw.Elapsed.TotalMilliseconds)
+            } catch {
+                $sw.Stop()
+                $fail++
+            }
+        }
+        $ok = $okTimes.Count
+        $avg = if ($ok -gt 0) { ($okTimes | Measure-Object -Average).Average } else { 0.0 }
+        $results += [pscustomobject]@{ Name = $mode.Name; UseProxy = $mode.UseProxy; Ok = $ok; Fail = $fail; Avg = $avg }
+    }
+    $best = $results | Sort-Object -Property @{ Expression = { -$_.Ok } }, @{ Expression = { $_.Avg } } | Select-Object -First 1
+    if ($best.UseProxy) {
+        [System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()
+    } else {
+        [System.Net.WebRequest]::DefaultWebProxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
+    }
+    return [pscustomobject]@{
+        Name      = $best.Name
+        ProxyOk   = ($results | Where-Object UseProxy).Ok
+        ProxyAvg  = ($results | Where-Object UseProxy).Avg
+        DirectOk  = ($results | Where-Object { -not $_.UseProxy }).Ok
+        DirectAvg = ($results | Where-Object { -not $_.UseProxy }).Avg
+    }
+}
+
 function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
     $unitSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $invalidCount = 0
@@ -123,9 +168,14 @@ $rawLinks = [System.Collections.Generic.List[string]]::new()
 $collectedSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
 $collectScript = {
-    param($item, $headers, $extractPattern)
+    param($item, $headers, $extractPattern, $cookieSeed, $cookieDomain)
     [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
     $ProgressPreference = 'SilentlyContinue'
+
+    $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    foreach ($name in $cookieSeed.Keys) {
+        try { $session.Cookies.Add([System.Net.Cookie]::new([string]$name, [string]$cookieSeed[$name], '/', $cookieDomain)) } catch { }
+    }
 
     $result = [pscustomobject]@{
         Url     = $item.Url
@@ -137,7 +187,7 @@ $collectScript = {
         Message = ''
     }
     try {
-        $resp = Invoke-WebRequest -Uri $item.Url -Headers $headers -TimeoutSec 30 -UseBasicParsing -ErrorAction Stop
+        $resp = Invoke-WebRequest -Uri $item.Url -Headers $headers -TimeoutSec 30 -UseBasicParsing -WebSession $session -ErrorAction Stop
         $html = [string]$resp.Content
         if ([int]$resp.StatusCode -ne 200) {
             $result.Message = '状态码 ' + $resp.StatusCode + ' 非 200'
@@ -191,7 +241,7 @@ function Receive-Collect-Result([object]$queue, [object]$inFlight, [string]$kind
         $item = [pscustomobject]@{ Url = $url; Kind = $kind }
         $ps = [powershell]::Create()
         $ps.RunspacePool = $pool
-        [void]$ps.AddScript($collectScript).AddArgument($item).AddArgument($headers).AddArgument($extractPattern)
+        [void]$ps.AddScript($collectScript).AddArgument($item).AddArgument($headers).AddArgument($extractPattern).AddArgument($cookieSeed).AddArgument($cookieDomain)
         [void]$inFlight.Add([pscustomobject]@{ Pipe = $ps; Handle = $ps.BeginInvoke(); Item = $item })
     }
     $done = $null
@@ -243,6 +293,26 @@ foreach ($site in $sites) {
     $lastLogLinks = $rawLinks.Count
     Write-Host ('开始采集站点 ' + $site.Root)
     Write-Host ('页面清单保存到 ' + $displayLogPath)
+
+    $probe = Set-Fastest-Proxy $site.Root $headers 3
+    $proxyText = if ($probe.ProxyOk -gt 0) { [string][math]::Round($probe.ProxyAvg) + ' ms' } else { '超时' }
+    $directText = if ($probe.DirectOk -gt 0) { [string][math]::Round($probe.DirectAvg) + ' ms' } else { '超时' }
+    Write-Host ('网络检测（访问首页平均耗时）：代理 ' + $proxyText + '，直连 ' + $directText)
+    if ($probe.ProxyOk -eq 0 -and $probe.DirectOk -eq 0) {
+        Write-Host '错误：网络不可用' -ForegroundColor Red
+        exit 1
+    }
+    Write-Host ('采用' + $probe.Name)
+
+    $cookieSeed = @{}
+    $cookieDomain = $root.Host
+    $warmSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    try {
+        $null = Invoke-WebRequest -Uri $site.Root -Headers $headers -TimeoutSec 30 -UseBasicParsing -WebSession $warmSession -ErrorAction Stop
+    } catch { }
+    foreach ($cookie in $warmSession.Cookies.GetCookies($site.Root)) {
+        $cookieSeed[$cookie.Name] = $cookie.Value
+    }
 
     $inFlight = [System.Collections.Generic.List[object]]::new()
     while ($sitemapQueue.Count -gt 0 -or $inFlight.Count -gt 0) {

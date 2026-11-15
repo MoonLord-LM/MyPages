@@ -83,6 +83,51 @@ if ([System.IO.File]::Exists($env:invalid_json_file)) {
     }
 }
 
+function Set-Fastest-Proxy([string]$testUrl, [object]$testHeaders, [int]$count) {
+    $probeTimeout = 10
+    $modes = @(
+        @{ Name = '代理'; UseProxy = $true },
+        @{ Name = '直连';     UseProxy = $false }
+    )
+    $results = @()
+    foreach ($mode in $modes) {
+        if ($mode.UseProxy) {
+            [System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()
+        } else {
+            [System.Net.WebRequest]::DefaultWebProxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
+        }
+        $okTimes = [System.Collections.Generic.List[double]]::new()
+        $fail = 0
+        for ($i = 0; $i -lt $count; $i++) {
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            try {
+                $null = Invoke-WebRequest -Uri $testUrl -Headers $testHeaders -TimeoutSec $probeTimeout -UseBasicParsing -ErrorAction Stop
+                $sw.Stop()
+                [void]$okTimes.Add($sw.Elapsed.TotalMilliseconds)
+            } catch {
+                $sw.Stop()
+                $fail++
+            }
+        }
+        $ok = $okTimes.Count
+        $avg = if ($ok -gt 0) { ($okTimes | Measure-Object -Average).Average } else { 0.0 }
+        $results += [pscustomobject]@{ Name = $mode.Name; UseProxy = $mode.UseProxy; Ok = $ok; Fail = $fail; Avg = $avg }
+    }
+    $best = $results | Sort-Object -Property @{ Expression = { -$_.Ok } }, @{ Expression = { $_.Avg } } | Select-Object -First 1
+    if ($best.UseProxy) {
+        [System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()
+    } else {
+        [System.Net.WebRequest]::DefaultWebProxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
+    }
+    return [pscustomobject]@{
+        Name      = $best.Name
+        ProxyOk   = ($results | Where-Object UseProxy).Ok
+        ProxyAvg  = ($results | Where-Object UseProxy).Avg
+        DirectOk  = ($results | Where-Object { -not $_.UseProxy }).Ok
+        DirectAvg = ($results | Where-Object { -not $_.UseProxy }).Avg
+    }
+}
+
 function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
     $unitSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $invalidCount = 0
@@ -102,6 +147,16 @@ function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
     }
     Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate)
 }
+
+$probe = Set-Fastest-Proxy 'https://t.me/' $headers 3
+$proxyText = if ($probe.ProxyOk -gt 0) { [string][math]::Round($probe.ProxyAvg) + ' ms' } else { '超时' }
+$directText = if ($probe.DirectOk -gt 0) { [string][math]::Round($probe.DirectAvg) + ' ms' } else { '超时' }
+Write-Host ('网络检测（访问首页平均耗时）：代理 ' + $proxyText + '，直连 ' + $directText)
+if ($probe.ProxyOk -eq 0 -and $probe.DirectOk -eq 0) {
+    Write-Host '错误：网络不可用' -ForegroundColor Red
+    exit 1
+}
+Write-Host ('采用' + $probe.Name)
 
 $rawLinks = [System.Collections.Generic.List[string]]::new()
 foreach ($ch in $tgChannels) {
