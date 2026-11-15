@@ -8,7 +8,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-powershell -NoProfile -Command "Write-Host '采集夸克网盘资源链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '从指定的网站的 sitemap 列出的网页中，采集夸克网盘资源链接' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '采集数据源 https://www.soquark.com 、 https://www.jisoju.com 、 https://www.panseeker.com' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '有效的完整信息保存到 quark.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
