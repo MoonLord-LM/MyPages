@@ -86,6 +86,39 @@ $pageLogStep = 1000
 $logDir = [System.IO.Path]::GetDirectoryName($jsonPath)
 $logEncoding = [System.Text.UTF8Encoding]::new($false)
 
+$validUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+$invalidUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+if ([System.IO.File]::Exists($env:json_file)) {
+    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($env:json_file, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
+        [void]$validUrlSet.Add($urlMatch.Groups[1].Value.Trim())
+    }
+}
+if ([System.IO.File]::Exists($env:invalid_json_file)) {
+    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($env:invalid_json_file, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
+        [void]$invalidUrlSet.Add($urlMatch.Groups[1].Value.Trim())
+    }
+}
+
+function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
+    $unitSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $invalidCount = 0
+    $validCount = 0
+    foreach ($link in $Links) {
+        $url = ([string]$link).Trim()
+        if (-not $url -or -not $unitSeen.Add($url)) { continue }
+        if ($validUrlSet.Contains($url)) { $validCount++ }
+        elseif ($invalidUrlSet.Contains($url)) { $invalidCount++ }
+    }
+    $known = $invalidCount + $validCount
+    if ($known -eq 0) {
+        $rate = 'NA'
+    } else {
+        $percent = 100.0 * $validCount / $known
+        $rate = ('{0:0.00}%（{1}/{2}）' -f $percent, $validCount, $known)
+    }
+    Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate)
+}
+
 $rawLinks = [System.Collections.Generic.List[string]]::new()
 $collectedSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
@@ -198,6 +231,7 @@ foreach ($site in $sites) {
     $sitemapFail = 0
     $pageOk = 0
     $pageFail = 0
+    $unitLinks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     $startUrl = [System.Uri]::new($root, 'sitemap.xml').AbsoluteUri
     [void]$sitemapSeen.Add($startUrl)
@@ -245,6 +279,7 @@ foreach ($site in $sites) {
             $pageOk++
             [void]$collectedPages.Add($res.Url)
             foreach ($lk in $res.Links) {
+                [void]$unitLinks.Add($lk)
                 if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add($lk) }
             }
             $pageBase = $null
@@ -268,6 +303,7 @@ foreach ($site in $sites) {
 
     Save-Page-Log $logPath $collectedPages
     Write-Host ('站点 ' + $site.Root + ' 采集完成：sitemap ' + $sitemapDone + ' 个（失败 ' + $sitemapFail + ' 个），页面成功 ' + $pageOk + ' 页、失败 ' + $pageFail + ' 页，已保存 ' + $collectedPages.Count + ' 个页面链接，累计 ' + $rawLinks.Count + ' 条')
+    Write-Estimated-Rate $site.Host '网站' $unitLinks
     Write-Host ''
 }
 

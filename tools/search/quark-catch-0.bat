@@ -68,6 +68,39 @@ if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
 }
 $extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
+$validUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+$invalidUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+if ([System.IO.File]::Exists($env:json_file)) {
+    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($env:json_file, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
+        [void]$validUrlSet.Add($urlMatch.Groups[1].Value.Trim())
+    }
+}
+if ([System.IO.File]::Exists($env:invalid_json_file)) {
+    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($env:invalid_json_file, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
+        [void]$invalidUrlSet.Add($urlMatch.Groups[1].Value.Trim())
+    }
+}
+
+function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
+    $unitSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $invalidCount = 0
+    $validCount = 0
+    foreach ($link in $Links) {
+        $url = ([string]$link).Trim()
+        if (-not $url -or -not $unitSeen.Add($url)) { continue }
+        if ($validUrlSet.Contains($url)) { $validCount++ }
+        elseif ($invalidUrlSet.Contains($url)) { $invalidCount++ }
+    }
+    $known = $invalidCount + $validCount
+    if ($known -eq 0) {
+        $rate = 'NA'
+    } else {
+        $percent = 100.0 * $validCount / $known
+        $rate = ('{0:0.00}%（{1}/{2}）' -f $percent, $validCount, $known)
+    }
+    Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate)
+}
+
 $txtFiles = @([System.IO.Directory]::GetFiles($env:work_dir, '*.txt'))
 if ($txtFiles.Count -eq 0) {
     Write-Host '错误：未找到 txt 文件' -ForegroundColor Red
@@ -79,9 +112,12 @@ try {
     foreach ($file in $txtFiles) {
         $content = [System.IO.File]::ReadAllText($file, [System.Text.Encoding]::UTF8)
         $matches = [regex]::Matches($content, $extractPattern)
+        $unitLinks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
         foreach ($m in $matches) {
             [void]$rawLinks.Add($m.Value)
+            [void]$unitLinks.Add($m.Value)
         }
+        Write-Estimated-Rate ([System.IO.Path]::GetFileName($file)) '文件' $unitLinks
     }
 } catch {
     Write-Host '错误：文件解析失败' -ForegroundColor Red
