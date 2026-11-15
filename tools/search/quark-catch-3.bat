@@ -65,6 +65,7 @@ $threadCount = 50
 if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
     [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 }
+$extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
 $sites = @(
     @{ Host = 'soquark.com';   Root = 'https://www.soquark.com/' },
@@ -79,7 +80,7 @@ $rawLinks = [System.Collections.Generic.List[string]]::new()
 $collectedSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
 $collectScript = {
-    param($item, $headers)
+    param($item, $headers, $extractPattern)
     [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
     $ProgressPreference = 'SilentlyContinue'
 
@@ -103,7 +104,7 @@ $collectScript = {
             if ($result.Locs.Count -eq 0) { $result.Message = '200 但无 loc' }
             else { $result.Ok = $true }
         } else {
-            $m = [regex]::Matches($html, 'https://pan\.quark\.cn/s/[A-Za-z0-9]+')
+            $m = [regex]::Matches($html, $extractPattern)
             foreach ($x in $m) { [void]$result.Links.Add($x.Value) }
             $result.Ok = $true
         }
@@ -145,7 +146,7 @@ foreach ($site in $sites) {
             $item = $queue.Dequeue()
             $ps = [powershell]::Create()
             $ps.RunspacePool = $pool
-            [void]$ps.AddScript($collectScript).AddArgument($item).AddArgument($headers)
+            [void]$ps.AddScript($collectScript).AddArgument($item).AddArgument($headers).AddArgument($extractPattern)
             [void]$inFlight.Add([pscustomobject]@{ Pipe = $ps; Handle = $ps.BeginInvoke(); Item = $item })
         }
         $done = $null
