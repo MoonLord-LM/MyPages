@@ -100,7 +100,7 @@ if ([System.IO.File]::Exists($env:invalid_json_file)) {
 }
 
 function Set-Fastest-Proxy([string]$testUrl, [object]$testHeaders, [int]$count) {
-    $probeTimeout = 10
+    $probeTimeout = 5
     $modes = @(
         @{ Name = '代理'; UseProxy = $true },
         @{ Name = '直连';     UseProxy = $false }
