@@ -152,6 +152,8 @@ $workerScript = @'
     $title = [string]$item.Title
     $time = [string]$item.Time
     $valid = $false
+    $skip = $false
+    $stage = 'req'
     $author = $null
     $fileCount = $null
     $fileSize = $null
@@ -164,6 +166,7 @@ $workerScript = @'
             $body = '{"pwd_id":"' + $pwdId + '","passcode":""}'
             $tokenRaw = Invoke-WebRequest -Uri ($api + '/token?pr=ucd&fr=pc') -Method Post -Body $body `
                 -ContentType 'application/json' -Headers $headers -TimeoutSec 20 -UseBasicParsing
+            $stage = 'res'
             $token = ConvertFrom-Json -InputObject $tokenRaw.Content
             if ([int]$token.code -ne 0) {
                 throw ('分享接口返回 code=' + $token.code + ' ' + $token.message)
@@ -171,12 +174,15 @@ $workerScript = @'
             $stoken = [System.Uri]::EscapeDataString([string]$token.data.stoken)
             $uri = $api + '/detail?pr=ucd&fr=pc&pwd_id=' + $pwdId + '&stoken=' + $stoken `
                 + '&pdir_fid=0&force=0&_page=1&_size=50&_fetch_banner=1&_fetch_share=1'
+            $stage = 'req'
             $detailRaw = Invoke-WebRequest -Uri $uri -Headers $headers -TimeoutSec 20 -UseBasicParsing
+            $stage = 'res'
             $detail = ConvertFrom-Json -InputObject $detailRaw.Content
             if ([int]$detail.code -ne 0) {
                 throw ('详情接口返回 code=' + $detail.code + ' ' + $detail.message)
             }
             $share = $detail.data.share
+            if ($null -eq $share -or $null -eq $share.status -or $null -eq $share.expired_at) { throw }
             $author = [string]$token.data.author.nick_name
             $fileCount = [int64]$share.file_only_num
             $fileSize = [int64]$share.size
@@ -239,8 +245,12 @@ $workerScript = @'
             }
         } catch {
             $message = $_.Exception.Message
-            if ($message -match '\(404\)') { $reason = '链接已失效' }
-            else { $reason = '请求失败: ' + $message }
+            if ($message -match '\(404\)') {
+                $reason = '链接已失效'
+            } else {
+                $skip = $true
+                if ($stage -eq 'res') { $reason = '响应异常' } else { $reason = '请求失败' }
+            }
         }
     } else {
         $reason = '链接格式错误'
@@ -256,6 +266,7 @@ $workerScript = @'
         FileCount = $fileCount
         FileSize  = $fileSize
         Valid     = $valid
+        Skip      = $skip
         Reason    = $reason
     }
 '@
@@ -267,6 +278,7 @@ $sortByTime = @(
 )
 $pass = 0
 $fail = 0
+$skipped = 0
 $checked = 0
 $index = 0
 
@@ -323,8 +335,17 @@ try {
                 FileCount = $null
                 FileSize  = $null
                 Valid     = $false
+                Skip      = $true
                 Reason    = '处理失败'
             }
+        }
+
+        $tag = '[{0}/{1}]' -f $result.Index, $records.Count
+        if ($result.Skip) {
+            Write-Host ($tag + ' 跳过  ' + $result.Reason)
+            $skipped++
+            $checked++
+            continue
         }
 
         $newRecord = [ordered]@{
@@ -339,7 +360,6 @@ try {
         if (-not [string]::IsNullOrEmpty($result.Desc)) { $newRecord.Insert(3, 'desc', $result.Desc) }
         $results[$result.Index - 1] = [pscustomobject]$newRecord
 
-        $tag = '[{0}/{1}]' -f $result.Index, $records.Count
         if ($result.Valid) {
             Write-Host ($tag + ' 通过  ' + $result.Title) -ForegroundColor Green
             $pass++
@@ -369,7 +389,7 @@ try {
 
 Write-Host ''
 $validCount = @($results | Where-Object { $_.check_valid }).Count
-Write-Host ('检查完成：检查 ' + $checked + ' 条，检查有效 ' + $pass + ' 条，检查无效 ' + $fail + ' 条')
+Write-Host ('检查完成：检查 ' + $checked + ' 条，检查有效 ' + $pass + ' 条，检查无效 ' + $fail + ' 条，跳过 ' + $skipped + ' 条')
 Write-Host ('数据统计：共 ' + $records.Count + ' 条，有效数据 ' + $validCount + ' 条，无效数据 ' + ($records.Count - $validCount) + ' 条')
 
 Write-Host ''

@@ -64,7 +64,7 @@ set "temp_dir=%temp%\MyPages_%random%_%random%_%random%_%random%\"
 if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
 if not exist "!temp_dir!" ( mkdir "!temp_dir!" )
 
-cd "!temp_dir!"
+cd /d "!temp_dir!"
 if !errorlevel! neq 0 (
     echo 错误：无法进入临时目录
     echo.
