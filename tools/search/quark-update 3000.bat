@@ -404,7 +404,9 @@ try {
         if (-not [string]::IsNullOrEmpty($_.desc)) { $siteRecord.Insert(2, 'desc', $_.desc) }
         [pscustomobject]$siteRecord
     })
-    $siteText = if ($siteList.Count -eq 0) { '[]' } else { ConvertTo-Json -InputObject $siteList -Depth 5 -Compress }
+    $cleanSiteList = @($siteList | Where-Object { ([string]$_.title) -notmatch '夸.*克|审.*核|傻.*比' })
+    Write-Host ('已排除敏感标题: ' + ($siteList.Count - $cleanSiteList.Count) + ' 条')
+    $siteText = if ($cleanSiteList.Count -eq 0) { '[]' } else { ConvertTo-Json -InputObject $cleanSiteList -Depth 5 -Compress }
     $siteBytes = $utf8.GetBytes($siteText)
 
     $tempGzip = [System.IO.Path]::Combine($env:TEMP, 'quark-update-' + [guid]::NewGuid().ToString('N') + '.gz')
