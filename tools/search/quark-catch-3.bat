@@ -76,7 +76,8 @@ $staticExt = @(
     'doc','docx','xls','xlsx','ppt','pptx','pdf','csv',
     'css','js','ejs','svg','svgz','eps','pict','mid','midi','ps','pls','swf','class','jar','apk','dmg','bin'
 )
-$staticPattern = '\.(?:' + ($staticExt -join '|') + ')$'
+$staticSet = [System.Collections.Generic.HashSet[string]]::new([string[]]$staticExt, [System.StringComparer]::OrdinalIgnoreCase)
+$badEscape = @('%60', '%22', '%27', '%00', '%0A', '%0D')
 
 $sites = @(
     @{ Host = 'soquark.com';   Root = 'https://www.soquark.com/' }
@@ -136,14 +137,18 @@ function Save-Page-Log([string]$path, [object]$pages) {
     [System.IO.File]::WriteAllLines($path, [string[]]$pages.ToArray(), $logEncoding)
 }
 
-function Resolve-Page-Url([System.Uri]$base, [string]$raw, [string]$rootPattern) {
+function Resolve-Page-Url([System.Uri]$base, [string]$raw, [string]$rootPrefix) {
     $abs = $null
     try {
         $abs = [System.Uri]::new($base, [System.Net.WebUtility]::HtmlDecode($raw).Trim()).AbsoluteUri
     } catch { return $null }
-    if ($abs -notmatch $rootPattern) { return $null }
+    if (-not $abs.StartsWith($rootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) { return $null }
+    foreach ($bad in $badEscape) {
+        if ($abs.IndexOf($bad, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) { return $null }
+    }
     $abs = $abs -replace '[#?].*$', ''
-    if ($abs -match $staticPattern) { return $null }
+    $dot = $abs.LastIndexOf('.')
+    if ($dot -ge 0 -and $staticSet.Contains($abs.Substring($dot + 1))) { return $null }
     return $abs
 }
 
@@ -182,7 +187,7 @@ $pool.Open()
 
 foreach ($site in $sites) {
     $root = [System.Uri]::new($site.Root)
-    $rootPattern = '^' + [regex]::Escape($site.Root)
+    $rootPrefix = [string]$site.Root
     $logPath = [System.IO.Path]::Combine($logDir, $site.Host + '.txt')
     $sitemapSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $pageSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -225,7 +230,7 @@ foreach ($site in $sites) {
                 if ($sitemapSeen.Add($abs)) { $sitemapQueue.Enqueue($abs) }
                 continue
             }
-            $pageUrl = Resolve-Page-Url $root $loc $rootPattern
+            $pageUrl = Resolve-Page-Url $root $loc $rootPrefix
             if ($null -eq $pageUrl) { continue }
             if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl); $newPage++ }
         }
@@ -245,7 +250,7 @@ foreach ($site in $sites) {
             $pageBase = $null
             try { $pageBase = [System.Uri]::new($res.Url) } catch { $pageBase = $root }
             foreach ($href in $res.Hrefs) {
-                $pageUrl = Resolve-Page-Url $pageBase $href $rootPattern
+                $pageUrl = Resolve-Page-Url $pageBase $href $rootPrefix
                 if ($null -eq $pageUrl) { continue }
                 if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl) }
             }
