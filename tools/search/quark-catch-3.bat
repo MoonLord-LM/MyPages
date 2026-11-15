@@ -262,7 +262,7 @@ foreach ($site in $sites) {
             Save-Page-Log $logPath $collectedPages
             $foundLinks = $rawLinks.Count - $lastLogLinks
             $lastLogLinks = $rawLinks.Count
-            Write-Host ('站点 ' + $site.Host + ' 已采集 ' + $donePages + ' / ' + $pageSeen.Count + ' 页，失败 ' + $pageFail + ' 页，发现 ' + $foundLinks + ' 条，累计 ' + $rawLinks.Count + ' 条')
+            Write-Host ('站点 ' + $site.Host + ' 已采集 ' + $donePages + ' / ' + $pageSeen.Count + ' 页，已失败 ' + $pageFail + ' 页，发现 ' + $foundLinks + ' 条，累计 ' + $rawLinks.Count + ' 条')
         }
     }
 
