@@ -9,7 +9,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 powershell -NoProfile -Command "Write-Host '从指定的网站的 /sitemap.xml 列出的网页中，采集夸克网盘资源链接' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '采集数据源 https://www.soquark.com https://www.jisoju.com https://www.panseeker.com' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '采集数据源 https://www.soquark.com' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '有效的完整信息保存到 quark.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '在 quark.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
@@ -66,11 +66,20 @@ if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
     [System.Net.ServicePointManager]::DefaultConnectionLimit = $threadCount
 }
 $extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
+$staticExt = @(
+    'mp4','mkv','ts','avi','wmv','flv','rmvb','rm','vob','mpg','mpeg','3gp','m4v','f4v','mov','webm',
+    'flac','m4a','mp3','wav','ogg','aac','opus','wma','alac','ac3','eac3','mp2',
+    'jpg','jpeg','png','webp','bmp','gif','tif','tiff','avif','heic','heif','jfif','psd','ico',
+    'srt','ass',
+    'ttf','otf','woff2','woff','eot',
+    '7z','zip','rar','tar','gz','bz2','xz','tgz','tbz2','zst','cab','lz4','iso','exe','001',
+    'doc','docx','xls','xlsx','ppt','pptx','pdf','csv',
+    'css','js','ejs','svg','svgz','eps','pict','mid','midi','ps','pls','swf','class','jar','apk','dmg','bin'
+)
+$staticPattern = '\.(?:' + ($staticExt -join '|') + ')$'
 
 $sites = @(
-    @{ Host = 'soquark.com';   Root = 'https://www.soquark.com/' },
-    @{ Host = 'jisoju.com';    Root = 'https://www.jisoju.com/' },
-    @{ Host = 'panseeker.com'; Root = 'https://www.panseeker.com/' }
+    @{ Host = 'soquark.com';   Root = 'https://www.soquark.com/' }
 )
 $pageLogStep = 1000
 $logDir = [System.IO.Path]::GetDirectoryName($jsonPath)
@@ -127,17 +136,14 @@ function Save-Page-Log([string]$path, [object]$pages) {
     [System.IO.File]::WriteAllLines($path, [string[]]$pages.ToArray(), $logEncoding)
 }
 
-function Resolve-Page-Url([System.Uri]$base, [string]$raw, [string]$hostPattern) {
+function Resolve-Page-Url([System.Uri]$base, [string]$raw, [string]$rootPattern) {
     $abs = $null
     try {
         $abs = [System.Uri]::new($base, [System.Net.WebUtility]::HtmlDecode($raw).Trim()).AbsoluteUri
     } catch { return $null }
-    if ($abs -notmatch '^https?://') { return $null }
+    if ($abs -notmatch $rootPattern) { return $null }
     $abs = $abs -replace '[#?].*$', ''
-    if ($abs -notmatch '\.html$') { return $null }
-    $uriHost = $null
-    try { $uriHost = ([System.Uri]$abs).Host } catch { return $null }
-    if ($uriHost -notmatch $hostPattern) { return $null }
+    if ($abs -match $staticPattern) { return $null }
     return $abs
 }
 
@@ -176,7 +182,7 @@ $pool.Open()
 
 foreach ($site in $sites) {
     $root = [System.Uri]::new($site.Root)
-    $hostPattern = '(^|\.)' + [regex]::Escape($site.Host) + '$'
+    $rootPattern = '^' + [regex]::Escape($site.Root)
     $logPath = [System.IO.Path]::Combine($logDir, $site.Host + '.txt')
     $sitemapSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $pageSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -219,7 +225,7 @@ foreach ($site in $sites) {
                 if ($sitemapSeen.Add($abs)) { $sitemapQueue.Enqueue($abs) }
                 continue
             }
-            $pageUrl = Resolve-Page-Url $root $loc $hostPattern
+            $pageUrl = Resolve-Page-Url $root $loc $rootPattern
             if ($null -eq $pageUrl) { continue }
             if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl); $newPage++ }
         }
@@ -239,9 +245,8 @@ foreach ($site in $sites) {
             $pageBase = $null
             try { $pageBase = [System.Uri]::new($res.Url) } catch { $pageBase = $root }
             foreach ($href in $res.Hrefs) {
-                $pageUrl = Resolve-Page-Url $pageBase $href $hostPattern
+                $pageUrl = Resolve-Page-Url $pageBase $href $rootPattern
                 if ($null -eq $pageUrl) { continue }
-                if (-not $pageUrl.StartsWith($site.Root, [System.StringComparison]::OrdinalIgnoreCase)) { continue }
                 if ($pageSeen.Add($pageUrl)) { $pageQueue.Enqueue($pageUrl) }
             }
         } else {
