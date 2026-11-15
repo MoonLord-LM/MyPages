@@ -67,7 +67,7 @@ if ([System.Net.ServicePointManager]::DefaultConnectionLimit -lt $threadCount) {
 }
 $extractPattern = 'https://pan\.quark\.cn/s/[A-Za-z0-9]+'
 
-$tgChannels = @('kduanju', 'yoyokuakeduanju', 'Quark_Movies', 'Quark_Movies', 'QuarkFree')
+$tgChannels = @('kduanju', 'yoyokuakeduanju', 'Quark_Movies', 'QuarkFree')
 $tgMaxPages = 100
 
 $validUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
