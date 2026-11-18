@@ -1,4 +1,4 @@
-name: search
+name: tools-github
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
-    paths: ['tools/search/*.bat', '.github/workflows/search.yml']
+    paths: ['tools/github/*.bat', '.github/workflows/tools-github.yml']
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  search:
+  github:
     runs-on: windows-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,9 +39,9 @@ jobs:
         with:
           ref: master
 
-      - name: Run search.bat
+      - name: Run github.bat
         shell: cmd
-        run: call tools\search\search.bat <nul
+        run: call tools\github\github.bat <nul
 
       - name: Commit and push
         shell: powershell
@@ -49,9 +49,9 @@ jobs:
           git add -A
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
-            git commit -m "auto-build by [ search.bat ]"
+            git commit -m "auto-build by [ github.bat ]"
             git pull origin master
             git push origin HEAD
           } else {
-            Write-Host 'No changes after search.bat.'
+            Write-Host 'No changes after github.bat.'
           }
