@@ -26,7 +26,7 @@ https://github.com/tanskeran/starship-deck
 
 ## 20261110 Saltline - One Shotted Version
 
-Saltline（Three.js 框架，单个 html 文件，1.22 MB）  
+Saltline 第一人称射击游戏（单个 html 文件，1.52 MB）  
 
 访问地址：  
 https://www.moonlord.cc/share/page/20261110-saltline-one-shotted-version.html  
