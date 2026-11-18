@@ -9,7 +9,7 @@ on:
     branches: [master]
     paths: ['pages/**', 'build.bat', '.github/workflows/build.yml']
   workflow_run:
-    workflows: ["github", "search"]
+    workflows: ["tools-github", "tools-search"]
     types: [completed]
 
 permissions:
