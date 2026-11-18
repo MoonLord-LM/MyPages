@@ -208,30 +208,11 @@ function pageDepth(outPath) {
     return rel === '' ? 0 : rel.split(path.sep).length;
 }
 
-function navActiveSection(outPath) {
-    const rel = path.relative(DIST, outPath).split(path.sep).join('/');
-    if (rel === 'index.html') return 'index';
-    if (rel.startsWith('service/')) return 'service';
-    if (rel.startsWith('github/')) return 'github';
-    if (rel.startsWith('admin/')) return 'admin';
-    if (rel.startsWith('tools/')) return 'tools';
-    if (rel.startsWith('about/')) return 'about';
-    return '';
-}
 // depth 0 用 ./ 前缀（与子目录页面的 ../ 一致），避免被 adjustRelativeRefs 当作裸相对路径重复处理
 function relativizeNav(hdr, depth) {
     const prefix = depth === 0 ? './' : '../'.repeat(depth);
     return hdr.replace(/(<a class="nav-link"\s+href=")([^"]*)(")/g,
         (m, open, href, close) => open + prefix + href + close);
-}
-
-function markActiveNav(hdr, outPath, depth) {
-    const section = navActiveSection(outPath);
-    if (!section) return hdr;
-    const prefix = depth === 0 ? './' : '../'.repeat(depth);
-    const target = prefix + ({ index: 'index.html', service: 'service/index.html', github: 'github/index.html', admin: 'admin/index.html', tools: 'tools/index.html', about: 'about/index.html' })[section];
-    const re = new RegExp('(<a class="nav-link" href=")' + target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"');
-    return hdr.replace(re, '<a class="nav-link active" href="' + target + '"');
 }
 
 function injectHeader(html, outPath, srcDir) {
@@ -240,8 +221,8 @@ function injectHeader(html, outPath, srcDir) {
     const depth = pageDepth(outPath);
     const base = path.dirname(tp);
     let hdr = loadTemplateAt(tp);
-    // 先处理顶栏导航的相对路径与 active 高亮（产出 ./ 或 ../ 前缀，避免被下面的通用重写重复处理）
-    hdr = markActiveNav(relativizeNav(hdr, depth), outPath, depth);
+    // 先处理顶栏导航的相对路径（产出 ./ 或 ../ 前缀，避免被下面的通用重写重复处理）
+    hdr = relativizeNav(hdr, depth);
     hdr = adjustRelativeRefs(hdr, base, path.dirname(outPath));
     // 必须在 adjustRelativeRefs 之后执行，否则裸相对路径会被重新解析前缀
     hdr = hdr.replace(/(<a\s+class="nav-link[^"]*"\s+href=")\.\//g, '$1');
