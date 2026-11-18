@@ -21,5 +21,5 @@ https://x.com/NathanWilbanks_/status/2122359334290313441
 https://www.moonlord.cc/share/page/20261117-starship-deck-xuanpu-07-bridge.html  
 
 原始出处：  
-https://www.v2ex.com/t/125766  
+https://www.v2ex.com/t/1257667  
 https://github.com/tanskeran/starship-deck  
