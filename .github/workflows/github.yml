@@ -1,0 +1,57 @@
+name: github
+
+on:
+  schedule:
+    - cron: '57 21 * * *'
+      timezone: 'Asia/Shanghai'
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths: ['tools/github/*.bat', '.github/workflows/github.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: My-Pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  github:
+    runs-on: windows-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name : Git Config
+        shell: powershell
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.safecrlf false
+          git config --global core.ignorecase false
+          git config --global core.quotepath false
+          git config --global i18n.logoutputencoding utf-8
+          git config --global i18n.commitencoding utf-8
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Run github.bat
+        shell: cmd
+        run: call tools\github\github.bat <nul
+
+      - name: Commit and push
+        shell: powershell
+        run: |
+          git add -A
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "auto-build by [ github.bat ]"
+            git pull origin master
+            git push origin HEAD
+          } else {
+            Write-Host 'No changes after github.bat.'
+          }

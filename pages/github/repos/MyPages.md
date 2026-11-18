@@ -94,8 +94,8 @@ MyPages/
 ├── dist/                                 # 站点构建产物
 ├── pages/                                # 站点源文件
 ├── tools/                                # 辅助工具
-│   ├── tools.bat                         # 工具入口
 │   ├── github/                           # GitHub 相关工具
+│   │   ├── github.bat                    # GitHub 工具入口
 │   │   ├── github-profile.bat            # 采集 GitHub 用户资料
 │   │   ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
 │   └── search/                           # 搜索功能相关工具

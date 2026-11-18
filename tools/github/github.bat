@@ -9,8 +9,8 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 powershell -NoProfile -Command "Write-Host '调用当前目录中的工具脚本' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '调用 github\github-languages-color.bat 脚本，生成 languages-color.json 文件' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '调用 github\github-profile.bat 脚本，并同步生成的文件，到 ..\pages\github 目录' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 github-languages-color.bat 脚本，生成 languages-color.json 文件' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 github-profile.bat 脚本，并同步生成的文件，到 ..\..\pages\github 目录' -ForegroundColor Green"
 echo.
 
 
@@ -30,10 +30,10 @@ echo.
 
 
 
-set "tool1=!script_dir!github\github-languages-color.bat"
-set "tool2=!script_dir!github\github-profile.bat"
-set "src_dir=!script_dir!github\profile"
-set "dst_dir=!script_dir!..\pages\github"
+set "tool1=!script_dir!github-languages-color.bat"
+set "tool2=!script_dir!github-profile.bat"
+set "src_dir=!script_dir!profile"
+set "dst_dir=!script_dir!..\..\pages\github"
 
 echo 开始调用: !tool1! & REM
 echo.
