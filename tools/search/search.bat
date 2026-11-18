@@ -8,11 +8,11 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-echo 调用当前目录中的工具脚本
-echo 调用 quark-catch-1.bat 脚本，采集夸克网盘资源链接
-echo 调用 quark-catch-2.bat 脚本，采集夸克网盘资源链接
-echo 调用 quark-catch-3.bat 脚本，采集夸克网盘资源链接
-echo 调用 quark-update 3000.bat 脚本，更新搜索数据与资源收录页面
+powershell -NoProfile -Command "Write-Host '调用当前目录中的工具脚本' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 quark-catch-1.bat 脚本，采集夸克网盘资源链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 quark-catch-2.bat 脚本，采集夸克网盘资源链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 quark-catch-3.bat 脚本，采集夸克网盘资源链接' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '调用 quark-update-3000.bat 脚本，更新搜索数据与资源收录页面' -ForegroundColor Green"
 echo.
 
 
@@ -35,7 +35,7 @@ echo.
 set "tool1=!script_dir!quark-catch-1.bat"
 set "tool2=!script_dir!quark-catch-2.bat"
 set "tool3=!script_dir!quark-catch-3.bat"
-set "tool4=!script_dir!quark-update 3000.bat"
+set "tool4=!script_dir!quark-update-3000.bat"
 
 echo 开始调用: !tool1! & REM
 echo.

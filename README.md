@@ -95,7 +95,9 @@ MyPages/
 │   │   ├── github-profile.bat            # 采集 GitHub 用户资料
 │   │   ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
 │   └── search/                           # 搜索功能相关工具
-│       ├── quark-update-all.bat          # 处理夸克网盘资源链接，生成站点搜索数据与收录页面
+│       ├── search.bat                    # 搜索工具入口
+│       ├── quark-update-3000.bat         # 生成搜索数据与收录页面
+│       └── quark-update-all.bat          # 生成搜索数据与收录页面
 ├── build.bat                             # 构建脚本
 ├── LLM.md                                # 提示信息
 └── README.md                             # 工程说明
