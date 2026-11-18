@@ -23,3 +23,14 @@ https://www.moonlord.cc/share/page/20261117-starship-deck-xuanpu-07-bridge.html
 原始出处：  
 https://www.v2ex.com/t/1257667  
 https://github.com/tanskeran/starship-deck  
+
+## 20261110 Saltline - One Shotted Version
+
+Saltline（Three.js 框架，单个 html 文件，1.22 MB）  
+
+访问地址：  
+https://www.moonlord.cc/share/page/20261110-saltline-one-shotted-version.html  
+
+原始出处：  
+https://x.com/felixrieseberg/status/2119925633564463609  
+https://claude.ai/artifact/BGY1SztrAYcJQHSsnHHGmp  
