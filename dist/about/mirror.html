@@ -208,9 +208,10 @@ body { overflow-x: clip; }
       <li><a class="nav-link" href="../index.html">首页</a></li>
       <li><a class="nav-link" href="../service/index.html">服务</a></li>
       <li><a class="nav-link" href="../tools/index.html">工具</a></li>
+      <li><a class="nav-link" href="../share/index.html">分享</a></li>
       <li><a class="nav-link" href="../github/index.html">开源</a></li>
       <li><a class="nav-link" href="../admin/index.html">监控</a></li>
-      <li><a class="nav-link active" href="../about/index.html">关于</a></li>
+      <li><a class="nav-link" href="../about/index.html">关于</a></li>
     </ul>
     <button class="nav-search-btn" id="searchToggle" aria-label="搜索">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -221,6 +222,23 @@ body { overflow-x: clip; }
     </button>
   </div>
 </nav>
+
+<!-- 根据当前页面所属文件夹高亮菜单 -->
+<script>
+  (function () {
+    function folder(path) {
+      var parts = path.replace(/^(?:\/|\.\.?\/)+/, '').split('/');
+      return parts.length > 1 ? parts[0] : '';
+    }
+    var current = folder(location.pathname);
+    var links = document.querySelectorAll('#site-nav .nav-link');
+    for (var i = 0; i < links.length; i++) {
+      if (folder(links[i].getAttribute('href') || '') === current) {
+        links[i].classList.add('active');
+      }
+    }
+  })();
+</script>
 
 <div id="searchOverlay">
   <div class="search-box">
