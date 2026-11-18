@@ -352,12 +352,13 @@ body { overflow-x: clip; }
   </ul>
 </nav>
 <div class="auto-list-content">
-<p>2026-11-18 20:59:33 +08:00<br>
+<p>2026-11-18 23:54:24 +08:00<br>
 https://github.com/MoonLord-LM/MyPages</p>
 <hr>
 <h1>MyPages</h1>
 <p><a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/build.yml" target="_blank" rel="noopener"><img src="assets/MyPages-001.svg" alt="build"></a>
-<a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/tools.yml" target="_blank" rel="noopener"><img src="assets/MyPages-002.svg" alt="tools"></a></p>
+<a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/tools-github.yml" target="_blank" rel="noopener"><img src="assets/MyPages-002.svg" alt="tools-github"></a>
+<a href="https://github.com/MoonLord-LM/MyPages/actions/workflows/tools-search.yml" target="_blank" rel="noopener"><img src="assets/MyPages-003.svg" alt="tools-search"></a></p>
 <p>Static Site Generator<br>
 静态页面生成工具</p>
 <p>将 <code>/pages</code> 目录下的 Markdown / HTML 等源文件，构建为可部署的静态站点文件，输出到 <code>/dist</code> 目录<br>
@@ -422,12 +423,14 @@ https://github.com/MoonLord-LM/MyPages</p>
 ├── dist/                                 # 站点构建产物
 ├── pages/                                # 站点源文件
 ├── tools/                                # 辅助工具
-│   ├── tools.bat                         # 工具入口
 │   ├── github/                           # GitHub 相关工具
+│   │   ├── github.bat                    # GitHub 工具入口
 │   │   ├── github-profile.bat            # 采集 GitHub 用户资料
 │   │   ├── github-languages-color.bat    # 采集 GitHub Linguist 语言配色
 │   └── search/                           # 搜索功能相关工具
-│       ├── quark-update-all.bat          # 处理夸克网盘资源链接，生成站点搜索数据与收录页面
+│       ├── search.bat                    # 搜索工具入口
+│       ├── quark-update-3000.bat         # 生成搜索数据与收录页面
+│       └── quark-update-all.bat          # 生成搜索数据与收录页面
 ├── build.bat                             # 构建脚本
 ├── LLM.md                                # 提示信息
 └── README.md                             # 工程说明
