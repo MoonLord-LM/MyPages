@@ -11,13 +11,13 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 powershell -NoProfile -Command "Write-Host '从指定的 Telegram 频道中，采集夸克网盘资源链接' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '采集数据源 https://t.me/s/kduanju https://t.me/s/yoyokuakeduanju https://t.me/s/Quark_Movies https://t.me/s/QuarkFree' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '有效的完整信息保存到 quark.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '在 quark.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '有效的完整信息按日期保存到 quark-valid-日期.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '在 quark-valid-*.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
 echo.
 
 
 
-set "json_file=!script_dir!data\quark.json"
+set "data_dir=!script_dir!data"
 set "invalid_json_file=!script_dir!data\quark-invalid.json"
 
 
@@ -55,7 +55,81 @@ exit /b
 [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
 $ProgressPreference = 'SilentlyContinue'
 
-$jsonPath = $env:json_file
+$dataDir = $env:data_dir
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+$malformedUrls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+if (-not [System.IO.Directory]::Exists($dataDir)) { [System.IO.Directory]::CreateDirectory($dataDir) | Out-Null }
+
+function Get-Record-Day([object]$rec) {
+    $timeText = [string]$rec.time
+    if ($timeText -match '^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}$') {
+        return $Matches[1] + $Matches[2] + $Matches[3]
+    }
+    return $null
+}
+
+function Note-Malformed([object]$rec) {
+    $url = [string]$rec.url
+    if ($url) { [void]$malformedUrls.Add($url) }
+}
+
+function Read-Valid-Records([string]$dir) {
+    $all = [System.Collections.Generic.List[object]]::new()
+    foreach ($file in @([System.IO.Directory]::GetFiles($dir, 'quark-valid-*.json'))) {
+        $parsed = ConvertFrom-Json -InputObject ([System.IO.File]::ReadAllText($file, [System.Text.Encoding]::UTF8))
+        foreach ($rec in @($parsed)) {
+            if ($null -eq (Get-Record-Day $rec)) { Note-Malformed $rec; continue }
+            [void]$all.Add($rec)
+        }
+    }
+    return @($all)
+}
+
+function Save-Valid-Records([string]$dir, [object]$records, [object]$sortRule) {
+    $groups = @{}
+    $written = 0
+    foreach ($rec in $records) {
+        $day = Get-Record-Day $rec
+        if ($null -eq $day) { Note-Malformed $rec; continue }
+        if (-not $groups.ContainsKey($day)) { $groups[$day] = [System.Collections.Generic.List[object]]::new() }
+        [void]$groups[$day].Add($rec)
+        $written++
+    }
+    foreach ($day in $groups.Keys) {
+        $sorted = @($groups[$day] | Sort-Object -Property $sortRule)
+        $text = ConvertTo-Json -InputObject $sorted -Depth 5
+        [void](ConvertFrom-Json -InputObject $text)
+        $path = [System.IO.Path]::Combine($dir, 'quark-valid-' + $day + '.json')
+        [System.IO.File]::WriteAllText($path, $text + "`n", $utf8NoBom)
+    }
+    return [pscustomobject]@{ Files = $groups.Count; Records = $written }
+}
+
+function Save-Malformed-Urls([string]$dir) {
+    if ($malformedUrls.Count -eq 0) { return 0 }
+    $path = [System.IO.Path]::Combine($dir, 'quark-invalid.json')
+    $existing = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $all = [System.Collections.Generic.List[object]]::new()
+    if ([System.IO.File]::Exists($path)) {
+        $parsed = ConvertFrom-Json -InputObject ([System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8))
+        foreach ($rec in @($parsed)) {
+            $url = [string]$rec.url
+            if ($url -and $existing.Add($url)) { [void]$all.Add([pscustomobject][ordered]@{ url = $url }) }
+        }
+    }
+    $added = 0
+    foreach ($url in $malformedUrls) {
+        if ($url -and $existing.Add($url)) {
+            [void]$all.Add([pscustomobject][ordered]@{ url = $url })
+            $added++
+        }
+    }
+    if ($added -gt 0) {
+        $sorted = @($all | Sort-Object -Property @{ Expression = { [string]$_.url } })
+        [System.IO.File]::WriteAllText($path, (ConvertTo-Json -InputObject $sorted -Depth 5) + "`n", $utf8NoBom)
+    }
+    return $added
+}
 $api = 'https://drive-h.quark.cn/1/clouddrive/share/sharepage'
 $headers = @{
     'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36';
@@ -72,8 +146,8 @@ $tgMaxPages = 100
 
 $validUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 $invalidUrlSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-if ([System.IO.File]::Exists($env:json_file)) {
-    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($env:json_file, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
+foreach ($validFile in @([System.IO.Directory]::GetFiles($dataDir, 'quark-valid-*.json'))) {
+    foreach ($urlMatch in [regex]::Matches([System.IO.File]::ReadAllText($validFile, [System.Text.Encoding]::UTF8), '"url"\s*:\s*"([^"]+)"')) {
         [void]$validUrlSet.Add($urlMatch.Groups[1].Value.Trim())
     }
 }
@@ -202,16 +276,11 @@ $emptyJson = "[]`n"
 $emptyEncoding = [System.Text.UTF8Encoding]::new($false)
 
 $records = @()
-if ([System.IO.File]::Exists($jsonPath)) {
-    try {
-        $raw = [System.IO.File]::ReadAllText($jsonPath, [System.Text.Encoding]::UTF8)
-        $records = ConvertFrom-Json -InputObject $raw
-    } catch {
-        Write-Host '错误：数据文件解析失败' -ForegroundColor Red
-        exit 1
-    }
-} else {
-    [System.IO.File]::WriteAllText($jsonPath, $emptyJson, $emptyEncoding)
+try {
+    $records = @(Read-Valid-Records $dataDir)
+} catch {
+    Write-Host '错误：数据文件解析失败' -ForegroundColor Red
+    exit 1
 }
 
 $invalidRecords = [System.Collections.Generic.List[object]]::new()
@@ -485,7 +554,7 @@ try {
 
 Write-Host ('验证完成：待验证 ' + $candidates.Count + ' 条，有效 ' + $pass + ' 条，无效 ' + $fail + ' 条，跳过 ' + $skipped + ' 条')
 
-if ($added.Count -eq 0 -and $invalidAdded.Count -eq 0) {
+if ($added.Count -eq 0 -and $invalidAdded.Count -eq 0 -and $malformedUrls.Count -eq 0) {
     Write-Host '无新增记录，数据文件未修改' -ForegroundColor Green
     exit 0
 }
@@ -513,12 +582,13 @@ function Save-Quark-Data([string]$FilePath, [object]$BaseRecords, [object]$NewRe
 
 if ($added.Count -gt 0) {
     try {
-        $validTotal = Save-Quark-Data $jsonPath $records $added $sortByTime
+        $allRecords = @($records) + @($added)
+        $saveResult = Save-Valid-Records $dataDir $allRecords $sortByTime
     } catch {
-        Write-Host '错误：写入 quark.json 失败' -ForegroundColor Red
+        Write-Host '错误：写入数据文件失败' -ForegroundColor Red
         exit 1
     }
-    Write-Host ('已写回: ' + $jsonPath + '（新增 ' + $added.Count + ' 条，共 ' + $validTotal + ' 条）')
+    Write-Host ('已按日期写回: ' + $saveResult.Files + ' 个文件（写入 ' + $saveResult.Records + ' 条，其中新增 ' + $added.Count + ' 条）')
 }
 
 if ($invalidAdded.Count -gt 0) {
@@ -531,6 +601,10 @@ if ($invalidAdded.Count -gt 0) {
     Write-Host ('已写回: ' + $env:invalid_json_file + '（新增 ' + $invalidAdded.Count + ' 条，共 ' + $invalidTotal + ' 条）')
 }
 
+$malformedAdded = Save-Malformed-Urls $dataDir
+if ($malformedAdded -gt 0) {
+    Write-Host ('已转入 invalid: ' + $malformedAdded + ' 条异常记录')
+}
 Write-Host ('采集完成：新增有效 ' + $added.Count + ' 条，新增无效 ' + $invalidAdded.Count + ' 条，跳过 ' + $skipped + ' 条') -ForegroundColor Green
 exit 0
 -----END POWERSHELL CODE-----

@@ -8,7 +8,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-powershell -NoProfile -Command "Write-Host '检查 quark.json 中的夸克网盘资源链接，记录链接有效状态' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '检查 quark-valid-*.json 中的夸克网盘资源链接，记录链接有效状态' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '每次随机选择起点，向后连续处理最多 3000 条记录' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '按检查结果生成站点搜索数据 gz 文件，并按天生成资源收录页面 md 文件' -ForegroundColor Green"
@@ -39,12 +39,12 @@ if !errorlevel! neq 0 (
 
 
 
-set "json_file=!script_dir!data\quark.json"
+set "data_dir=!script_dir!data"
 set "out_file_name=pan-quark-cn"
 set "out_dir=!script_dir!..\..\dist\static\search"
 set "page_dir=!script_dir!..\..\pages\service\internet-search\quark"
-if not exist "!json_file!" (
-    echo 错误：未找到数据文件 "!json_file!"
+if not exist "!data_dir!" (
+    echo 错误：未找到数据目录 "!data_dir!"
     echo.
     pause
     exit /b 1
@@ -88,7 +88,81 @@ $ProgressPreference = 'SilentlyContinue'
 Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName System.IO.Compression
 
-$jsonPath = $env:json_file
+$dataDir = $env:data_dir
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+$malformedUrls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+if (-not [System.IO.Directory]::Exists($dataDir)) { [System.IO.Directory]::CreateDirectory($dataDir) | Out-Null }
+
+function Get-Record-Day([object]$rec) {
+    $timeText = [string]$rec.time
+    if ($timeText -match '^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}$') {
+        return $Matches[1] + $Matches[2] + $Matches[3]
+    }
+    return $null
+}
+
+function Note-Malformed([object]$rec) {
+    $url = [string]$rec.url
+    if ($url) { [void]$malformedUrls.Add($url) }
+}
+
+function Read-Valid-Records([string]$dir) {
+    $all = [System.Collections.Generic.List[object]]::new()
+    foreach ($file in @([System.IO.Directory]::GetFiles($dir, 'quark-valid-*.json'))) {
+        $parsed = ConvertFrom-Json -InputObject ([System.IO.File]::ReadAllText($file, [System.Text.Encoding]::UTF8))
+        foreach ($rec in @($parsed)) {
+            if ($null -eq (Get-Record-Day $rec)) { Note-Malformed $rec; continue }
+            [void]$all.Add($rec)
+        }
+    }
+    return @($all)
+}
+
+function Save-Valid-Records([string]$dir, [object]$records, [object]$sortRule) {
+    $groups = @{}
+    $written = 0
+    foreach ($rec in $records) {
+        $day = Get-Record-Day $rec
+        if ($null -eq $day) { Note-Malformed $rec; continue }
+        if (-not $groups.ContainsKey($day)) { $groups[$day] = [System.Collections.Generic.List[object]]::new() }
+        [void]$groups[$day].Add($rec)
+        $written++
+    }
+    foreach ($day in $groups.Keys) {
+        $sorted = @($groups[$day] | Sort-Object -Property $sortRule)
+        $text = ConvertTo-Json -InputObject $sorted -Depth 5
+        [void](ConvertFrom-Json -InputObject $text)
+        $path = [System.IO.Path]::Combine($dir, 'quark-valid-' + $day + '.json')
+        [System.IO.File]::WriteAllText($path, $text + "`n", $utf8NoBom)
+    }
+    return [pscustomobject]@{ Files = $groups.Count; Records = $written }
+}
+
+function Save-Malformed-Urls([string]$dir) {
+    if ($malformedUrls.Count -eq 0) { return 0 }
+    $path = [System.IO.Path]::Combine($dir, 'quark-invalid.json')
+    $existing = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $all = [System.Collections.Generic.List[object]]::new()
+    if ([System.IO.File]::Exists($path)) {
+        $parsed = ConvertFrom-Json -InputObject ([System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8))
+        foreach ($rec in @($parsed)) {
+            $url = [string]$rec.url
+            if ($url -and $existing.Add($url)) { [void]$all.Add([pscustomobject][ordered]@{ url = $url }) }
+        }
+    }
+    $added = 0
+    foreach ($url in $malformedUrls) {
+        if ($url -and $existing.Add($url)) {
+            [void]$all.Add([pscustomobject][ordered]@{ url = $url })
+            $added++
+        }
+    }
+    if ($added -gt 0) {
+        $sorted = @($all | Sort-Object -Property @{ Expression = { [string]$_.url } })
+        [System.IO.File]::WriteAllText($path, (ConvertTo-Json -InputObject $sorted -Depth 5) + "`n", $utf8NoBom)
+    }
+    return $added
+}
 $outDir = [System.IO.Path]::GetFullPath($env:out_dir)
 $pageDir = [System.IO.Path]::GetFullPath($env:page_dir)
 $outFileName = $env:out_file_name
@@ -183,8 +257,7 @@ Write-Host ('采用' + $probe.Name)
 Write-Host '开始检查链接有效性'
 
 try {
-    $raw = [System.IO.File]::ReadAllText($jsonPath, [System.Text.Encoding]::UTF8)
-    $records = ConvertFrom-Json -InputObject $raw
+    $records = @(Read-Valid-Records $dataDir)
 } catch {
     Write-Host ('错误：数据文件解析失败 - ' + $_.Exception.Message) -ForegroundColor Red
     exit 1
@@ -438,9 +511,7 @@ try {
         $checked++
         if ($checked % 5000 -eq 0) {
             try {
-                $sorted = @($results | Sort-Object -Property $sortByTime)
-                $checkedText = ConvertTo-Json -InputObject $sorted -Depth 5
-                [System.IO.File]::WriteAllText($jsonPath, $checkedText + "`n", $utf8)
+                [void](Save-Valid-Records $dataDir $results $sortByTime)
                 Write-Host ('已保存（已检查 ' + $checked + ' 条，' + $result.Index + '/' + $records.Count + '）')
             } catch {
                 Write-Host ('错误：保存进度失败 - ' + $_.Exception.Message) -ForegroundColor Red
@@ -464,9 +535,8 @@ Write-Host '开始生成站点搜索数据'
 Write-Host ''
 
 try {
+    [void](Save-Valid-Records $dataDir $results $sortByTime)
     $sorted = @($results | Sort-Object -Property $sortByTime)
-    $checkedText = ConvertTo-Json -InputObject $sorted -Depth 5
-    [System.IO.File]::WriteAllText($jsonPath, $checkedText + "`n", $utf8)
 
     $sorted = @($sorted | Where-Object { ([string]$_.title) -notmatch '夸.*克|审.*核|傻.*比' })
     Write-Host ('已排除敏感标题: ' + ($records.Count - $sorted.Count) + ' 条')
@@ -542,7 +612,7 @@ try {
     exit 1
 }
 
-Write-Host ('已写回检查结果: ' + $jsonPath) -ForegroundColor Green
+Write-Host '已按日期写回检查结果' -ForegroundColor Green
 Write-Host ('已生成站点数据: ' + $outGzip) -ForegroundColor Green
 
 Write-Host ''
@@ -619,4 +689,8 @@ try {
 
 Write-Host ('页面目录: ' + $pageDir)
 Write-Host ('生成完成：共 ' + $total + ' 条，有效 ' + $pageValid + ' 条，失效 ' + $pageInvalid + ' 条，跳过 ' + $pageSkipped + ' 条，生成 ' + $pages.Count + ' 个页面') -ForegroundColor Green
+$malformedAdded = Save-Malformed-Urls $dataDir
+if ($malformedAdded -gt 0) {
+    Write-Host ('已转入 invalid: ' + $malformedAdded + ' 条异常记录') -ForegroundColor Green
+}
 -----END POWERSHELL CODE-----
