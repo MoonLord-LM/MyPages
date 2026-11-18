@@ -72,7 +72,20 @@ if !errorlevel! neq 0 (
     exit /b 1
 )
 
-call npx -y wrangler login
+REM Cloudflare 认证：优先使用 CLOUDFLARE_API_TOKEN 与 CLOUDFLARE_ACCOUNT_ID 环境变量
+set "use_token=0"
+if not "!CLOUDFLARE_API_TOKEN!"=="" (
+    if not "!CLOUDFLARE_ACCOUNT_ID!"=="" (
+        set "use_token=1"
+    )
+)
+if "!use_token!"=="1" (
+    echo 已检测到 CLOUDFLARE_API_TOKEN 与 CLOUDFLARE_ACCOUNT_ID 环境变量，使用令牌认证 & REM
+) else (
+    echo 环境变量 CLOUDFLARE_API_TOKEN 与 CLOUDFLARE_ACCOUNT_ID 不完整，改用 wrangler login 登录 & REM
+    call npx -y wrangler login
+)
+echo.
 
 :loop
 
