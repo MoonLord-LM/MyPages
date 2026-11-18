@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分享</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      color: #1f2328; line-height: 1.6; background: #fafafa;
+    }
+    /* .wrap 统一由公共模板 header.html 定义 */
+    h1 { font-size: 28px; color: #1f2328; padding-bottom: .3em; border-bottom: 1px solid #d8dee4; margin-bottom: 8px; line-height: 1.25; }
+    .intro { color: #59636e; font-size: 14px; margin-bottom: 28px; }
+    .share-list { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    .share-card {
+      display: flex; flex-direction: column; background: #fff; border: 1px solid #e3e8ef; border-radius: 14px;
+      padding: 24px; color: #1f2328; box-shadow: 0 6px 20px rgba(0,0,0,.06);
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .share-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.1); border-color: #0969da; }
+    .share-card h2 { font-size: 20px; color: #1f2328; margin-bottom: 8px; }
+    .share-card p { color: #59636e; font-size: 14px; }
+    .card-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 16px; }
+    .card-links a {
+      padding: 6px 12px; border: 1px solid #d1d9e0; border-radius: 6px;
+      background: #fff; color: #0969da; font-size: 14px; text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+    .card-links a:hover { background: #ddf4ff; border-color: #0969da; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>分享</h1>
+    <p class="intro">源码分享</p>
+    <div class="share-list">
+      <div class="share-card">
+        <h2>20261117 Duskward - An Interactive World</h2>
+        <p>奥尼尔圆柱体空间站（单个 html 文件，1.05 MB）</p>
+        <div class="card-links">
+          <a href="https://www.moonlord.cc/share/page/20261117-duskward-an-interactive-world.html" target="_blank" rel="noopener">访问地址</a>
+          <a href="https://agnt.gg/creation?id=DmDSpPYm" target="_blank" rel="noopener">agnt.gg</a>
+          <a href="https://x.com/NathanWilbanks_/status/2122359334290313441" target="_blank" rel="noopener">x.com</a>
+        </div>
+      </div>
+      <div class="share-card">
+        <h2>20261117 Starship Deck - 玄圃号舰桥 / XUANPU-07 Bridge</h2>
+        <p>工业科幻飞船舰桥（Three.js 框架，单个 html 文件，1.22 MB）</p>
+        <div class="card-links">
+          <a href="https://www.moonlord.cc/share/page/20261117-starship-deck-xuanpu-07-bridge.html" target="_blank" rel="noopener">访问地址</a>
+          <a href="https://www.v2ex.com/t/125766" target="_blank" rel="noopener">v2ex.com</a>
+          <a href="https://github.com/tanskeran/starship-deck" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
