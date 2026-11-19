@@ -10,8 +10,20 @@ date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
 ini_set('default_charset', 'UTF-8');
 
-const MODELS_FILE = '/var/www/config/models.json';
+const MODELS_FILE = '/var/www/config/models.json'; // { "models": [ { "id", "name", "vendor", "url", "apiKey", "desc" } ] }
 const USAGE_FILE  = '/var/www/config/models-usage.json';
+
+function read_model_config() {
+    $raw = @file_get_contents(MODELS_FILE);
+    if ($raw === false) {
+        fail(500, 'config unavailable');
+    }
+    $cfg = json_decode($raw, true);
+    if (!is_array($cfg) || !isset($cfg['models']) || !is_array($cfg['models'])) {
+        fail(500, 'invalid config');
+    }
+    return $cfg;
+}
 
 function respond_json($s, $data) {
     http_response_code($s);
@@ -22,22 +34,6 @@ function respond_json($s, $data) {
 
 function fail($s, $m, $t = 'server_error') {
     respond_json($s, ['error' => ['message' => $m, 'type' => $t]]);
-}
-
-function read_config() {
-    $h = @fopen(MODELS_FILE, 'r');
-    if (!$h) {
-        fail(500, 'config unavailable');
-    }
-    flock($h, LOCK_SH);
-    $raw = stream_get_contents($h);
-    flock($h, LOCK_UN);
-    fclose($h);
-    $cfg = json_decode($raw, true);
-    if (!is_array($cfg) || !isset($cfg['models']) || !is_array($cfg['models'])) {
-        fail(500, 'invalid config');
-    }
-    return $cfg;
 }
 
 function read_usage() {
@@ -102,7 +98,7 @@ function list_models($cfg, $usage) {
         $succ_all += $succ;
         if ($id !== '' && !in_array($id, $ids, true)) {
             $ids[] = $id;
-            $data[] = ['id' => $id, 'object' => 'model', 'created' => 0, 'owned_by' => 'llm-proxy'];
+            $data[] = ['id' => $id, 'object' => 'model', 'created' => 0, 'owned_by' => 'MoonLord'];
         }
         $stats[] = [
             'id' => $id,
@@ -119,6 +115,31 @@ function list_models($cfg, $usage) {
         'stats' => $stats,
         'successRate' => $req_all ? round($succ_all / $req_all, 4) : null,
     ]);
+}
+
+function model_info($cfg, $usage, $id) {
+    foreach ($cfg['models'] as $i => $m) {
+        if (!isset($m['id']) || $m['id'] !== $id) {
+            continue;
+        }
+        $u = isset($usage['usage'][$i]) ? $usage['usage'][$i] : [];
+        $req = isset($u['requests']) ? (int) $u['requests'] : 0;
+        $succ = isset($u['successes']) ? (int) $u['successes'] : 0;
+        respond_json(200, [
+            'id' => $id,
+            'object' => 'model',
+            'created' => 0,
+            'owned_by' => 'MoonLord',
+            'name' => isset($m['name']) ? $m['name'] : '',
+            'vendor' => isset($m['vendor']) ? $m['vendor'] : '',
+            'desc' => isset($m['desc']) ? $m['desc'] : '',
+            'requests' => $req,
+            'successes' => $succ,
+            'successRate' => $req ? round($succ / $req, 4) : null,
+            'lastSuccess' => isset($u['lastSuccess']) ? $u['lastSuccess'] : null,
+        ]);
+    }
+    fail(404, 'model not found', 'invalid_request_error');
 }
 
 
@@ -192,12 +213,22 @@ function try_proxy($model, $req) {
 
 
 
-$cfg = read_config();
+$cfg = read_model_config();
 $usage = read_usage();
 $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
+$path = isset($_SERVER['PATH_INFO']) ? trim($_SERVER['PATH_INFO'], '/') : '';
+if ($path === '' && isset($_SERVER['REQUEST_URI'], $_SERVER['SCRIPT_NAME'])) {
+    $path = trim(explode('?', substr($_SERVER['REQUEST_URI'], strlen($_SERVER['SCRIPT_NAME'])))[0], '/');
+}
 
-if ($method === 'GET') {
+if ($method === 'GET' && ($path === '' || $path === 'v1/models')) {
     list_models($cfg, $usage);
+}
+if ($method === 'GET' && strpos($path, 'v1/models/') === 0) {
+    model_info($cfg, $usage, urldecode(substr($path, strlen('v1/models/'))));
+}
+if (!($method === 'POST' && ($path === 'v1/chat/completions' || $path === 'v1/completions'))) {
+    fail(404, 'not found', 'invalid_request_error');
 }
 
 $raw = file_get_contents('php://input');
