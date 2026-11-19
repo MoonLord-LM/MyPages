@@ -9,6 +9,7 @@
 # { "models": [ { "id", "name", "vendor", "url", "apiKey", "desc" } ] }
 
 const MODELS_FILE = '/var/www/config/models.json';
+const MODELS_LOG = '/var/www/config/models.log';
 
 date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
@@ -87,6 +88,14 @@ function model_info($config, $id) {
     ]);
 }
 
+function append_proxy_log($payload_json, $code, $body) {
+    $timestamp = date('Y-m-d H:i:s');
+    $decoded = json_decode($body, true);
+    $formatted = is_array($decoded) ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $body;
+    $log = "[$timestamp] REQUEST\n" . $payload_json . "\n" . "RESPONSE (HTTP $code)\n" . $formatted . "\n\n";
+    @file_put_contents(MODELS_LOG, $log, FILE_APPEND | LOCK_EX);
+}
+
 function proxy_request($config) {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
@@ -104,11 +113,13 @@ function proxy_request($config) {
     $payload_json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
     if (!function_exists('curl_init')) {
+        append_proxy_log($payload_json, 500, 'curl unavailable');
         output_error(500, 'curl unavailable');
     }
 
     $curl_request = curl_init($model['url']);
     if ($curl_request === false) {
+        append_proxy_log($payload_json, 500, 'curl init error');
         output_error(500, 'curl init error');
     }
     curl_setopt_array($curl_request, [
@@ -130,15 +141,19 @@ function proxy_request($config) {
     curl_close($curl_request);
 
     if ($body === false) {
+        append_proxy_log($payload_json, 502, 'upstream unavailable');
         output_error(502, 'upstream unavailable');
     }
     $decoded = json_decode($body, true);
     if(!is_array($decoded)){
+        append_proxy_log($payload_json, 502, $body);
         output_error(502, 'upstream json unavailable');
     }
     else if (is_array($decoded) && isset($decoded['error']) && $code < 400 ) {
+        append_proxy_log($payload_json, 502, $body);
         output_error(502, 'upstream json contains error');
     }
+    append_proxy_log($payload_json, $code, $body);
     http_response_code($code);
     header('Content-Type: ' . ($type ?: 'application/json; charset=utf-8'));
     echo $body;
