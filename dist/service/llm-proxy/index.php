@@ -89,7 +89,7 @@ function model_info($config, $id) {
 }
 
 function append_proxy_log($payload_json, $code, $body) {
-    $decoded_body = json_decode($body, true);
+    $decoded_body = is_array($body) ? $body : json_decode($body, true);
     $record = [
         'timestamp' => date('Y-m-d H:i:s'),
         'request' => json_decode($payload_json, true),
@@ -162,10 +162,10 @@ function proxy_request($config) {
         while (ob_get_level() > 0) {
             ob_end_flush();
         }
-        $stream_body = '';
+        $stream_chunks = [];
         $headers_sent = false;
         curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, false);
-        curl_setopt($curl_request, CURLOPT_WRITEFUNCTION, function ($curl_request, $chunk) use (&$stream_body, &$headers_sent) {
+        curl_setopt($curl_request, CURLOPT_WRITEFUNCTION, function ($curl_request, $chunk) use (&$stream_chunks, &$headers_sent) {
             if (!$headers_sent) {
                 $response_code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
                 if ($response_code >= 400) {
@@ -179,7 +179,7 @@ function proxy_request($config) {
                 }
                 $headers_sent = true;
             }
-            $stream_body .= $chunk;
+            $stream_chunks[] = $chunk;
             echo $chunk;
             flush();
             return strlen($chunk);
@@ -198,7 +198,7 @@ function proxy_request($config) {
                 header('X-Accel-Buffering: no');
             }
         }
-        append_proxy_log($payload_json, $code, $stream_body);
+        append_proxy_log($payload_json, $code, $stream_chunks);
         return;
     }
 
