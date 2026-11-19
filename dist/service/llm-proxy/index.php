@@ -10,6 +10,7 @@
 
 const MODELS_FILE = '/var/www/config/models.json';
 const MODELS_LOG = '/var/www/config/models.log';
+const MODELS_LOG_MAX_BYTES = 5 * 1024 * 1024;
 
 date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
@@ -89,6 +90,9 @@ function model_info($config, $id) {
 }
 
 function append_proxy_log($payload_json, $code, $body) {
+    if (@filesize(MODELS_LOG) > MODELS_LOG_MAX_BYTES) {
+        @file_put_contents(MODELS_LOG, '', LOCK_EX);
+    }
     $decoded_body = is_array($body) ? $body : json_decode($body, true);
     $record = [
         'timestamp' => date('Y-m-d H:i:s'),
