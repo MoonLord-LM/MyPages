@@ -117,8 +117,7 @@ function show_proxy_log() {
 function clear_proxy_log() {
     @file_put_contents(MODELS_LOG, '', LOCK_EX);
     header('Content-Type: text/plain; charset=utf-8');
-    echo 'ok';
-    exit;
+    echo 'clear ok';
 }
 
 function proxy_request($config) {
@@ -159,6 +158,29 @@ function proxy_request($config) {
         CURLOPT_FOLLOWLOCATION => true,
     ]);
 
+    if (isset($payload['stream']) && $payload['stream'] === true) {
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        header('Content-Type: text/event-stream; charset=utf-8');
+        header('Cache-Control: no-cache');
+        header('X-Accel-Buffering: no');
+
+        $stream_body = '';
+        curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($curl_request, CURLOPT_WRITEFUNCTION, function ($curl_request, $chunk) use (&$stream_body) {
+            $stream_body .= $chunk;
+            echo $chunk;
+            flush();
+            return strlen($chunk);
+        });
+        curl_exec($curl_request);
+        $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
+        curl_close($curl_request);
+        append_proxy_log($payload_json, $code, $stream_body);
+        return;
+    }
+
     curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, true);
     $body = curl_exec($curl_request);
     $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
@@ -182,7 +204,6 @@ function proxy_request($config) {
     http_response_code($code);
     header('Content-Type: ' . ($type ?: 'application/json; charset=utf-8'));
     echo $body;
-    exit;
 }
 
 $config = read_model_config();
