@@ -44,9 +44,9 @@ REM Cloudflare Pages 工程名
 set "cloudflare_project=moonlord"
 
 REM 网络代理设置
-set HTTP_PROXY=http://127.0.0.1:10809
-set HTTPS_PROXY=http://127.0.0.1:10809
-set NO_PROXY=localhost,127.0.0.1
+REM set HTTP_PROXY=http://127.0.0.1:10809
+REM set HTTPS_PROXY=http://127.0.0.1:10809
+REM set NO_PROXY=localhost,127.0.0.1
 
 
 

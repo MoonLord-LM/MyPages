@@ -55,3 +55,18 @@ jobs:
           } else {
             Write-Host 'No changes after search.bat.'
           }
+
+      - name: Download Cloudflare static assets
+        shell: cmd
+        run: call tools\cloudflare\cloudflare-list-download.bat <nul
+
+      - name: Refresh Cloudflare list.json
+        shell: cmd
+        run: call tools\cloudflare\cloudflare-list-refresh.bat <nul
+
+      - name: Deploy to Cloudflare Pages
+        shell: cmd
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: call tools\cloudflare\cloudflare-pages-deploy.bat <nul
