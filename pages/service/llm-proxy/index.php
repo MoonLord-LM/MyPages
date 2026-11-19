@@ -89,17 +89,35 @@ function model_info($config, $id) {
 }
 
 function append_proxy_log($payload_json, $code, $body) {
-    $timestamp = date('Y-m-d H:i:s');
-    $decoded = json_decode($body, true);
-    $formatted = is_array($decoded) ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $body;
-    $log = "[$timestamp] REQUEST\n" . $payload_json . "\n" . "RESPONSE (HTTP $code)\n" . $formatted . "\n\n";
-    @file_put_contents(MODELS_LOG, $log, FILE_APPEND | LOCK_EX);
+    $decoded_body = json_decode($body, true);
+    $record = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'request' => json_decode($payload_json, true),
+        'code' => $code,
+        'response' => is_array($decoded_body) ? $decoded_body : $body,
+    ];
+    $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    @file_put_contents(MODELS_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
 }
 
 function show_proxy_log() {
-    header('Content-Type: text/plain; charset=utf-8');
     $content = @file_get_contents(MODELS_LOG);
-    echo $content === false ? '' : $content;
+    $records = [];
+    if ($content !== false) {
+        foreach (explode("\n", $content) as $line) {
+            $record = json_decode(trim($line), true);
+            if (is_array($record)) {
+                $records[] = $record;
+            }
+        }
+    }
+    output_json(200, $records);
+}
+
+function clear_proxy_log() {
+    @file_put_contents(MODELS_LOG, '', LOCK_EX);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'ok';
     exit;
 }
 
@@ -117,7 +135,7 @@ function proxy_request($config) {
 
     $payload = $request;
     $payload['model'] = $model['id'];
-    $payload_json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $payload_json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
     if (!function_exists('curl_init')) {
         append_proxy_log($payload_json, 500, 'curl unavailable');
@@ -172,8 +190,11 @@ $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
 $path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '';
 
 if ($method === 'GET') {
-    if ($path === '/log') {
+    if ($path === '/v1/log/view') {
         show_proxy_log();
+    }
+    else if ($path === '/v1/log/clear') {
+        clear_proxy_log();
     }
     else if (strpos($path, '/v1/models/') === 0) {
         model_info($config, urldecode(substr($path, strlen('/v1/models/'))));
