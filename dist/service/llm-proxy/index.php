@@ -56,7 +56,7 @@ function list_models($config) {
             $data[] = ['id' => $id, 'object' => 'model', 'created' => 0, 'owned_by' => $name];
         }
     }
-    output_json(200, ['object' => 'list', 'data' => $data, ]);
+    output_json(200, ['object' => 'list', 'data' => $data]);
 }
 
 function find_model_by_id($config, $id) {
@@ -213,11 +213,11 @@ function proxy_request($config) {
         output_error(502, 'upstream unavailable');
     }
     $decoded = json_decode($body, true);
-    if(!is_array($decoded)){
+    if (!is_array($decoded)) {
         append_proxy_log($payload_json, 502, $body);
         output_error(502, 'upstream json unavailable');
     }
-    else if (is_array($decoded) && isset($decoded['error']) && $code < 400 ) {
+    else if (isset($decoded['error']) && $code < 400) {
         append_proxy_log($payload_json, 502, $body);
         output_error(502, 'upstream json contains error');
     }
