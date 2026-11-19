@@ -162,13 +162,23 @@ function proxy_request($config) {
         while (ob_get_level() > 0) {
             ob_end_flush();
         }
-        header('Content-Type: text/event-stream; charset=utf-8');
-        header('Cache-Control: no-cache');
-        header('X-Accel-Buffering: no');
-
         $stream_body = '';
+        $headers_sent = false;
         curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, false);
-        curl_setopt($curl_request, CURLOPT_WRITEFUNCTION, function ($curl_request, $chunk) use (&$stream_body) {
+        curl_setopt($curl_request, CURLOPT_WRITEFUNCTION, function ($curl_request, $chunk) use (&$stream_body, &$headers_sent) {
+            if (!$headers_sent) {
+                $response_code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
+                if ($response_code >= 400) {
+                    http_response_code($response_code);
+                    header('Content-Type: application/json; charset=utf-8');
+                }
+                else {
+                    header('Content-Type: text/event-stream; charset=utf-8');
+                    header('Cache-Control: no-cache');
+                    header('X-Accel-Buffering: no');
+                }
+                $headers_sent = true;
+            }
             $stream_body .= $chunk;
             echo $chunk;
             flush();
@@ -177,6 +187,17 @@ function proxy_request($config) {
         curl_exec($curl_request);
         $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
         curl_close($curl_request);
+        if (!$headers_sent) {
+            if ($code >= 400) {
+                http_response_code($code);
+                header('Content-Type: application/json; charset=utf-8');
+            }
+            else {
+                header('Content-Type: text/event-stream; charset=utf-8');
+                header('Cache-Control: no-cache');
+                header('X-Accel-Buffering: no');
+            }
+        }
         append_proxy_log($payload_json, $code, $stream_body);
         return;
     }
