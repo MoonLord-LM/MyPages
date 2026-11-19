@@ -5,8 +5,8 @@
 
 | URL | 说明 |
 | --- | --- |
-| https://www.moonlord.cc/service/llm-proxy/index.php/v1/models | 查看模型列表 |
-| https://www.moonlord.cc/service/llm-proxy/index.php/v1/models/glm-4.7-flash | 查看模型信息 |
-| https://www.moonlord.cc/service/llm-proxy/index.php/v1/chat/completions | POST 调用模型 |
-| https://www.moonlord.cc/service/llm-proxy/index.php/v1/log/view | 查看调用日志 |
-| https://www.moonlord.cc/service/llm-proxy/index.php/v1/log/clear | 清空调用日志 |
+| [https://www.moonlord.cc/service/llm-proxy/index.php/v1/models](https://www.moonlord.cc/service/llm-proxy/index.php/v1/models) | 查看模型列表 |
+| [https://www.moonlord.cc/service/llm-proxy/index.php/v1/models/glm-4.7-flash](https://www.moonlord.cc/service/llm-proxy/index.php/v1/models/glm-4.7-flash) | 查看模型信息 |
+| [https://www.moonlord.cc/service/llm-proxy/index.php/v1/chat/completions](https://www.moonlord.cc/service/llm-proxy/index.php/v1/chat/completions) | POST 调用模型 |
+| [https://www.moonlord.cc/service/llm-proxy/index.php/v1/log/view](https://www.moonlord.cc/service/llm-proxy/index.php/v1/log/view) | 查看调用日志 |
+| [https://www.moonlord.cc/service/llm-proxy/index.php/v1/log/clear](https://www.moonlord.cc/service/llm-proxy/index.php/v1/log/clear) | 清空调用日志 |
