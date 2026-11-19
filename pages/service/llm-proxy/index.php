@@ -10,30 +10,31 @@ date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
 ini_set('default_charset', 'UTF-8');
 
-const MODELS_FILE = '/var/www/config/models.json'; // { "models": [ { "id", "name", "vendor", "url", "apiKey", "desc" } ] }
+// 配置文件格式：{ "models": [ { "id", "name", "vendor", "url", "apiKey", "desc" } ] }
+const MODELS_FILE = '/var/www/config/models.json';
 const USAGE_FILE  = '/var/www/config/models-usage.json';
 
-function read_model_config() {
-    $raw = @file_get_contents(MODELS_FILE);
-    if ($raw === false) {
-        fail(500, 'config unavailable');
-    }
-    $cfg = json_decode($raw, true);
-    if (!is_array($cfg) || !isset($cfg['models']) || !is_array($cfg['models'])) {
-        fail(500, 'invalid config');
-    }
-    return $cfg;
-}
-
-function respond_json($s, $data) {
-    http_response_code($s);
+function output_json($code, $data) {
+    http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
     exit;
 }
 
-function fail($s, $m, $t = 'server_error') {
-    respond_json($s, ['error' => ['message' => $m, 'type' => $t]]);
+function output_error($code, $message) {
+    output_json($code, ['error' => ['message' => $message, 'type' => $message, 'code' => $message, 'param' => $message]]);
+}
+
+function read_model_config() {
+    $content = @file_get_contents(MODELS_FILE);
+    if ($content === false) {
+        output_error(500, 'config unavailable');
+    }
+    $config = json_decode($content, true);
+    if (!is_array($config) || !isset($config['models']) || !is_array($config['models'])) {
+        output_error(500, 'invalid config');
+    }
+    return $config;
 }
 
 function read_usage() {
@@ -109,7 +110,7 @@ function list_models($cfg, $usage) {
             'lastSuccess' => isset($u['lastSuccess']) ? $u['lastSuccess'] : null,
         ];
     }
-    respond_json(200, [
+    output_json(200, [
         'object' => 'list',
         'data' => $data,
         'stats' => $stats,
@@ -125,7 +126,7 @@ function model_info($cfg, $usage, $id) {
         $u = isset($usage['usage'][$i]) ? $usage['usage'][$i] : [];
         $req = isset($u['requests']) ? (int) $u['requests'] : 0;
         $succ = isset($u['successes']) ? (int) $u['successes'] : 0;
-        respond_json(200, [
+        output_json(200, [
             'id' => $id,
             'object' => 'model',
             'created' => 0,
@@ -139,7 +140,7 @@ function model_info($cfg, $usage, $id) {
             'lastSuccess' => isset($u['lastSuccess']) ? $u['lastSuccess'] : null,
         ]);
     }
-    fail(404, 'model not found', 'invalid_request_error');
+    output_error404, 'model not found', 'invalid_request_error');
 }
 
 
@@ -228,21 +229,21 @@ if ($method === 'GET' && strpos($path, 'v1/models/') === 0) {
     model_info($cfg, $usage, urldecode(substr($path, strlen('v1/models/'))));
 }
 if (!($method === 'POST' && ($path === 'v1/chat/completions' || $path === 'v1/completions'))) {
-    fail(404, 'not found', 'invalid_request_error');
+    output_error404, 'not found', 'invalid_request_error');
 }
 
 $raw = file_get_contents('php://input');
 $req = json_decode($raw, true);
 if (!is_array($req)) {
-    fail(400, 'invalid request', 'invalid_request_error');
+    output_error400, 'invalid request', 'invalid_request_error');
 }
 if (!function_exists('curl_init')) {
-    fail(500, 'curl unavailable');
+    output_error500, 'curl unavailable');
 }
 
 $cands = ordered_candidates($cfg, isset($req['model']) ? $req['model'] : '', $usage);
 if (!$cands) {
-    fail(404, 'model not found', 'invalid_request_error');
+    output_error404, 'model not found', 'invalid_request_error');
 }
 
 $updates = [];
@@ -263,7 +264,7 @@ foreach ($cands as $c) {
 save_stats($updates);
 
 if (!$resp['ok']) {
-    fail(502, 'upstream unavailable');
+    output_error502, 'upstream unavailable');
 }
 http_response_code($resp['code']);
 header('Content-Type: ' . ($resp['type'] ?: 'application/json; charset=utf-8'));
