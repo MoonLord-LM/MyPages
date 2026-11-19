@@ -96,6 +96,13 @@ function append_proxy_log($payload_json, $code, $body) {
     @file_put_contents(MODELS_LOG, $log, FILE_APPEND | LOCK_EX);
 }
 
+function show_proxy_log() {
+    header('Content-Type: text/plain; charset=utf-8');
+    $content = @file_get_contents(MODELS_LOG);
+    echo $content === false ? '' : $content;
+    exit;
+}
+
 function proxy_request($config) {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
@@ -165,10 +172,15 @@ $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
 $path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '';
 
 if ($method === 'GET') {
-    if (strpos($path, '/v1/models/') === 0) {
+    if ($path === '/log') {
+        show_proxy_log();
+    }
+    else if (strpos($path, '/v1/models/') === 0) {
         model_info($config, urldecode(substr($path, strlen('/v1/models/'))));
     }
-    list_models($config);
+    else {
+        list_models($config);
+    }
 }
 else if ($method === 'POST') {
     proxy_request($config);
