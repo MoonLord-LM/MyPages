@@ -19,6 +19,7 @@ const MODEL_DESC = 'WebAPI';
 
 const PENDING_QUEUE = 'llm:local:pending';
 const REQUEST_PREFIX = 'llm:local:request:';
+const RESPONSE_PREFIX = 'llm:local:response:';
 const REQUEST_TTL = 120;
 const WAIT_SECONDS = 40;
 const POLL_SECONDS = 1;
@@ -322,6 +323,18 @@ function submit_request($redis) {
         $request['stream'] = false;
     }
 
+    $cached_value = $redis->command('GET', RESPONSE_PREFIX . $input);
+    if (is_string($cached_value)) {
+        $cached_record = json_decode($cached_value, true);
+        if (is_array($cached_record) && array_key_exists('response', $cached_record)) {
+            append_local_log($request, 200, $cached_record['response']);
+            if ($original_stream) {
+                output_chat_completion_stream($cached_record['response']);
+            }
+            output_json(200, $cached_record['response']);
+        }
+    }
+
     /*
     if (isset($request['messages']) && is_array($request['messages'])) {
         $request['messages'] = array_values(array_filter($request['messages'], function ($message) {
@@ -334,7 +347,7 @@ function submit_request($redis) {
     $uuid = generate_uuid();
     $key = REQUEST_PREFIX . $uuid;
     $saved_at = time();
-    $record = ['uuid' => $uuid, 'request' => $request, 'status' => 'pending', 'response' => null, 'saved_at' => $saved_at];
+    $record = ['uuid' => $uuid, 'input' => $input, 'request' => $request, 'status' => 'pending', 'response' => null, 'saved_at' => $saved_at];
     $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $redis->command('SET', $key, $record_json, 'EX', REQUEST_TTL);
     $redis->command('LPUSH', PENDING_QUEUE, $uuid);
@@ -414,6 +427,11 @@ function handle_request($redis) {
     $record['response'] = $result['response'];
     $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $redis->command('SET', $key, $record_json, 'EX', REQUEST_TTL);
+    if (isset($record['input'])) {
+        $response_record = ['input' => $record['input'], 'response' => $result['response'], 'saved_at' => time()];
+        $response_json = json_encode($response_record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $redis->command('SET', RESPONSE_PREFIX . $record['input'], $response_json, 'EX', REQUEST_TTL);
+    }
     output_json(200, ['uuid' => $uuid, 'status' => 'handled']);
 }
 
