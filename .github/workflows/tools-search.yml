@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
-    paths: ['tools/search/*.bat', '.github/workflows/tools-search.yml']
+    paths: ['tools/search/*.bat', 'tools/cloudflare/*.bat', '.github/workflows/tools-search.yml']
 
 permissions:
   contents: write
