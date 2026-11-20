@@ -154,6 +154,7 @@ function output_chat_completion_stream($response) {
     $content = isset($message['content']) ? $message['content'] : '';
     $tool_calls = isset($message['tool_calls']) && is_array($message['tool_calls']) ? $message['tool_calls'] : [];
     $finish_reason = isset($choice['finish_reason']) ? $choice['finish_reason'] : 'stop';
+
     if (count($tool_calls) > 0 && $finish_reason !== 'tool_calls') {
         $finish_reason = 'tool_calls';
     }
@@ -181,13 +182,17 @@ function output_chat_completion_stream($response) {
             continue;
         }
         $function = isset($tool_call['function']) && is_array($tool_call['function']) ? $tool_call['function'] : [];
+        $function_arguments = isset($function['arguments']) ? $function['arguments'] : '';
+        if (!is_string($function_arguments)) {
+            $function_arguments = json_encode($function_arguments, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
         $tool_deltas[] = [
             'index' => $index,
             'id' => isset($tool_call['id']) ? $tool_call['id'] : '',
             'type' => isset($tool_call['type']) ? $tool_call['type'] : 'function',
             'function' => [
                 'name' => isset($function['name']) ? $function['name'] : '',
-                'arguments' => stringify_tool_arguments(isset($function['arguments']) ? $function['arguments'] : ''),
+                'arguments' => $function_arguments,
             ],
         ];
     }
@@ -218,13 +223,6 @@ function output_chat_completion_stream($response) {
 
     echo "data: [DONE]\n\n";
     exit;
-}
-
-function stringify_tool_arguments($arguments) {
-    if (is_string($arguments)) {
-        return $arguments;
-    }
-    return json_encode($arguments, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 }
 
 class RedisClient {
@@ -331,7 +329,7 @@ function generate_uuid() {
     return substr($hex, 0, 8) . '-' . substr($hex, 8, 4) . '-' . substr($hex, 12, 4) . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20);
 }
 
-function submit_request($redis) {
+function proxy_request($redis) {
     set_time_limit(60);
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
@@ -483,7 +481,7 @@ else if ($method === 'POST') {
         handle_request($redis);
     }
     else {
-        submit_request($redis);
+        proxy_request($redis);
     }
 }
 else {
