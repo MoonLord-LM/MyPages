@@ -159,7 +159,7 @@ function output_chat_completion_stream($response) {
         $finish_reason = 'tool_calls';
     }
     $chunk = [
-        'id' => is_array($response) && isset($response['id']) ? $response['id'] : 'chatcmpl-' . generate_uuid(),
+        'id' => is_array($response) && isset($response['id']) ? $response['id'] : 'chatcmpl-' . bin2hex(random_bytes(16)),
         'object' => 'chat.completion.chunk',
         'created' => is_array($response) && isset($response['created']) ? $response['created'] : time(),
         'model' => is_array($response) && isset($response['model']) ? $response['model'] : MODEL_ID,
@@ -247,14 +247,6 @@ function create_redis_client() {
     return $redis;
 }
 
-function generate_uuid() {
-    $bytes = random_bytes(16);
-    $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-    $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
-    $hex = bin2hex($bytes);
-    return substr($hex, 0, 8) . '-' . substr($hex, 8, 4) . '-' . substr($hex, 12, 4) . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20);
-}
-
 function proxy_request($redis) {
     set_time_limit(60);
     $input = file_get_contents('php://input');
@@ -280,16 +272,7 @@ function proxy_request($redis) {
         }
     }
 
-    /*
-    if (isset($request['messages']) && is_array($request['messages'])) {
-        $request['messages'] = array_values(array_filter($request['messages'], function ($message) {
-            return !is_array($message) || !isset($message['role']) || $message['role'] !== 'system';
-        }));
-    }
-    unset($request['tools']);
-    */
-
-    $uuid = generate_uuid();
+    $uuid = bin2hex(random_bytes(16));
     $key = REQUEST_PREFIX . $uuid;
     $saved_at = time();
     $record = ['uuid' => $uuid, 'input' => $input, 'request' => $request, 'status' => 'pending', 'response' => null, 'saved_at' => $saved_at];
