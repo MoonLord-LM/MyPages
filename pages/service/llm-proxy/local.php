@@ -225,100 +225,26 @@ function output_chat_completion_stream($response) {
     exit;
 }
 
-class RedisClient {
-    private $socket;
-
-    public function __construct($redis_config) {
-        $use_tls = isset($redis_config['tls']) && $redis_config['tls'] === true;
-        $target = ($use_tls ? 'ssl://' : 'tcp://') . $redis_config['host'] . ':' . (int)$redis_config['port'];
-        if ($use_tls && !extension_loaded('openssl')) {
-            output_error(500, 'openssl unavailable');
-        }
-        $stream_context = stream_context_create([
-            'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
-        ]);
-        $this->socket = @stream_socket_client($target, $error_code, $error_message, 5, STREAM_CLIENT_CONNECT, $stream_context);
-        if ($this->socket === false) {
-            output_error(500, 'redis unavailable');
-        }
-        stream_set_timeout($this->socket, 5);
-        $password = isset($redis_config['password']) ? $redis_config['password'] : '';
-        if ($password !== '' && $this->command('AUTH', $password) !== 'OK') {
-            output_error(500, 'redis auth failed');
-        }
-    }
-
-    public function command(...$arguments) {
-        $payload = '*' . count($arguments) . "\r\n";
-        foreach ($arguments as $argument) {
-            $argument = (string)$argument;
-            $payload .= '$' . strlen($argument) . "\r\n" . $argument . "\r\n";
-        }
-        $total = strlen($payload);
-        $written = 0;
-        while ($written < $total) {
-            $count = fwrite($this->socket, substr($payload, $written));
-            if ($count === false || $count === 0) {
-                return false;
-            }
-            $written += $count;
-        }
-        return $this->read_response();
-    }
-
-    private function read_exactly($length) {
-        $data = '';
-        while (strlen($data) < $length) {
-            $chunk = fread($this->socket, $length - strlen($data));
-            if ($chunk === false || $chunk === '') {
-                break;
-            }
-            $data .= $chunk;
-        }
-        return $data;
-    }
-
-    private function read_response() {
-        $line = fgets($this->socket);
-        if ($line === false) {
-            return false;
-        }
-        $prefix = $line[0];
-        $value = substr(rtrim($line, "\r\n"), 1);
-        if ($prefix === '+') {
-            return $value;
-        }
-        if ($prefix === '-') {
-            return false;
-        }
-        if ($prefix === ':') {
-            return (int)$value;
-        }
-        if ($prefix === '$') {
-            $length = (int)$value;
-            if ($length < 0) {
-                return null;
-            }
-            return substr($this->read_exactly($length + 2), 0, $length);
-        }
-        if ($prefix === '*') {
-            $count = (int)$value;
-            if ($count < 0) {
-                return null;
-            }
-            $items = [];
-            for ($index = 0; $index < $count; $index++) {
-                $items[] = $this->read_response();
-            }
-            return $items;
-        }
-        return false;
-    }
-}
-
 function create_redis_client() {
     $redis_config = read_redis_config();
-    return new RedisClient($redis_config);
+    $use_tls = isset($redis_config['tls']) && $redis_config['tls'] === true;
+    if ($use_tls && !extension_loaded('openssl')) {
+        output_error(500, 'openssl unavailable');
+    }
+    $options = [];
+    if ($use_tls) {
+        $options['stream'] = ['verify_peer' => false, 'verify_peer_name' => false];
+    }
+    $target = ($use_tls ? 'tls://' : '') . $redis_config['host'];
+    $redis = new Redis();
+    if (!@$redis->connect($target, (int)$redis_config['port'], 5, null, 0, 5, $options)) {
+        output_error(500, 'redis unavailable');
+    }
+    $password = isset($redis_config['password']) ? $redis_config['password'] : '';
+    if ($password !== '' && !$redis->auth($password)) {
+        output_error(500, 'redis auth failed');
+    }
+    return $redis;
 }
 
 function generate_uuid() {
@@ -342,7 +268,7 @@ function proxy_request($redis) {
         $request['stream'] = false;
     }
 
-    $cached_value = $redis->command('GET', RESPONSE_PREFIX . $input);
+    $cached_value = $redis->get(RESPONSE_PREFIX . $input);
     if (is_string($cached_value)) {
         $cached_record = json_decode($cached_value, true);
         if (is_array($cached_record) && array_key_exists('response', $cached_record)) {
@@ -368,19 +294,19 @@ function proxy_request($redis) {
     $saved_at = time();
     $record = ['uuid' => $uuid, 'input' => $input, 'request' => $request, 'status' => 'pending', 'response' => null, 'saved_at' => $saved_at];
     $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    $redis->command('SET', $key, $record_json, 'EX', REQUEST_TTL);
-    $redis->command('LPUSH', PENDING_QUEUE, $uuid);
+    $redis->set($key, $record_json, REQUEST_TTL);
+    $redis->lPush(PENDING_QUEUE, $uuid);
 
     $poll_count = (int)ceil(WAIT_SECONDS / POLL_SECONDS);
     for ($index = 0; $index < $poll_count; $index++) {
         sleep(POLL_SECONDS);
-        $value = $redis->command('GET', $key);
+        $value = $redis->get($key);
         if (!is_string($value)) {
             continue;
         }
         $current = json_decode($value, true);
         if (is_array($current) && isset($current['status']) && $current['status'] === 'handled') {
-            $redis->command('DEL', $key);
+            $redis->del($key);
             append_proxy_log($request, 200, $current['response']);
             if ($original_stream) {
                 output_chat_completion_stream($current['response']);
@@ -388,13 +314,13 @@ function proxy_request($redis) {
             output_json(200, $current['response']);
         }
     }
-    $redis->command('LREM', PENDING_QUEUE, 0, $uuid);
+    $redis->lRem(PENDING_QUEUE, $uuid, 0);
     append_proxy_log($request, 429, 'request timeout');
     output_error(429, 'request timeout');
 }
 
 function get_request($redis) {
-    $uuids = $redis->command('LRANGE', PENDING_QUEUE, 0, -1);
+    $uuids = $redis->lRange(PENDING_QUEUE, 0, -1);
     if (!is_array($uuids) || count($uuids) === 0) {
         output_error(404, 'no pending request');
     }
@@ -403,14 +329,14 @@ function get_request($redis) {
     $latest_saved_at = 0;
     $latest_request = null;
     foreach ($uuids as $uuid) {
-        $value = $redis->command('GET', REQUEST_PREFIX . $uuid);
+        $value = $redis->get(REQUEST_PREFIX . $uuid);
         $record = is_string($value) ? json_decode($value, true) : null;
         $is_valid = is_array($record)
             && isset($record['request'], $record['saved_at'])
             && !(isset($record['status']) && $record['status'] === 'handled')
             && ($now - $record['saved_at']) <= WAIT_SECONDS;
         if (!$is_valid) {
-            $redis->command('LREM', PENDING_QUEUE, 0, $uuid);
+            $redis->lRem(PENDING_QUEUE, $uuid, 0);
             continue;
         }
         if ($record['saved_at'] > $latest_saved_at) {
@@ -422,7 +348,7 @@ function get_request($redis) {
     if ($latest_uuid === null) {
         output_error(404, 'no pending request');
     }
-    $redis->command('LREM', PENDING_QUEUE, 0, $latest_uuid);
+    $redis->lRem(PENDING_QUEUE, $latest_uuid, 0);
     output_json(200, ['uuid' => $latest_uuid, 'request' => $latest_request]);
 }
 
@@ -434,7 +360,7 @@ function handle_request($redis) {
     }
     $uuid = $result['uuid'];
     $key = REQUEST_PREFIX . $uuid;
-    $value = $redis->command('GET', $key);
+    $value = $redis->get($key);
     if (!is_string($value)) {
         output_error(404, 'request not found');
     }
@@ -445,11 +371,11 @@ function handle_request($redis) {
     $record['status'] = 'handled';
     $record['response'] = $result['response'];
     $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    $redis->command('SET', $key, $record_json, 'EX', REQUEST_TTL);
+    $redis->set($key, $record_json, REQUEST_TTL);
     if (isset($record['input'])) {
         $response_record = ['input' => $record['input'], 'response' => $result['response'], 'saved_at' => time()];
         $response_json = json_encode($response_record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $redis->command('SET', RESPONSE_PREFIX . $record['input'], $response_json, 'EX', REQUEST_TTL);
+        $redis->set(RESPONSE_PREFIX . $record['input'], $response_json, REQUEST_TTL);
     }
     output_json(200, ['uuid' => $uuid, 'status' => 'handled']);
 }
