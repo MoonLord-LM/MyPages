@@ -17,9 +17,9 @@ const MODEL_NAME = 'WebAPI';
 const MODEL_VENDOR = 'WebAPI';
 const MODEL_DESC = 'WebAPI';
 
-const PENDING_QUEUE = 'llm:local:pending';
-const REQUEST_PREFIX = 'llm:local:request:';
-const RESPONSE_PREFIX = 'llm:local:response:';
+const PENDING_QUEUE = 'llm-proxy:local:pending';
+const REQUEST_PREFIX = 'llm-proxy:local:request:';
+const RESPONSE_PREFIX = 'llm-proxy:local:response:';
 const REQUEST_TTL = 120;
 const WAIT_SECONDS = 40;
 const POLL_SECONDS = 1;
