@@ -250,8 +250,8 @@ function proxy_request($redis) {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
     if (!is_array($request)) {
-        append_proxy_log($input, 400, 'invalid request');
-        output_error(400, 'invalid request');
+        append_proxy_log($input, 400, 'request invalid');
+        output_error(400, 'request invalid');
     }
 
     $original_stream = isset($request['stream']) && $request['stream'] === true;
