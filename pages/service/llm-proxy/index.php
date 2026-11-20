@@ -39,7 +39,9 @@ function read_model_config() {
     $models = [];
     foreach ($config['models'] as $model) {
         if (isset($model['id'], $model['url'], $model['apiKey'])) {
-            $models[] = $model;
+            if (is_string($model['id']) && is_string($model['url']) && is_string($model['apiKey'])) {
+                $models[] = $model;
+            }
         }
     }
     $config['models'] = $models;
@@ -160,6 +162,7 @@ function proxy_request($config) {
         CURLOPT_CONNECTTIMEOUT => 30,
         CURLOPT_TIMEOUT => 300,
         CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
     ]);
 
     if (isset($payload['stream']) && $payload['stream'] === true) {
@@ -171,9 +174,9 @@ function proxy_request($config) {
         curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, false);
         curl_setopt($curl_request, CURLOPT_WRITEFUNCTION, function ($curl_request, $chunk) use (&$stream_chunks, &$headers_sent) {
             if (!$headers_sent) {
-                $response_code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
-                if ($response_code >= 400) {
-                    http_response_code($response_code);
+                $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
+                if ($code >= 400) {
+                    http_response_code($code);
                     header('Content-Type: application/json; charset=utf-8');
                 }
                 else {
@@ -188,19 +191,21 @@ function proxy_request($config) {
             flush();
             return strlen($chunk);
         });
-        curl_exec($curl_request);
+        $result = curl_exec($curl_request);
+        if ($result === false && !$headers_sent) {
+            append_proxy_log($payload_json, 502, 'upstream unavailable');
+            output_error(502, 'upstream unavailable');
+        }
+
         $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
-        curl_close($curl_request);
         if (!$headers_sent) {
             if ($code >= 400) {
-                http_response_code($code);
-                header('Content-Type: application/json; charset=utf-8');
+                append_proxy_log($payload_json, $code, 'upstream error');
+                output_error($code, 'upstream error');
             }
-            else {
-                header('Content-Type: text/event-stream; charset=utf-8');
-                header('Cache-Control: no-cache');
-                header('X-Accel-Buffering: no');
-            }
+            header('Content-Type: text/event-stream; charset=utf-8');
+            header('Cache-Control: no-cache');
+            header('X-Accel-Buffering: no');
         }
         append_proxy_log($payload_json, $code, $stream_chunks);
         return;
@@ -210,7 +215,6 @@ function proxy_request($config) {
     $body = curl_exec($curl_request);
     $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
     $type = curl_getinfo($curl_request, CURLINFO_CONTENT_TYPE);
-    curl_close($curl_request);
 
     if ($body === false) {
         append_proxy_log($payload_json, 502, 'upstream unavailable');
