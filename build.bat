@@ -159,7 +159,7 @@ if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
 
 echo.
 pause
-exit /b
+exit /b 0
 
 
 

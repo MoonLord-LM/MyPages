@@ -48,7 +48,7 @@ echo.
 
 echo.
 pause
-exit /b
+exit /b 0
 
 
 

@@ -91,7 +91,7 @@ echo 生成 html 文件成功
 
 echo.
 pause
-exit /b
+exit /b 0
 
 
 
