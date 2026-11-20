@@ -71,7 +71,11 @@ function Get-LocalPath($FileField) {
 }
 
 Write-Host ('下载清单: ' + $listUrl);
-Invoke-WebRequest -Uri $listUrl -OutFile $listFile -UseBasicParsing -ErrorAction Stop;
+try {
+    Invoke-WebRequest -Uri $listUrl -OutFile $listFile -UseBasicParsing -ErrorAction Stop;
+} catch {
+    throw ('下载清单失败: ' + $_.Exception.Message);
+}
 
 $parsedEntries = Get-Content -LiteralPath $listFile -Encoding UTF8 -Raw | ConvertFrom-Json;
 $entries = @($parsedEntries | ForEach-Object { $_ });
@@ -91,7 +95,11 @@ foreach ($entry in $downloadEntries) {
     if (-not (Test-Path -LiteralPath $directory)) {
         [System.IO.Directory]::CreateDirectory($directory) | Out-Null;
     }
-    Invoke-WebRequest -Uri $entry.url[0] -OutFile $destination -UseBasicParsing -ErrorAction Stop;
+    try {
+        Invoke-WebRequest -Uri $entry.url[0] -OutFile $destination -UseBasicParsing -ErrorAction Stop;
+    } catch {
+        throw ('下载文件失败: ' + $_.Exception.Message);
+    }
 }
 
 Write-Host '';
