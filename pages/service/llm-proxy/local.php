@@ -248,7 +248,6 @@ function create_redis_client() {
 }
 
 function proxy_request($redis) {
-    set_time_limit(60);
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
     if (!is_array($request)) {
