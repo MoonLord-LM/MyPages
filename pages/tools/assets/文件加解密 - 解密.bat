@@ -94,29 +94,21 @@ set "input_file=!param1_path!"
         set "input_file="
         goto input_file
     )
+    set "output_file=!input_file:~0,-4!"
+    if exist "!output_file!" (
+        echo 错误：输出文件已存在："!output_file!"，请重新输入或先移走旧文件
+        echo.
+        set "input_file="
+        goto input_file
+    )
 
 
 
 echo 开始处理："!input_file!"
 echo.
 
-set "output_file=!input_file:~0,-4!"
 echo 输出文件："!output_file!"
 echo.
-
-if "!output_file!" == "" (
-    echo 错误：无法确定输出路径
-    echo.
-    pause
-    exit /b 1
-)
-if exist "!output_file!" (
-    echo 输出文件已存在："!output_file!"，跳过不处理 & REM
-    echo 如果需要重新解密，请先移走旧文件 & REM
-    echo.
-    pause
-    exit /b 1
-)
 
 REM 从自身文件末尾的 -----BEGIN CSHARP CODE----- / -----END CSHARP CODE----- 之间提取 C# 源码，并编译调用
 powershell -NoProfile -Command ^
@@ -144,12 +136,15 @@ powershell -NoProfile -Command ^
     "};" ^
     "$passwordBytes = [System.Text.Encoding]::UTF8.GetBytes($passwordText);" ^
     "Write-Host '正在解密，请稍候...';" ^
+    "$stopwatch = [System.Diagnostics.Stopwatch]::StartNew();" ^
     "$resultCode = [AesGcmCli]::DecryptFile($env:input_file, $env:output_file, $passwordBytes, [ref]$message);" ^
+    "$stopwatch.Stop();" ^
     "if ($resultCode -ne 0) {" ^
     "    Write-Host ('解密失败：' + $message) -ForegroundColor Red;" ^
     "    if (Test-Path $env:output_file) { Remove-Item $env:output_file -Force -ErrorAction SilentlyContinue };" ^
     "    exit 1;" ^
     "};" ^
+    "Write-Host ('解密耗时：' + $stopwatch.Elapsed.TotalSeconds.ToString('0.000') + ' 秒');" ^
     "Write-Host '解密完成' -ForegroundColor Green"
 if !errorlevel! neq 0 (
     echo 解密失败

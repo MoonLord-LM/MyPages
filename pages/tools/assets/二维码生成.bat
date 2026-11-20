@@ -52,7 +52,7 @@ set "qr_text=!param1!"
             if !errorlevel! neq 0 (
                 echo 无输入，退出脚本
                 echo.
-                exit /b 1
+                exit
             )
             echo.
         ) else (
@@ -213,5 +213,4 @@ try {
     Write-Host ('错误：生成二维码失败：' + $_.Exception.Message) -ForegroundColor Red;
     exit 1;
 }
-exit 0;
 -----END POWERSHELL CODE-----
