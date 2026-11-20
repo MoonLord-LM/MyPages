@@ -52,7 +52,7 @@ exit /b
 
 -----BEGIN POWERSHELL CODE-----
 [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
+$ProgressPreference='SilentlyContinue';
 
 $staticDir = $env:static_dir;
 $listUrl = $env:list_url;
@@ -84,14 +84,16 @@ $downloadEntries = @($entries);
 
 $downloaded = 0;
 foreach ($entry in $downloadEntries) {
+    $downloaded++;
+    Write-Host ('下载第 ' + $downloaded + ' 个文件')
     $destination = Get-LocalPath $entry.file;
     $directory = [System.IO.Path]::GetDirectoryName($destination);
     if (-not (Test-Path -LiteralPath $directory)) {
         [System.IO.Directory]::CreateDirectory($directory) | Out-Null;
     }
     Invoke-WebRequest -Uri $entry.url[0] -OutFile $destination -UseBasicParsing -ErrorAction Stop;
-    $downloaded++;
 }
 
-Write-Host ('已下载 ' + $downloaded + ' 个文件') -ForegroundColor Green;
+Write-Host '';
+Write-Host ('下载完成，共下载 ' + $downloaded + ' 个文件') -ForegroundColor Green;
 -----END POWERSHELL CODE-----

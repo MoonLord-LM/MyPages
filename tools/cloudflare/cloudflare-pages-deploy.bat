@@ -94,7 +94,12 @@ echo.
     echo.
     echo 上传完成，请选择按 Enter 键重新上传，或者关闭窗口结束运行
     echo.
-    pause
+    set /p "input_enter="
+    if !errorlevel! neq 0 (
+        echo 无输入，退出脚本
+        echo.
+        exit /b 1
+    )
 
 goto loop
 
