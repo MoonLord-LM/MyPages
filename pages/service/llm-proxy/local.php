@@ -43,17 +43,47 @@ function output_chat_completion_stream($response) {
     header('Cache-Control: no-cache');
     header('X-Accel-Buffering: no');
 
+    $is_raw_stream = is_array($response) && count($response) > 0;
+    if ($is_raw_stream) {
+        foreach ($response as $line) {
+            if (!is_string($line) || strpos($line, 'data: ') !== 0) {
+                $is_raw_stream = false;
+                break;
+            }
+        }
+    }
+    if ($is_raw_stream) {
+        $has_done = false;
+        foreach ($response as $line) {
+            echo $line;
+            if (strpos($line, 'data: [DONE]') !== false) {
+                $has_done = true;
+            }
+        }
+        if (!$has_done) {
+            echo "data: [DONE]\n\n";
+        }
+        exit;
+    }
+
     $choices = is_array($response) && isset($response['choices']) && is_array($response['choices']) ? $response['choices'] : [];
     $choice = count($choices) > 0 && is_array($choices[0]) ? $choices[0] : [];
     $message = isset($choice['message']) && is_array($choice['message']) ? $choice['message'] : [];
     $content = isset($message['content']) ? $message['content'] : '';
+    $tool_calls = isset($message['tool_calls']) && is_array($message['tool_calls']) ? $message['tool_calls'] : [];
     $finish_reason = isset($choice['finish_reason']) ? $choice['finish_reason'] : 'stop';
+    if (count($tool_calls) > 0 && $finish_reason !== 'tool_calls') {
+        $finish_reason = 'tool_calls';
+    }
     $chunk = [
         'id' => is_array($response) && isset($response['id']) ? $response['id'] : 'chatcmpl-' . generate_uuid(),
         'object' => 'chat.completion.chunk',
         'created' => is_array($response) && isset($response['created']) ? $response['created'] : time(),
         'model' => is_array($response) && isset($response['model']) ? $response['model'] : MODEL_ID,
     ];
+    if (is_array($response) && isset($response['system_fingerprint'])) {
+        $chunk['system_fingerprint'] = $response['system_fingerprint'];
+    }
 
     $content_chunk = $chunk;
     $content_chunk['choices'] = [[
@@ -63,6 +93,32 @@ function output_chat_completion_stream($response) {
     ]];
     echo 'data: ' . json_encode($content_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
 
+    $tool_deltas = [];
+    foreach ($tool_calls as $index => $tool_call) {
+        if (!is_array($tool_call)) {
+            continue;
+        }
+        $function = isset($tool_call['function']) && is_array($tool_call['function']) ? $tool_call['function'] : [];
+        $tool_deltas[] = [
+            'index' => $index,
+            'id' => isset($tool_call['id']) ? $tool_call['id'] : '',
+            'type' => isset($tool_call['type']) ? $tool_call['type'] : 'function',
+            'function' => [
+                'name' => isset($function['name']) ? $function['name'] : '',
+                'arguments' => isset($function['arguments']) ? $function['arguments'] : '',
+            ],
+        ];
+    }
+    if (count($tool_deltas) > 0) {
+        $tool_chunk = $chunk;
+        $tool_chunk['choices'] = [[
+            'index' => 0,
+            'delta' => ['tool_calls' => $tool_deltas],
+            'finish_reason' => null,
+        ]];
+        echo 'data: ' . json_encode($tool_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
+    }
+
     $finish_chunk = $chunk;
     $finish_chunk['choices'] = [[
         'index' => 0,
@@ -70,9 +126,15 @@ function output_chat_completion_stream($response) {
         'finish_reason' => $finish_reason,
     ]];
     echo 'data: ' . json_encode($finish_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
-    if ($finish_reason !== 'tool_calls') {
-        echo "data: [DONE]\n\n";
+
+    if (is_array($response) && isset($response['usage']) && is_array($response['usage'])) {
+        $usage_chunk = $chunk;
+        $usage_chunk['choices'] = [];
+        $usage_chunk['usage'] = $response['usage'];
+        echo 'data: ' . json_encode($usage_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
     }
+
+    echo "data: [DONE]\n\n";
     exit;
 }
 
