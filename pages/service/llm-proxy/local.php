@@ -306,38 +306,29 @@ function get_request($redis) {
         output_error(404, 'no pending request');
     }
     $now = time();
-    $latest_hash = null;
-    $latest_saved_at = 0;
-    $latest_request = null;
     foreach ($hashes as $hash) {
         $value = $redis->get(PROXY_REQUEST_PREFIX . $hash);
         $record = is_string($value) ? json_decode($value, true) : null;
         $is_valid = is_array($record)
-            && isset($record['request'], $record['saved_at'])
-            && !(isset($record['status']) && $record['status'] === 'handled')
+            && isset($record['hash'], $record['request'], $record['status'], $record['saved_at'])
+            && !($record['status'] === 'handled')
             && ($now - $record['saved_at']) <= WAIT_SECONDS;
         if (!$is_valid) {
+            $redis->lRem(PROXY_QUEUE, $hash, 0);
             continue;
         }
-        if ($record['saved_at'] > $latest_saved_at) {
-            $latest_saved_at = $record['saved_at'];
-            $latest_hash = $hash;
-            $latest_request = $record['request'];
-        }
+        output_json(200, ['hash' => $hash, 'request' => $record['request']]);
     }
-    if ($latest_hash === null) {
-        output_error(404, 'no pending request');
-    }
-    $redis->lRem(PROXY_QUEUE, $latest_hash, 0);
-    output_json(200, ['hash' => $latest_hash, 'request' => $latest_request]);
+    output_error(404, 'no pending request');
 }
 
 function handle_request($redis) {
     $input = file_get_contents('php://input');
     $result = json_decode($input, true);
-    if (!is_array($result) || !isset($result['hash']) || !array_key_exists('response', $result)) {
-        output_error(400, 'invalid request');
+    if (!is_array($result) || !isset($result['hash'], $result['response'])) {
+        output_error(400, 'request invalid');
     }
+
     $hash = $result['hash'];
     $key = PROXY_REQUEST_PREFIX . $hash;
     $value = $redis->get($key);
@@ -346,12 +337,17 @@ function handle_request($redis) {
     }
     $record = json_decode($value, true);
     if (!is_array($record)) {
-        output_error(500, 'invalid request');
+        output_error(500, 'request cache invalid');
     }
+    if (isset($record['status']) && $record['status'] === 'handled') {
+        output_error(429, 'request already handled');
+    }
+
     $record['status'] = 'handled';
     $record['response'] = $result['response'];
     $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $redis->set($key, $record_json, REQUEST_TTL);
+    $redis->lRem(PROXY_QUEUE, $hash, 0);
     output_json(200, ['hash' => $hash, 'status' => 'handled']);
 }
 
