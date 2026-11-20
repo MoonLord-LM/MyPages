@@ -39,6 +39,87 @@ function output_error($status_code, $message) {
     output_json($status_code, ['error' => ['message' => $message, 'type' => $message, 'code' => $message, 'param' => $message]]);
 }
 
+function read_redis_config() {
+    $content = @file_get_contents(LOCAL_CONFIG_FILE);
+    if ($content === false) {
+        output_error(500, 'redis config unavailable');
+    }
+    $config = json_decode($content, true);
+    if (!is_array($config) || !isset($config['Redis']) || !is_array($config['Redis'])) {
+        output_error(500, 'redis config invalid');
+    }
+    $redis_config = $config['Redis'];
+    if (!isset($redis_config['host'], $redis_config['port'])) {
+        output_error(500, 'redis config missing host or port');
+    }
+    if (!is_string($redis_config['host']) || !is_numeric($redis_config['port'])) {
+        output_error(500, 'redis config invalid');
+    }
+    if (isset($redis_config['tls']) && !is_bool($redis_config['tls'])) {
+        output_error(500, 'redis config invalid');
+    }
+    if (isset($redis_config['password']) && !is_string($redis_config['password'])) {
+        output_error(500, 'redis config invalid');
+    }
+    return $redis_config;
+}
+
+function list_models() {
+    output_json(200, [
+        'object' => 'list',
+        'data' => [['id' => MODEL_ID, 'object' => 'model', 'created' => 0, 'owned_by' => MODEL_NAME]],
+    ]);
+}
+
+function get_model_info($id) {
+    if ($id !== MODEL_ID) {
+        output_error(404, 'model not found');
+    }
+    output_json(200, [
+        'id' => MODEL_ID,
+        'object' => 'model',
+        'created' => 0,
+        'owned_by' => MODEL_NAME,
+        'name' => MODEL_NAME,
+        'vendor' => MODEL_VENDOR,
+        'desc' => MODEL_DESC,
+    ]);
+}
+
+function append_proxy_log($request, $status_code, $response) {
+    if (@filesize(PROXY_LOG) > PROXY_LOG_MAX_BYTES) {
+        @file_put_contents(PROXY_LOG, '', LOCK_EX);
+    }
+    $record = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'request' => $request,
+        'code' => $status_code,
+        'response' => $response,
+    ];
+    $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    @file_put_contents(PROXY_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
+}
+
+function show_proxy_log() {
+    $content = @file_get_contents(PROXY_LOG);
+    $records = [];
+    if ($content !== false) {
+        foreach (explode("\n", $content) as $line) {
+            $record = json_decode(trim($line), true);
+            if (is_array($record)) {
+                $records[] = $record;
+            }
+        }
+    }
+    output_json(200, $records);
+}
+
+function clear_proxy_log() {
+    @file_put_contents(PROXY_LOG, '', LOCK_EX);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'clear ok';
+}
+
 function output_chat_completion_stream($response) {
     header('Content-Type: text/event-stream; charset=utf-8');
     header('Cache-Control: no-cache');
@@ -146,31 +227,6 @@ function stringify_tool_arguments($arguments) {
     return json_encode($arguments, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 }
 
-function read_redis_config() {
-    $content = @file_get_contents(LOCAL_CONFIG_FILE);
-    if ($content === false) {
-        output_error(500, 'redis config unavailable');
-    }
-    $config = json_decode($content, true);
-    if (!is_array($config) || !isset($config['Redis']) || !is_array($config['Redis'])) {
-        output_error(500, 'redis config invalid');
-    }
-    $redis_config = $config['Redis'];
-    if (!isset($redis_config['host'], $redis_config['port'])) {
-        output_error(500, 'redis config missing host or port');
-    }
-    if (!is_string($redis_config['host']) || !is_numeric($redis_config['port'])) {
-        output_error(500, 'redis config invalid');
-    }
-    if (isset($redis_config['tls']) && !is_bool($redis_config['tls'])) {
-        output_error(500, 'redis config invalid');
-    }
-    if (isset($redis_config['password']) && !is_string($redis_config['password'])) {
-        output_error(500, 'redis config invalid');
-    }
-    return $redis_config;
-}
-
 class RedisClient {
     private $socket;
 
@@ -273,62 +329,6 @@ function generate_uuid() {
     $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
     $hex = bin2hex($bytes);
     return substr($hex, 0, 8) . '-' . substr($hex, 8, 4) . '-' . substr($hex, 12, 4) . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20);
-}
-
-function list_models() {
-    output_json(200, [
-        'object' => 'list',
-        'data' => [['id' => MODEL_ID, 'object' => 'model', 'created' => 0, 'owned_by' => MODEL_NAME]],
-    ]);
-}
-
-function get_model_info($id) {
-    if ($id !== MODEL_ID) {
-        output_error(404, 'model not found');
-    }
-    output_json(200, [
-        'id' => MODEL_ID,
-        'object' => 'model',
-        'created' => 0,
-        'owned_by' => MODEL_NAME,
-        'name' => MODEL_NAME,
-        'vendor' => MODEL_VENDOR,
-        'desc' => MODEL_DESC,
-    ]);
-}
-
-function append_proxy_log($request, $status_code, $response) {
-    if (@filesize(PROXY_LOG) > PROXY_LOG_MAX_BYTES) {
-        @file_put_contents(PROXY_LOG, '', LOCK_EX);
-    }
-    $record = [
-        'timestamp' => date('Y-m-d H:i:s'),
-        'request' => $request,
-        'code' => $status_code,
-        'response' => $response,
-    ];
-    $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    @file_put_contents(PROXY_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
-}
-
-function show_proxy_log() {
-    $content = @file_get_contents(PROXY_LOG);
-    $records = [];
-    if ($content !== false) {
-        foreach (explode("\n", $content) as $line) {
-            $record = json_decode(trim($line), true);
-            if (is_array($record)) {
-                $records[] = $record;
-            }
-        }
-    }
-    output_json(200, $records);
-}
-
-function clear_proxy_log() {
-    @file_put_contents(PROXY_LOG, '', LOCK_EX);
-    header('Content-Type: text/plain; charset=utf-8');
-    echo 'clear ok';
 }
 
 function submit_request($redis) {

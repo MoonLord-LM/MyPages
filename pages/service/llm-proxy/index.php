@@ -91,19 +91,19 @@ function get_model_info($config, $id) {
     ]);
 }
 
-function append_proxy_log($payload, $status_code, $body) {
+function append_proxy_log($request, $status_code, $response) {
     if (@filesize(PROXY_LOG) > PROXY_LOG_MAX_BYTES) {
         @file_put_contents(PROXY_LOG, '', LOCK_EX);
     }
-    $decoded_body = is_array($body) ? $body : json_decode($body, true);
-    if (!is_array($decoded_body)) {
-        $decoded_body = $body;
+    $decoded = is_array($response) ? $response : json_decode($response, true);
+    if (!is_array($decoded)) {
+        $decoded = $response;
     }
     $record = [
         'timestamp' => date('Y-m-d H:i:s'),
-        'request' => $payload,
+        'request' => $request,
         'code' => $status_code,
-        'response' => $decoded_body,
+        'response' => $decoded,
     ];
     $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     @file_put_contents(PROXY_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
