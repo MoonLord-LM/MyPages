@@ -254,6 +254,7 @@ function proxy_request($redis) {
         append_proxy_log($input, 400, 'invalid request');
         output_error(400, 'invalid request');
     }
+
     $original_stream = isset($request['stream']) && $request['stream'] === true;
     if ($original_stream) {
         $request['stream'] = false;
