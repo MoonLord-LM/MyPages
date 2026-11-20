@@ -94,11 +94,12 @@ echo.
     echo.
     echo 处理完成，请选择输入 Y 重新上传，或者关闭窗口结束运行
     echo.
+
     set /p "input_yes="
     if !errorlevel! neq 0 (
         echo 无输入，退出脚本
         echo.
-        exit /b 1
+        exit
     )
 
 goto loop
