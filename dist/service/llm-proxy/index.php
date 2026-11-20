@@ -16,15 +16,15 @@ date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
 ini_set('default_charset', 'UTF-8');
 
-function output_json($code, $data) {
-    http_response_code($code);
+function output_json($status_code, $data) {
+    http_response_code($status_code);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
     exit;
 }
 
-function output_error($code, $message) {
-    output_json($code, ['error' => ['message' => $message, 'type' => $message, 'code' => $message, 'param' => $message]]);
+function output_error($status_code, $message) {
+    output_json($status_code, ['error' => ['message' => $message, 'type' => $message, 'code' => $message, 'param' => $message]]);
 }
 
 function read_model_config() {
@@ -75,7 +75,7 @@ function find_model_by_id($config, $id) {
     return $pool[array_rand($pool)];
 }
 
-function model_info($config, $id) {
+function get_model_info($config, $id) {
     $model = find_model_by_id($config, $id);
     if ($model === null) {
         output_error(404, 'model not found');
@@ -91,16 +91,19 @@ function model_info($config, $id) {
     ]);
 }
 
-function append_proxy_log($payload_json, $code, $body) {
+function append_proxy_log($payload, $status_code, $body) {
     if (@filesize(MODELS_LOG) > MODELS_LOG_MAX_BYTES) {
         @file_put_contents(MODELS_LOG, '', LOCK_EX);
     }
     $decoded_body = is_array($body) ? $body : json_decode($body, true);
+    if (!is_array($decoded_body)) {
+        $decoded_body = $body;
+    }
     $record = [
         'timestamp' => date('Y-m-d H:i:s'),
-        'request' => json_decode($payload_json, true),
-        'code' => $code,
-        'response' => is_array($decoded_body) ? $decoded_body : $body,
+        'request' => $payload,
+        'code' => $status_code,
+        'response' => $decoded_body,
     ];
     $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     @file_put_contents(MODELS_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
@@ -143,13 +146,13 @@ function proxy_request($config) {
     $payload_json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
     if (!function_exists('curl_init')) {
-        append_proxy_log($payload_json, 500, 'curl unavailable');
+        append_proxy_log($payload, 500, 'curl unavailable');
         output_error(500, 'curl unavailable');
     }
 
     $curl_request = curl_init($model['url']);
     if ($curl_request === false) {
-        append_proxy_log($payload_json, 500, 'curl init error');
+        append_proxy_log($payload, 500, 'curl init error');
         output_error(500, 'curl init error');
     }
     curl_setopt_array($curl_request, [
@@ -174,9 +177,9 @@ function proxy_request($config) {
         curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, false);
         curl_setopt($curl_request, CURLOPT_WRITEFUNCTION, function ($curl_request, $chunk) use (&$stream_chunks, &$headers_sent) {
             if (!$headers_sent) {
-                $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
-                if ($code >= 400) {
-                    http_response_code($code);
+                $status_code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
+                if ($status_code >= 400) {
+                    http_response_code($status_code);
                     header('Content-Type: application/json; charset=utf-8');
                 }
                 else {
@@ -193,45 +196,45 @@ function proxy_request($config) {
         });
         $result = curl_exec($curl_request);
         if ($result === false && !$headers_sent) {
-            append_proxy_log($payload_json, 502, 'upstream unavailable');
+            append_proxy_log($payload, 502, 'upstream unavailable');
             output_error(502, 'upstream unavailable');
         }
 
-        $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
+        $status_code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
         if (!$headers_sent) {
-            if ($code >= 400) {
-                append_proxy_log($payload_json, $code, 'upstream error');
-                output_error($code, 'upstream error');
+            if ($status_code >= 400) {
+                append_proxy_log($payload, $status_code, 'upstream error');
+                output_error($status_code, 'upstream error');
             }
             header('Content-Type: text/event-stream; charset=utf-8');
             header('Cache-Control: no-cache');
             header('X-Accel-Buffering: no');
         }
-        append_proxy_log($payload_json, $code, $stream_chunks);
+        append_proxy_log($payload, $status_code, $stream_chunks);
         return;
     }
 
     curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, true);
     $body = curl_exec($curl_request);
-    $code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
-    $type = curl_getinfo($curl_request, CURLINFO_CONTENT_TYPE);
+    $status_code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
+    $content_type = curl_getinfo($curl_request, CURLINFO_CONTENT_TYPE);
 
     if ($body === false) {
-        append_proxy_log($payload_json, 502, 'upstream unavailable');
+        append_proxy_log($payload, 502, 'upstream unavailable');
         output_error(502, 'upstream unavailable');
     }
     $decoded = json_decode($body, true);
     if (!is_array($decoded)) {
-        append_proxy_log($payload_json, 502, $body);
+        append_proxy_log($payload, 502, $body);
         output_error(502, 'upstream json unavailable');
     }
-    else if (isset($decoded['error']) && $code < 400) {
-        append_proxy_log($payload_json, 502, $body);
+    else if (isset($decoded['error']) && $status_code < 400) {
+        append_proxy_log($payload, 502, $body);
         output_error(502, 'upstream json contains error');
     }
-    append_proxy_log($payload_json, $code, $body);
-    http_response_code($code);
-    header('Content-Type: ' . ($type ?: 'application/json; charset=utf-8'));
+    append_proxy_log($payload, $status_code, $body);
+    http_response_code($status_code);
+    header('Content-Type: ' . ($content_type ?: 'application/json; charset=utf-8'));
     echo $body;
 }
 
@@ -247,7 +250,7 @@ if ($method === 'GET') {
         clear_proxy_log();
     }
     else if (strpos($path, '/v1/models/') === 0) {
-        model_info($config, urldecode(substr($path, strlen('/v1/models/'))));
+        get_model_info($config, urldecode(substr($path, strlen('/v1/models/'))));
     }
     else {
         list_models($config);
@@ -257,5 +260,6 @@ else if ($method === 'POST') {
     proxy_request($config);
 }
 else {
+    header('Allow: GET, POST, OPTIONS');
     output_error(405, 'method not allowed');
 }
