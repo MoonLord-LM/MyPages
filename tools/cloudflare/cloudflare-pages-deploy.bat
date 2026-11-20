@@ -99,7 +99,7 @@ echo.
     if !errorlevel! neq 0 (
         echo 无输入，退出脚本
         echo.
-        exit
+        exit /b
     )
 
 goto loop
