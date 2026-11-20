@@ -9,8 +9,8 @@
 # { "Redis": { "host", "port", "tls", "password" } }
 
 const LOCAL_CONFIG_FILE = '/var/www/config/local.json';
-const LOCAL_LOG = '/var/www/config/local.log';
-const LOCAL_LOG_MAX_BYTES = 5 * 1024 * 1024;
+const PROXY_LOG = '/var/www/config/local.log';
+const PROXY_LOG_MAX_BYTES = 5 * 1024 * 1024;
 
 const MODEL_ID = 'WebModel';
 const MODEL_NAME = 'WebAPI';
@@ -28,15 +28,15 @@ date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
 ini_set('default_charset', 'UTF-8');
 
-function output_json($code, $data) {
-    http_response_code($code);
+function output_json($status_code, $data) {
+    http_response_code($status_code);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
     exit;
 }
 
-function output_error($code, $message) {
-    output_json($code, ['error' => ['message' => $message, 'type' => $message, 'code' => $message, 'param' => $message]]);
+function output_error($status_code, $message) {
+    output_json($status_code, ['error' => ['message' => $message, 'type' => $message, 'code' => $message, 'param' => $message]]);
 }
 
 function output_chat_completion_stream($response) {
@@ -159,6 +159,15 @@ function read_redis_config() {
     if (!isset($redis_config['host'], $redis_config['port'])) {
         output_error(500, 'redis config missing host or port');
     }
+    if (!is_string($redis_config['host']) || !is_numeric($redis_config['port'])) {
+        output_error(500, 'redis config invalid');
+    }
+    if (isset($redis_config['tls']) && !is_bool($redis_config['tls'])) {
+        output_error(500, 'redis config invalid');
+    }
+    if (isset($redis_config['password']) && !is_string($redis_config['password'])) {
+        output_error(500, 'redis config invalid');
+    }
     return $redis_config;
 }
 
@@ -253,6 +262,11 @@ class RedisClient {
     }
 }
 
+function create_redis_client() {
+    $redis_config = read_redis_config();
+    return new RedisClient($redis_config);
+}
+
 function generate_uuid() {
     $bytes = random_bytes(16);
     $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
@@ -268,7 +282,7 @@ function list_models() {
     ]);
 }
 
-function model_info($id) {
+function get_model_info($id) {
     if ($id !== MODEL_ID) {
         output_error(404, 'model not found');
     }
@@ -283,22 +297,22 @@ function model_info($id) {
     ]);
 }
 
-function append_local_log($request, $code, $response) {
-    if (@filesize(LOCAL_LOG) > LOCAL_LOG_MAX_BYTES) {
-        @file_put_contents(LOCAL_LOG, '', LOCK_EX);
+function append_proxy_log($request, $status_code, $response) {
+    if (@filesize(PROXY_LOG) > PROXY_LOG_MAX_BYTES) {
+        @file_put_contents(PROXY_LOG, '', LOCK_EX);
     }
     $record = [
         'timestamp' => date('Y-m-d H:i:s'),
         'request' => $request,
-        'code' => $code,
+        'code' => $status_code,
         'response' => $response,
     ];
     $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    @file_put_contents(LOCAL_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
+    @file_put_contents(PROXY_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
 }
 
-function show_local_log() {
-    $content = @file_get_contents(LOCAL_LOG);
+function show_proxy_log() {
+    $content = @file_get_contents(PROXY_LOG);
     $records = [];
     if ($content !== false) {
         foreach (explode("\n", $content) as $line) {
@@ -311,8 +325,8 @@ function show_local_log() {
     output_json(200, $records);
 }
 
-function clear_local_log() {
-    @file_put_contents(LOCAL_LOG, '', LOCK_EX);
+function clear_proxy_log() {
+    @file_put_contents(PROXY_LOG, '', LOCK_EX);
     header('Content-Type: text/plain; charset=utf-8');
     echo 'clear ok';
 }
@@ -322,7 +336,7 @@ function submit_request($redis) {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
     if (!is_array($request)) {
-        append_local_log($input, 400, 'invalid request');
+        append_proxy_log($input, 400, 'invalid request');
         output_error(400, 'invalid request');
     }
     $original_stream = isset($request['stream']) && $request['stream'] === true;
@@ -334,7 +348,7 @@ function submit_request($redis) {
     if (is_string($cached_value)) {
         $cached_record = json_decode($cached_value, true);
         if (is_array($cached_record) && array_key_exists('response', $cached_record)) {
-            append_local_log($request, 200, $cached_record['response']);
+            append_proxy_log($request, 200, $cached_record['response']);
             if ($original_stream) {
                 output_chat_completion_stream($cached_record['response']);
             }
@@ -369,7 +383,7 @@ function submit_request($redis) {
         $current = json_decode($value, true);
         if (is_array($current) && isset($current['status']) && $current['status'] === 'handled') {
             $redis->command('DEL', $key);
-            append_local_log($request, 200, $current['response']);
+            append_proxy_log($request, 200, $current['response']);
             if ($original_stream) {
                 output_chat_completion_stream($current['response']);
             }
@@ -377,7 +391,7 @@ function submit_request($redis) {
         }
     }
     $redis->command('LREM', PENDING_QUEUE, 0, $uuid);
-    append_local_log($request, 429, 'request timeout');
+    append_proxy_log($request, 429, 'request timeout');
     output_error(429, 'request timeout');
 }
 
@@ -442,22 +456,21 @@ function handle_request($redis) {
     output_json(200, ['uuid' => $uuid, 'status' => 'handled']);
 }
 
-$redis_config = read_redis_config();
-$redis = new RedisClient($redis_config);
 $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
 $path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '';
 
 if ($method === 'GET') {
     if ($path === '/v1/log/view') {
-        show_local_log();
+        show_proxy_log();
     }
     else if ($path === '/v1/log/clear') {
-        clear_local_log();
+        clear_proxy_log();
     }
     else if (strpos($path, '/v1/models/') === 0) {
-        model_info(urldecode(substr($path, strlen('/v1/models/'))));
+        get_model_info(urldecode(substr($path, strlen('/v1/models/'))));
     }
     else if ($path === '/v1/request/get') {
+        $redis = create_redis_client();
         get_request($redis);
     }
     else {
@@ -465,6 +478,7 @@ if ($method === 'GET') {
     }
 }
 else if ($method === 'POST') {
+    $redis = create_redis_client();
     if ($path === '/v1/request/handle') {
         handle_request($redis);
     }
@@ -473,5 +487,6 @@ else if ($method === 'POST') {
     }
 }
 else {
+    header('Allow: GET, POST');
     output_error(405, 'method not allowed');
 }
