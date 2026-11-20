@@ -238,7 +238,6 @@ function proxy_request($config) {
     echo $body;
 }
 
-$config = read_model_config();
 $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
 $path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '';
 
@@ -250,16 +249,19 @@ if ($method === 'GET') {
         clear_proxy_log();
     }
     else if (strpos($path, '/v1/models/') === 0) {
+        $config = read_model_config();
         get_model_info($config, urldecode(substr($path, strlen('/v1/models/'))));
     }
     else {
+        $config = read_model_config();
         list_models($config);
     }
 }
 else if ($method === 'POST') {
+    $config = read_model_config();
     proxy_request($config);
 }
 else {
-    header('Allow: GET, POST, OPTIONS');
+    header('Allow: GET, POST');
     output_error(405, 'method not allowed');
 }
