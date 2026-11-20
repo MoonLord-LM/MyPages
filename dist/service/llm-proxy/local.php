@@ -6,17 +6,22 @@
 # 需要配置文件：
 # /var/www/config/local.json
 # 配置文件格式：
-# { "Redis": { "host", "port", "password" } }
+# { "Redis": { "host", "port", "tls", "password" } }
 
 const LOCAL_CONFIG_FILE = '/var/www/config/local.json';
 const LOCAL_LOG = '/var/www/config/local.log';
 const LOCAL_LOG_MAX_BYTES = 5 * 1024 * 1024;
 
+const MODEL_ID = 'WebModel';
+const MODEL_NAME = 'WebAPI';
+const MODEL_VENDOR = 'WebAPI';
+const MODEL_DESC = 'WebAPI';
+
 const PENDING_QUEUE = 'llm:local:pending';
 const REQUEST_PREFIX = 'llm:local:request:';
-const REQUEST_TTL = 60;
-const WAIT_SECONDS = 15;
-const POLL_SECONDS = 3;
+const REQUEST_TTL = 120;
+const WAIT_SECONDS = 40;
+const POLL_SECONDS = 1;
 
 date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
@@ -25,12 +30,50 @@ ini_set('default_charset', 'UTF-8');
 function output_json($code, $data) {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
+    echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
     exit;
 }
 
 function output_error($code, $message) {
     output_json($code, ['error' => ['message' => $message, 'type' => $message, 'code' => $message, 'param' => $message]]);
+}
+
+function output_chat_completion_stream($response) {
+    header('Content-Type: text/event-stream; charset=utf-8');
+    header('Cache-Control: no-cache');
+    header('X-Accel-Buffering: no');
+
+    $choices = is_array($response) && isset($response['choices']) && is_array($response['choices']) ? $response['choices'] : [];
+    $choice = count($choices) > 0 && is_array($choices[0]) ? $choices[0] : [];
+    $message = isset($choice['message']) && is_array($choice['message']) ? $choice['message'] : [];
+    $content = isset($message['content']) ? $message['content'] : '';
+    $finish_reason = isset($choice['finish_reason']) ? $choice['finish_reason'] : 'stop';
+    $chunk = [
+        'id' => is_array($response) && isset($response['id']) ? $response['id'] : 'chatcmpl-' . generate_uuid(),
+        'object' => 'chat.completion.chunk',
+        'created' => is_array($response) && isset($response['created']) ? $response['created'] : time(),
+        'model' => is_array($response) && isset($response['model']) ? $response['model'] : MODEL_ID,
+    ];
+
+    $content_chunk = $chunk;
+    $content_chunk['choices'] = [[
+        'index' => 0,
+        'delta' => ['role' => 'assistant', 'content' => $content],
+        'finish_reason' => null,
+    ]];
+    echo 'data: ' . json_encode($content_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
+
+    $finish_chunk = $chunk;
+    $finish_chunk['choices'] = [[
+        'index' => 0,
+        'delta' => new stdClass(),
+        'finish_reason' => $finish_reason,
+    ]];
+    echo 'data: ' . json_encode($finish_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
+    if ($finish_reason !== 'tool_calls') {
+        echo "data: [DONE]\n\n";
+    }
+    exit;
 }
 
 function read_redis_config() {
@@ -53,7 +96,15 @@ class RedisClient {
     private $socket;
 
     public function __construct($redis_config) {
-        $this->socket = @fsockopen($redis_config['host'], (int)$redis_config['port'], $error_code, $error_message, 5);
+        $use_tls = isset($redis_config['tls']) && $redis_config['tls'] === true;
+        $target = ($use_tls ? 'ssl://' : 'tcp://') . $redis_config['host'] . ':' . (int)$redis_config['port'];
+        if ($use_tls && !extension_loaded('openssl')) {
+            output_error(500, 'openssl unavailable');
+        }
+        $stream_context = stream_context_create([
+            'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
+        ]);
+        $this->socket = @stream_socket_client($target, $error_code, $error_message, 5, STREAM_CLIENT_CONNECT, $stream_context);
         if ($this->socket === false) {
             output_error(500, 'redis unavailable');
         }
@@ -115,9 +166,7 @@ class RedisClient {
             if ($length < 0) {
                 return null;
             }
-            $data = $this->read_exactly($length);
-            $this->read_exactly(2);
-            return $data;
+            return substr($this->read_exactly($length + 2), 0, $length);
         }
         if ($prefix === '*') {
             $count = (int)$value;
@@ -134,10 +183,6 @@ class RedisClient {
     }
 }
 
-function request_key($uuid) {
-    return REQUEST_PREFIX . $uuid;
-}
-
 function generate_uuid() {
     $bytes = random_bytes(16);
     $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
@@ -146,8 +191,26 @@ function generate_uuid() {
     return substr($hex, 0, 8) . '-' . substr($hex, 8, 4) . '-' . substr($hex, 12, 4) . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20);
 }
 
-function encode_record($record) {
-    return json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+function list_models() {
+    output_json(200, [
+        'object' => 'list',
+        'data' => [['id' => MODEL_ID, 'object' => 'model', 'created' => 0, 'owned_by' => MODEL_NAME]],
+    ]);
+}
+
+function model_info($id) {
+    if ($id !== MODEL_ID) {
+        output_error(404, 'model not found');
+    }
+    output_json(200, [
+        'id' => MODEL_ID,
+        'object' => 'model',
+        'created' => 0,
+        'owned_by' => MODEL_NAME,
+        'name' => MODEL_NAME,
+        'vendor' => MODEL_VENDOR,
+        'desc' => MODEL_DESC,
+    ]);
 }
 
 function append_local_log($request, $code, $response) {
@@ -164,6 +227,26 @@ function append_local_log($request, $code, $response) {
     @file_put_contents(LOCAL_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
 }
 
+function show_local_log() {
+    $content = @file_get_contents(LOCAL_LOG);
+    $records = [];
+    if ($content !== false) {
+        foreach (explode("\n", $content) as $line) {
+            $record = json_decode(trim($line), true);
+            if (is_array($record)) {
+                $records[] = $record;
+            }
+        }
+    }
+    output_json(200, $records);
+}
+
+function clear_local_log() {
+    @file_put_contents(LOCAL_LOG, '', LOCK_EX);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'clear ok';
+}
+
 function submit_request($redis) {
     set_time_limit(60);
     $input = file_get_contents('php://input');
@@ -172,51 +255,81 @@ function submit_request($redis) {
         append_local_log($input, 400, 'invalid request');
         output_error(400, 'invalid request');
     }
-    if (isset($request['stream']) && $request['stream'] === true) {
-        append_local_log($request, 400, 'stream not supported');
-        output_error(400, 'stream not supported');
+    $original_stream = isset($request['stream']) && $request['stream'] === true;
+    if ($original_stream) {
+        $request['stream'] = false;
     }
 
+    /*
+    if (isset($request['messages']) && is_array($request['messages'])) {
+        $request['messages'] = array_values(array_filter($request['messages'], function ($message) {
+            return !is_array($message) || !isset($message['role']) || $message['role'] !== 'system';
+        }));
+    }
+    unset($request['tools']);
+    */
+
     $uuid = generate_uuid();
-    $record = ['uuid' => $uuid, 'request' => $request, 'status' => 'pending', 'response' => null];
-    $redis->command('SET', request_key($uuid), encode_record($record), 'EX', REQUEST_TTL);
-    $redis->command('RPUSH', PENDING_QUEUE, $uuid);
+    $key = REQUEST_PREFIX . $uuid;
+    $saved_at = time();
+    $record = ['uuid' => $uuid, 'request' => $request, 'status' => 'pending', 'response' => null, 'saved_at' => $saved_at];
+    $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $redis->command('SET', $key, $record_json, 'EX', REQUEST_TTL);
+    $redis->command('LPUSH', PENDING_QUEUE, $uuid);
 
     $poll_count = (int)ceil(WAIT_SECONDS / POLL_SECONDS);
     for ($index = 0; $index < $poll_count; $index++) {
         sleep(POLL_SECONDS);
-        $value = $redis->command('GET', request_key($uuid));
+        $value = $redis->command('GET', $key);
         if (!is_string($value)) {
             continue;
         }
         $current = json_decode($value, true);
         if (is_array($current) && isset($current['status']) && $current['status'] === 'handled') {
-            $redis->command('DEL', request_key($uuid));
+            $redis->command('DEL', $key);
             append_local_log($request, 200, $current['response']);
+            if ($original_stream) {
+                output_chat_completion_stream($current['response']);
+            }
             output_json(200, $current['response']);
         }
     }
-    $redis->command('DEL', request_key($uuid));
     $redis->command('LREM', PENDING_QUEUE, 0, $uuid);
     append_local_log($request, 429, 'request timeout');
     output_error(429, 'request timeout');
 }
 
 function get_request($redis) {
-    $uuid = $redis->command('LPOP', PENDING_QUEUE);
-    if (!is_string($uuid) || $uuid === '') {
+    $uuids = $redis->command('LRANGE', PENDING_QUEUE, 0, -1);
+    if (!is_array($uuids) || count($uuids) === 0) {
         output_error(404, 'no pending request');
     }
-    $value = $redis->command('GET', request_key($uuid));
-    if (!is_string($value)) {
-        $redis->command('LREM', PENDING_QUEUE, 0, $uuid);
-        output_error(404, 'request not found');
+    $now = time();
+    $latest_uuid = null;
+    $latest_saved_at = 0;
+    $latest_request = null;
+    foreach ($uuids as $uuid) {
+        $value = $redis->command('GET', REQUEST_PREFIX . $uuid);
+        $record = is_string($value) ? json_decode($value, true) : null;
+        $is_valid = is_array($record)
+            && isset($record['request'], $record['saved_at'])
+            && !(isset($record['status']) && $record['status'] === 'handled')
+            && ($now - $record['saved_at']) <= WAIT_SECONDS;
+        if (!$is_valid) {
+            $redis->command('LREM', PENDING_QUEUE, 0, $uuid);
+            continue;
+        }
+        if ($record['saved_at'] > $latest_saved_at) {
+            $latest_saved_at = $record['saved_at'];
+            $latest_uuid = $uuid;
+            $latest_request = $record['request'];
+        }
     }
-    $record = json_decode($value, true);
-    if (!is_array($record)) {
-        output_error(500, 'invalid request');
+    if ($latest_uuid === null) {
+        output_error(404, 'no pending request');
     }
-    output_json(200, ['uuid' => $uuid, 'request' => $record['request']]);
+    $redis->command('LREM', PENDING_QUEUE, 0, $latest_uuid);
+    output_json(200, ['uuid' => $latest_uuid, 'request' => $latest_request]);
 }
 
 function handle_request($redis) {
@@ -226,7 +339,7 @@ function handle_request($redis) {
         output_error(400, 'invalid request');
     }
     $uuid = $result['uuid'];
-    $key = request_key($uuid);
+    $key = REQUEST_PREFIX . $uuid;
     $value = $redis->command('GET', $key);
     if (!is_string($value)) {
         output_error(404, 'request not found');
@@ -237,7 +350,8 @@ function handle_request($redis) {
     }
     $record['status'] = 'handled';
     $record['response'] = $result['response'];
-    $redis->command('SET', $key, encode_record($record), 'EX', REQUEST_TTL);
+    $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $redis->command('SET', $key, $record_json, 'EX', REQUEST_TTL);
     output_json(200, ['uuid' => $uuid, 'status' => 'handled']);
 }
 
@@ -247,11 +361,20 @@ $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
 $path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '';
 
 if ($method === 'GET') {
-    if ($path === '/v1/request/get') {
+    if ($path === '/v1/log/view') {
+        show_local_log();
+    }
+    else if ($path === '/v1/log/clear') {
+        clear_local_log();
+    }
+    else if (strpos($path, '/v1/models/') === 0) {
+        model_info(urldecode(substr($path, strlen('/v1/models/'))));
+    }
+    else if ($path === '/v1/request/get') {
         get_request($redis);
     }
     else {
-        output_error(404, 'not found');
+        list_models();
     }
 }
 else if ($method === 'POST') {
