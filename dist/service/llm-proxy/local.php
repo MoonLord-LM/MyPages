@@ -106,7 +106,7 @@ function output_chat_completion_stream($response) {
             'type' => isset($tool_call['type']) ? $tool_call['type'] : 'function',
             'function' => [
                 'name' => isset($function['name']) ? $function['name'] : '',
-                'arguments' => isset($function['arguments']) ? $function['arguments'] : '',
+                'arguments' => stringify_tool_arguments(isset($function['arguments']) ? $function['arguments'] : ''),
             ],
         ];
     }
@@ -137,6 +137,13 @@ function output_chat_completion_stream($response) {
 
     echo "data: [DONE]\n\n";
     exit;
+}
+
+function stringify_tool_arguments($arguments) {
+    if (is_string($arguments)) {
+        return $arguments;
+    }
+    return json_encode($arguments, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 }
 
 function read_redis_config() {
