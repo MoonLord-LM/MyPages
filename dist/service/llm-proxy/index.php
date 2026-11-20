@@ -133,31 +133,32 @@ function proxy_request($config) {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
     if (!is_array($request)) {
+        append_proxy_log($input, 400, 'invalid request');
         output_error(400, 'invalid request');
     }
 
     $model = find_model_by_id($config, isset($request['model']) ? $request['model'] : '');
     if ($model === null) {
+        append_proxy_log($request, 400, 'invalid request');
         output_error(404, 'model not found');
     }
 
-    $payload = $request;
-    $payload['model'] = $model['id'];
-    $payload_json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $request['model'] = $model['id'];
+    $request_json = json_encode($request, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
     if (!function_exists('curl_init')) {
-        append_proxy_log($payload, 500, 'curl unavailable');
+        append_proxy_log($request, 500, 'curl unavailable');
         output_error(500, 'curl unavailable');
     }
 
     $curl_request = curl_init($model['url']);
     if ($curl_request === false) {
-        append_proxy_log($payload, 500, 'curl init error');
+        append_proxy_log($request, 500, 'curl init error');
         output_error(500, 'curl init error');
     }
     curl_setopt_array($curl_request, [
         CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload_json,
+        CURLOPT_POSTFIELDS => $request_json,
         CURLOPT_HTTPHEADER => [
             'Content-Type: application/json',
             'Authorization: Bearer ' . $model['apiKey'],
@@ -168,7 +169,7 @@ function proxy_request($config) {
         CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
     ]);
 
-    if (isset($payload['stream']) && $payload['stream'] === true) {
+    if (isset($request['stream']) && $request['stream'] === true) {
         while (ob_get_level() > 0) {
             ob_end_flush();
         }
@@ -196,21 +197,21 @@ function proxy_request($config) {
         });
         $result = curl_exec($curl_request);
         if ($result === false && !$headers_sent) {
-            append_proxy_log($payload, 502, 'upstream unavailable');
+            append_proxy_log($request, 502, 'upstream unavailable');
             output_error(502, 'upstream unavailable');
         }
 
         $status_code = curl_getinfo($curl_request, CURLINFO_HTTP_CODE);
         if (!$headers_sent) {
             if ($status_code >= 400) {
-                append_proxy_log($payload, $status_code, 'upstream error');
+                append_proxy_log($request, $status_code, 'upstream error');
                 output_error($status_code, 'upstream error');
             }
             header('Content-Type: text/event-stream; charset=utf-8');
             header('Cache-Control: no-cache');
             header('X-Accel-Buffering: no');
         }
-        append_proxy_log($payload, $status_code, $stream_chunks);
+        append_proxy_log($request, $status_code, $stream_chunks);
         return;
     }
 
@@ -220,19 +221,19 @@ function proxy_request($config) {
     $content_type = curl_getinfo($curl_request, CURLINFO_CONTENT_TYPE);
 
     if ($body === false) {
-        append_proxy_log($payload, 502, 'upstream unavailable');
+        append_proxy_log($request, 502, 'upstream unavailable');
         output_error(502, 'upstream unavailable');
     }
     $decoded = json_decode($body, true);
     if (!is_array($decoded)) {
-        append_proxy_log($payload, 502, $body);
+        append_proxy_log($request, 502, $body);
         output_error(502, 'upstream json unavailable');
     }
     else if (isset($decoded['error']) && $status_code < 400) {
-        append_proxy_log($payload, 502, $body);
+        append_proxy_log($request, 502, $body);
         output_error(502, 'upstream json contains error');
     }
-    append_proxy_log($payload, $status_code, $body);
+    append_proxy_log($request, $status_code, $body);
     http_response_code($status_code);
     header('Content-Type: ' . ($content_type ?: 'application/json; charset=utf-8'));
     echo $body;
