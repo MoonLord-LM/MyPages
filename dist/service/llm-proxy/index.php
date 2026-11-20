@@ -9,8 +9,8 @@
 # { "models": [ { "id", "name", "vendor", "url", "apiKey", "desc" } ] }
 
 const MODELS_FILE = '/var/www/config/models.json';
-const MODELS_LOG = '/var/www/config/models.log';
-const MODELS_LOG_MAX_BYTES = 5 * 1024 * 1024;
+const PROXY_LOG = '/var/www/config/models.log';
+const PROXY_LOG_MAX_BYTES = 5 * 1024 * 1024;
 
 date_default_timezone_set('Asia/Shanghai');
 mb_internal_encoding('UTF-8');
@@ -34,7 +34,7 @@ function read_model_config() {
     }
     $config = json_decode($content, true);
     if (!is_array($config) || !isset($config['models']) || !is_array($config['models'])) {
-        output_error(500, 'invalid config');
+        output_error(500, 'config invalid');
     }
     $models = [];
     foreach ($config['models'] as $model) {
@@ -92,8 +92,8 @@ function get_model_info($config, $id) {
 }
 
 function append_proxy_log($payload, $status_code, $body) {
-    if (@filesize(MODELS_LOG) > MODELS_LOG_MAX_BYTES) {
-        @file_put_contents(MODELS_LOG, '', LOCK_EX);
+    if (@filesize(PROXY_LOG) > PROXY_LOG_MAX_BYTES) {
+        @file_put_contents(PROXY_LOG, '', LOCK_EX);
     }
     $decoded_body = is_array($body) ? $body : json_decode($body, true);
     if (!is_array($decoded_body)) {
@@ -106,11 +106,11 @@ function append_proxy_log($payload, $status_code, $body) {
         'response' => $decoded_body,
     ];
     $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    @file_put_contents(MODELS_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
+    @file_put_contents(PROXY_LOG, $line . "\n", FILE_APPEND | LOCK_EX);
 }
 
 function show_proxy_log() {
-    $content = @file_get_contents(MODELS_LOG);
+    $content = @file_get_contents(PROXY_LOG);
     $records = [];
     if ($content !== false) {
         foreach (explode("\n", $content) as $line) {
@@ -124,7 +124,7 @@ function show_proxy_log() {
 }
 
 function clear_proxy_log() {
-    @file_put_contents(MODELS_LOG, '', LOCK_EX);
+    @file_put_contents(PROXY_LOG, '', LOCK_EX);
     header('Content-Type: text/plain; charset=utf-8');
     echo 'clear ok';
 }
