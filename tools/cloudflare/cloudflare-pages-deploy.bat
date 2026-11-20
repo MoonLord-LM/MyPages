@@ -92,9 +92,9 @@ echo.
     call npx -y wrangler pages deploy "!static_dir!" --project-name "!cloudflare_project!" --branch "main" --commit-message "!file_count!"
 
     echo.
-    echo 上传完成，请选择按 Enter 键重新上传，或者关闭窗口结束运行
+    echo 处理完成，请选择输入 Y 重新上传，或者关闭窗口结束运行
     echo.
-    set /p "input_enter="
+    set /p "input_yes="
     if !errorlevel! neq 0 (
         echo 无输入，退出脚本
         echo.

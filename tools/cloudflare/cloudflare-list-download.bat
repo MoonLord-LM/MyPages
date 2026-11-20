@@ -8,8 +8,8 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 
-powershell -NoProfile -Command "Write-Host '从 Cloudflare Pages 下载静态资源清单，并按清单恢复静态资源文件' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '恢复到 dist/static 目录，供重新部署时一并上传' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '从 Cloudflare Pages 下载静态资源清单，按清单与哈希值同步本地文件' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '同步到 dist/static：删除多余、补齐缺失、校验已有文件哈希并重新下载不符项' -ForegroundColor Green"
 echo.
 
 
@@ -35,7 +35,7 @@ powershell -NoProfile -Command ^
     "$code = $lines[$begin..($end - 1)] -join [System.Environment]::NewLine;" ^
     "Invoke-Expression $code"
 if !errorlevel! neq 0 (
-    echo 错误：下载静态资源失败，请检查上面的报错信息
+    echo 错误：同步静态资源失败，请检查上面的报错信息
     echo.
     pause
     exit /b 1
@@ -53,8 +53,9 @@ exit /b
 -----BEGIN POWERSHELL CODE-----
 [System.Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
 $ProgressPreference='SilentlyContinue';
+Add-Type -AssemblyName Microsoft.VisualBasic;
 
-$staticDir = $env:static_dir;
+$staticDir = [System.IO.Path]::GetFullPath($env:static_dir);
 $listUrl = $env:list_url;
 $listFile = [System.IO.Path]::Combine($staticDir, 'list.json');
 
@@ -67,41 +68,118 @@ function Get-LocalPath($FileField) {
     if ($relative.StartsWith('static/')) {
         $relative = $relative.Substring('static/'.Length);
     }
-    return [System.IO.Path]::Combine($staticDir, $relative.Replace('/', '\'));
+    return [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($staticDir, $relative.Replace('/', '\')));
 }
 
+function Get-NameFingerprint($FileName) {
+    $match = [regex]::Match($FileName, '\.([\da-fA-F]{128})\.[^.\\/]+$');
+    if ($match.Success) {
+        return $match.Groups[1].Value.ToLowerInvariant();
+    }
+    return $null;
+}
+
+function Get-FileFingerprint($Path) {
+    $sha = [System.Security.Cryptography.SHA512]::Create();
+    try {
+        $stream = [System.IO.File]::OpenRead($Path);
+        try {
+            $hashBytes = $sha.ComputeHash($stream);
+            return ([System.BitConverter]::ToString($hashBytes).Replace('-', '')).ToLowerInvariant();
+        } finally {
+            $stream.Dispose();
+        }
+    } finally {
+        $sha.Dispose();
+    }
+}
+
+$tempListFile = [System.IO.Path]::Combine($env:TEMP, 'cloudflare-list-' + [guid]::NewGuid().ToString('N') + '.json');
 Write-Host ('下载清单: ' + $listUrl);
 try {
-    Invoke-WebRequest -Uri $listUrl -OutFile $listFile -UseBasicParsing -ErrorAction Stop;
+    Invoke-WebRequest -Uri $listUrl -OutFile $tempListFile -UseBasicParsing -ErrorAction Stop;
+    $parsedEntries = Get-Content -LiteralPath $tempListFile -Encoding UTF8 -Raw | ConvertFrom-Json;
 } catch {
-    throw ('下载清单失败: ' + $_.Exception.Message);
+    throw ('下载或解析清单失败: ' + $_.Exception.Message);
 }
 
-$parsedEntries = Get-Content -LiteralPath $listFile -Encoding UTF8 -Raw | ConvertFrom-Json;
 $entries = @($parsedEntries | ForEach-Object { $_ });
 Write-Host ('清单条目数: ' + $entries.Count);
 if ($entries.Count -lt 1) {
-    throw '线上清单为空，终止下载';
+    Remove-Item -Force -LiteralPath $tempListFile -ErrorAction SilentlyContinue;
+    throw '线上清单为空，终止同步';
+}
+[System.IO.File]::Copy($tempListFile, $listFile, $true);
+Remove-Item -Force -LiteralPath $tempListFile;
+Write-Host ('清单已保存: ' + $listFile);
+
+$expectedMap = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase);
+foreach ($entry in $entries) {
+    $localPath = Get-LocalPath $entry.file;
+    $fingerprint = Get-NameFingerprint ([System.IO.Path]::GetFileName($localPath));
+    if ([string]::IsNullOrEmpty($fingerprint)) {
+        Write-Host ('警告：清单条目缺少有效指纹，已跳过: ' + $entry.file);
+        continue;
+    }
+    $expectedMap[$localPath] = [pscustomobject]@{
+        Fingerprint = $fingerprint;
+        Url         = [string]$entry.url[0];
+    };
+}
+Write-Host ('有效清单文件数: ' + $expectedMap.Count);
+
+$excludeNames = @('list.json', 'upload.bat', $env:script_name_ext);
+$deletedCount = 0;
+foreach ($file in [System.IO.Directory]::GetFiles($staticDir, '*', [System.IO.SearchOption]::AllDirectories)) {
+    $fullName = [System.IO.Path]::GetFullPath($file);
+    if ($excludeNames -contains ([System.IO.Path]::GetFileName($fullName))) { continue; }
+    if ($expectedMap.ContainsKey($fullName)) { continue; }
+    try {
+        [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($fullName, 'OnlyErrorDialogs', 'SendToRecycleBin');
+        Write-Host ('删除多余文件: ' + $fullName.Substring($staticDir.Length).TrimStart('\'));
+        $deletedCount++;
+    } catch {
+        throw ('删除多余文件失败: ' + $_.Exception.Message);
+    }
 }
 
-$downloadEntries = @($entries);
+$missingCount = 0;
+$redownloadCount = 0;
+$verifiedCount = 0;
 
-$downloaded = 0;
-foreach ($entry in $downloadEntries) {
-    $downloaded++;
-    Write-Host ('下载第 ' + $downloaded + ' 个文件')
-    $destination = Get-LocalPath $entry.file;
-    $directory = [System.IO.Path]::GetDirectoryName($destination);
+foreach ($localPath in ($expectedMap.Keys | Sort-Object)) {
+    $expected = $expectedMap[$localPath];
+    $fingerprint = $expected.Fingerprint;
+    $relativePath = $localPath.Substring($staticDir.Length).TrimStart('\');
+
+    if (Test-Path -LiteralPath $localPath) {
+        $actualFingerprint = Get-FileFingerprint $localPath;
+        if ($actualFingerprint -eq $fingerprint) {
+            $verifiedCount++;
+            continue;
+        }
+        Write-Host ('哈希不符，重新下载: ' + $relativePath);
+        $redownloadCount++;
+    } else {
+        Write-Host ('缺失，下载: ' + $relativePath);
+        $missingCount++;
+    }
+
+    $directory = [System.IO.Path]::GetDirectoryName($localPath);
     if (-not (Test-Path -LiteralPath $directory)) {
         [System.IO.Directory]::CreateDirectory($directory) | Out-Null;
     }
     try {
-        Invoke-WebRequest -Uri $entry.url[0] -OutFile $destination -UseBasicParsing -ErrorAction Stop;
+        Invoke-WebRequest -Uri $expected.Url -OutFile $localPath -UseBasicParsing -ErrorAction Stop;
+        $downloadedFingerprint = Get-FileFingerprint $localPath;
+        if ($downloadedFingerprint -ne $fingerprint) {
+            throw ('下载文件哈希不符，期望 ' + $fingerprint + '，实际 ' + $downloadedFingerprint);
+        }
     } catch {
-        throw ('下载文件失败: ' + $_.Exception.Message);
+        throw ('下载文件失败: ' + $relativePath + ' - ' + $_.Exception.Message);
     }
 }
 
 Write-Host '';
-Write-Host ('下载完成，共下载 ' + $downloaded + ' 个文件') -ForegroundColor Green;
+Write-Host ('同步完成：校验通过 ' + $verifiedCount + ' 个，新下载 ' + $missingCount + ' 个，重新下载 ' + $redownloadCount + ' 个，删除多余 ' + $deletedCount + ' 个') -ForegroundColor Green;
 -----END POWERSHELL CODE-----
