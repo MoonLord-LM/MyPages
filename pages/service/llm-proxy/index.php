@@ -139,7 +139,7 @@ function proxy_request($config) {
 
     $model = find_model_by_id($config, isset($request['model']) ? $request['model'] : '');
     if ($model === null) {
-        append_proxy_log($request, 400, 'invalid request');
+        append_proxy_log($request, 400, 'model not found');
         output_error(404, 'model not found');
     }
 
