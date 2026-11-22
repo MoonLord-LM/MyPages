@@ -2,7 +2,7 @@ name: tools-search
 
 on:
   schedule:
-    - cron: '57 21 * * *'
+    - cron: '57 19 * * *'
       timezone: 'Asia/Shanghai'
   workflow_dispatch:
   push:
