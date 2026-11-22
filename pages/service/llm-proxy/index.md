@@ -4,7 +4,7 @@
 
 将请求分发给后端配置的服务器（一些免费的 API 资源）  
 支持动态配置、负载均衡、流式请求、日志记录  
-可用于分析调试 LLM 模型或 Agent 工具等  
+可用于分析调试 LLM 模型或 Agent 工具，例如查看 `system prompt` / `tools` / `tool_calls` 等  
 查看源代码：[index.php ](https://github.com/MoonLord-LM/MyPages/blob/master/pages/service/llm-proxy/index.php)  
 
 API 清单：  
