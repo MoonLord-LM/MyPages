@@ -183,6 +183,13 @@ html { scrollbar-gutter: stable; }
 body { overflow-x: clip; }
 
 .auto-list { top: var(--nav-h, 54px) !important; }
+
+@media (max-width: 640px) {
+  #site-nav .nav-menu .nav-link { white-space: nowrap; flex-shrink: 0; }
+  #site-nav .nav-container { overflow-x: auto; scrollbar-width: none; }
+  #site-nav .nav-container::-webkit-scrollbar { display: none; }
+  #site-nav .nav-search-btn { flex-shrink: 0; }
+}
 </style>
 
 <nav id="site-nav">
