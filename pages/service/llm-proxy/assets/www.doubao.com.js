@@ -122,13 +122,13 @@ var runOnce = async function () {
     isBusy = true;
     try {
         var httpResponse = await fetch(proxyBaseUrl + '/v1/request/get');
-        if (httpResponse.status === 404) {
-            return;
-        }
         if (!httpResponse.ok) {
             throw new Error('HTTP ' + httpResponse.status);
         }
         var pending = await httpResponse.json();
+        if (Array.isArray(pending)) {
+            return;
+        }
 
         var prompt = promptInstruction + JSON.stringify(pending.request || {}, null, 2);
 
