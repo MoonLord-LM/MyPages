@@ -39,6 +39,10 @@ jobs:
         with:
           ref: master
 
+      - name: Download Cloudflare static assets
+        shell: cmd
+        run: call tools\cloudflare\cloudflare-list-download.bat <nul
+
       - name: Run search.bat
         shell: cmd
         run: call tools\search\search.bat <nul
@@ -55,10 +59,6 @@ jobs:
           } else {
             Write-Host 'No changes after search.bat.'
           }
-
-      - name: Download Cloudflare static assets
-        shell: cmd
-        run: call tools\cloudflare\cloudflare-list-download.bat <nul
 
       - name: Refresh Cloudflare list.json
         shell: cmd
