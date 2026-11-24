@@ -60,6 +60,9 @@ set "hljs_js_url=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/hig
 REM 站点地图所使用的站点根地址（与 pages/robots.txt 中的 Sitemap 保持一致）
 set "site_url=https://www.moonlord.cc"
 
+REM 构建失败后的最大尝试次数
+set "build_max_attempts=10"
+
 set "temp_dir=%temp%\MyPages_%random%_%random%_%random%_%random%\"
 if exist "!temp_dir!" ( rmdir /s /q "!temp_dir!" )
 if not exist "!temp_dir!" ( mkdir "!temp_dir!" )
@@ -132,7 +135,7 @@ set "build_attempt=0"
 set "build_ok=0"
 :build_retry
     set /a build_attempt+=1
-    echo [构建尝试 !build_attempt!/3]
+    echo [构建尝试 !build_attempt!/!build_max_attempts!]
     echo.
     call node "!temp_js!"
     if !errorlevel! equ 0 (
@@ -141,7 +144,7 @@ set "build_ok=0"
     )
     echo.
     echo 构建生成失败（第 !build_attempt! 次），准备重试
-    if !build_attempt! lss 3 (
+    if !build_attempt! lss !build_max_attempts! (
         goto build_retry
     )
 :build_done
