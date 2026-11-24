@@ -303,7 +303,7 @@ function proxy_request($redis) {
 function get_request($redis) {
     $hashes = $redis->lRange(PROXY_QUEUE, 0, -1);
     if (!is_array($hashes) || count($hashes) === 0) {
-        output_error(404, 'no pending request');
+        output_json(200, []);
     }
     $now = time();
     foreach ($hashes as $hash) {
@@ -319,7 +319,7 @@ function get_request($redis) {
         }
         output_json(200, ['hash' => $hash, 'request' => $record['request']]);
     }
-    output_error(404, 'no pending request');
+    output_json(200, []);
 }
 
 function handle_request($redis) {

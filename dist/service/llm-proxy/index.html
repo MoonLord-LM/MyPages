@@ -334,8 +334,53 @@ body { overflow-x: clip; }
 </tbody>
 </table>
 <h2>2. 利用浏览器处理请求的 LLM API 代理服务</h2>
-<p>将请求分发给浏览器插件来处理（利用免费的网页版 LLM 资源）<br>
-查看源代码：<a href="https://github.com/MoonLord-LM/MyPages/blob/master/pages/service/llm-proxy/local.php" target="_blank" rel="noopener">local.php </a></p>
+<p>将请求分发给浏览器网页来处理（可利用免费的网页版 API 资源）<br>
+需要在浏览器控制台执行脚本，脚本定时从队列取任务，交给网页版 API 生成 JSON 响应，再写回队列<br>
+查看源代码：<a href="https://github.com/MoonLord-LM/MyPages/blob/master/pages/service/llm-proxy/local.php" target="_blank" rel="noopener">local.php </a><br>
+豆包网页版：<a href="https://www.doubao.com/chat" target="_blank" rel="noopener">豆包网页版</a>，浏览器脚本：<a href="https://github.com/MoonLord-LM/MyPages/blob/master/pages/service/llm-proxy/assets/www.doubao.com.js" target="_blank" rel="noopener">www.doubao.com.js </a></p>
+<p>API 清单：</p>
+<table>
+<thead>
+<tr>
+<th>URL</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1</a></td>
+<td>配置地址</td>
+</tr>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1/models" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1/models</a></td>
+<td>查看模型列表</td>
+</tr>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1/models/WebModel" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1/models/WebModel</a></td>
+<td>查看模型信息</td>
+</tr>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1/chat/completions" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1/chat/completions</a></td>
+<td>POST 调用模型</td>
+</tr>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1/log/view" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1/log/view</a></td>
+<td>查看调用日志</td>
+</tr>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1/log/clear" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1/log/clear</a></td>
+<td>清空调用日志</td>
+</tr>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1/request/get" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1/request/get</a></td>
+<td>浏览器脚本拉取任务</td>
+</tr>
+<tr>
+<td><a href="https://www.moonlord.cc/service/llm-proxy/local.php/v1/request/handle" target="_blank" rel="noopener">https://www.moonlord.cc/service/llm-proxy/local.php/v1/request/handle</a></td>
+<td>浏览器脚本提交结果</td>
+</tr>
+</tbody>
+</table>
 
 </article>
 </div>
