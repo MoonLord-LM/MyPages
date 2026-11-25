@@ -18,7 +18,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: My-Pages-${{ github.ref }}
+  group: ${{ github.event.repository.name }}-${{ github.workflow }}-${{ github.ref }}
+  queue: max
   cancel-in-progress: false
 
 jobs:
