@@ -8,8 +8,9 @@ var intervalSeconds = 2;
 var isBusy = false;
 
 var promptInstruction1 = '现在你是一个 LLM 的 Chat Completions API 服务，使用 OpenAI API 协议，并且支持 tools 工具调用。';
-var promptInstruction2 = '请处理以下的 JSON 请求，按照 OpenAI API 协议，回复纯文本的 JSON 响应。';
-var promptInstruction = promptInstruction1 + '\n'+ promptInstruction2 + '\n\n';
+var promptInstruction2 = '请处理以下的 JSON 请求，考虑是否需要调用工具，然后按照 OpenAI API 协议，回复正确的 JSON 响应。';
+var promptInstruction3 = '对于 choices[0].tool_calls[0].function.arguments 字段，可以直接输出为 JSON 对象，不必转为字符串。';
+var promptInstruction = promptInstruction1 + '\n'+ promptInstruction2 + '\n'+ promptInstruction3 + '\n\n';
 
 // 对话输入框
 var findComposer = function () {
@@ -147,32 +148,49 @@ var runOnce = async function () {
         }
 
         var prompt = promptInstruction + JSON.stringify(pending.request || {}, null, 2);
+        var maxRetryCount = 3;
+        var retryCount = 0;
+        var responseBody = null;
+        var parseError = null;
 
         await startNewChat();
-        var previousMessageId = getLastAssistantMessageId();
-        var inputOk = await inputPromptText(prompt);
-        var sendButton = findSendButton();
-        if (!inputOk || !sendButton) {
-            console.log('doubao.com 输入或发送按钮未就绪，跳过本轮');
-            return;
-        }
-        sendButton.click();
 
-        var text = await waitForResponse(previousMessageId);
-        if (!text) {
-            console.log('doubao.com 等待回复超时');
-            return;
-        }
-        console.log('doubao.com 输出: ' + text);
+        while (retryCount <= maxRetryCount) {
+            var currentPrompt = retryCount === 0
+                ? prompt
+                : 'JSON 解析报错（' + parseError.message + '）。请重新生成 JSON 响应。输出严格合法的 JSON 对象。';
 
-        var responseBody;
-        try {
-            responseBody = JSON.parse(text.trim());
-        } catch (error) {
-            console.log('doubao.com 回复不是合法 JSON', error);
+            var previousMessageId = getLastAssistantMessageId();
+            var inputOk = await inputPromptText(currentPrompt);
+            var sendButton = findSendButton();
+            if (!inputOk || !sendButton) {
+                console.log('doubao.com 输入或发送按钮未就绪，跳过本轮');
+                return;
+            }
+            sendButton.click();
+
+            var text = await waitForResponse(previousMessageId);
+            if (!text) {
+                console.log('doubao.com 等待回复超时');
+                return;
+            }
+            console.log('doubao.com 输出: ' + text);
+
+            try {
+                responseBody = JSON.parse(text.trim());
+                break;
+            } catch (error) {
+                parseError = error;
+                console.log('doubao.com 回复不是合法 JSON', error);
+                retryCount += 1;
+            }
+        }
+
+        if (!responseBody) {
+            console.log('doubao.com 重试后仍不是合法 JSON，跳过本轮');
             return;
         }
-        if (!responseBody || typeof responseBody !== 'object' || Array.isArray(responseBody)) {
+        if (typeof responseBody !== 'object' || Array.isArray(responseBody)) {
             console.log('doubao.com 回复不是 JSON 对象，跳过本轮');
             return;
         }
