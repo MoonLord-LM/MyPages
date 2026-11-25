@@ -119,132 +119,14 @@ function clear_proxy_log() {
     echo 'clear ok';
 }
 
-function normalize_chat_completion_response($response) {
-    if (!is_array($response) || !isset($response['choices']) || !is_array($response['choices'])) {
-        output_error(500, 'response error: choices must be an array');
-    }
-    foreach ($response['choices'] as &$choice) {
-        if (!is_array($choice) || !isset($choice['message']) || !is_array($choice['message'])) {
-            output_error(500, 'response error: choice.message must be an object');
-        }
-        if (!array_key_exists('tool_calls', $choice['message'])) {
-            continue;
-        }
-        if (!is_array($choice['message']['tool_calls'])) {
-            output_error(500, 'response error: tool_calls must be an array');
-        }
-        foreach ($choice['message']['tool_calls'] as &$tool_call) {
-            if (!is_array($tool_call) || !isset($tool_call['function']) || !is_array($tool_call['function'])) {
-                output_error(500, 'response error: tool_call.function must be an object');
-            }
-            if (!isset($tool_call['function']['name']) || !is_string($tool_call['function']['name']) || $tool_call['function']['name'] === '') {
-                output_error(500, 'response error: tool_call.function.name must be a non-empty string');
-            }
-            if (!array_key_exists('arguments', $tool_call['function'])) {
-                output_error(500, 'response error: tool_call.function.arguments is missing');
-            }
-            if (!is_string($tool_call['function']['arguments'])) {
-                $arguments = json_encode($tool_call['function']['arguments'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                if ($arguments === false) {
-                    output_error(500, 'response error: tool arguments cannot be encoded - ' . json_last_error_msg());
-                }
-                $tool_call['function']['arguments'] = $arguments;
-            }
-            json_decode($tool_call['function']['arguments'], true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                output_error(500, 'response error: tool arguments are not valid JSON - ' . json_last_error_msg());
-            }
-        }
-        unset($tool_call);
-        if (count($choice['message']['tool_calls']) > 0) {
-            $choice['finish_reason'] = 'tool_calls';
-        }
-    }
-    unset($choice);
-    return $response;
-}
-
-function output_chat_completion_stream($response) {
-    header('Content-Type: text/event-stream; charset=utf-8');
-    header('Cache-Control: no-cache');
-    header('X-Accel-Buffering: no');
-
-    $choices = is_array($response) && isset($response['choices']) && is_array($response['choices']) ? $response['choices'] : [];
-    $choice = count($choices) > 0 && is_array($choices[0]) ? $choices[0] : [];
-    $message = isset($choice['message']) && is_array($choice['message']) ? $choice['message'] : [];
-    $content = isset($message['content']) ? $message['content'] : '';
-    $tool_calls = isset($message['tool_calls']) && is_array($message['tool_calls']) ? $message['tool_calls'] : [];
-    $finish_reason = isset($choice['finish_reason']) ? $choice['finish_reason'] : 'stop';
-
-    $chunk = [
-        'id' => is_array($response) && isset($response['id']) ? $response['id'] : 'chatcmpl-' . bin2hex(random_bytes(16)),
-        'object' => 'chat.completion.chunk',
-        'created' => is_array($response) && isset($response['created']) ? $response['created'] : time(),
-        'model' => is_array($response) && isset($response['model']) ? $response['model'] : MODEL_ID,
-    ];
-    if (is_array($response) && isset($response['system_fingerprint'])) {
-        $chunk['system_fingerprint'] = $response['system_fingerprint'];
-    }
-
-    $content_chunk = $chunk;
-    $content_chunk['choices'] = [[
-        'index' => 0,
-        'delta' => ['role' => 'assistant', 'content' => $content],
-        'finish_reason' => null,
-    ]];
-    echo 'data: ' . json_encode($content_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
-
-    $tool_deltas = [];
-    foreach ($tool_calls as $index => $tool_call) {
-        if (!is_array($tool_call)) {
-            continue;
-        }
-        $function = isset($tool_call['function']) && is_array($tool_call['function']) ? $tool_call['function'] : [];
-        $function_arguments = isset($function['arguments']) ? $function['arguments'] : '';
-        $tool_deltas[] = [
-            'index' => $index,
-            'id' => isset($tool_call['id']) ? $tool_call['id'] : '',
-            'type' => isset($tool_call['type']) ? $tool_call['type'] : 'function',
-            'function' => [
-                'name' => isset($function['name']) ? $function['name'] : '',
-                'arguments' => $function_arguments,
-            ],
-        ];
-    }
-    if (count($tool_deltas) > 0) {
-        $tool_chunk = $chunk;
-        $tool_chunk['choices'] = [[
-            'index' => 0,
-            'delta' => ['tool_calls' => $tool_deltas],
-            'finish_reason' => null,
-        ]];
-        echo 'data: ' . json_encode($tool_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
-    }
-
-    $finish_chunk = $chunk;
-    $finish_chunk['choices'] = [[
-        'index' => 0,
-        'delta' => new stdClass(),
-        'finish_reason' => $finish_reason,
-    ]];
-    echo 'data: ' . json_encode($finish_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
-
-    if (is_array($response) && isset($response['usage']) && is_array($response['usage'])) {
-        $usage_chunk = $chunk;
-        $usage_chunk['choices'] = [];
-        $usage_chunk['usage'] = $response['usage'];
-        echo 'data: ' . json_encode($usage_chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
-    }
-
-    echo "data: [DONE]\n\n";
-    exit;
-}
-
 function create_redis_client() {
+    if (!extension_loaded('redis')) {
+        output_error(500, 'redis extension unavailable');
+    }
     $redis_config = read_redis_config();
     $use_tls = isset($redis_config['tls']) && $redis_config['tls'] === true;
     if ($use_tls && !extension_loaded('openssl')) {
-        output_error(500, 'openssl unavailable');
+        output_error(500, 'openssl extension unavailable');
     }
     $options = [];
     if ($use_tls) {
@@ -262,6 +144,140 @@ function create_redis_client() {
     return $redis;
 }
 
+function normalize_chat_completion_response($response) {
+    if (!is_array($response) || !isset($response['choices']) || !is_array($response['choices']) || count($response['choices']) === 0) {
+        output_error(400, 'response error: choices must be a non-empty array');
+    }
+
+    $response['choices'] = array_values($response['choices']);
+    $response['id'] = isset($response['id']) && is_string($response['id']) && $response['id'] !== '' ? $response['id'] : 'chatcmpl-' . bin2hex(random_bytes(16));
+    $response['object'] = 'chat.completion';
+    $response['created'] = isset($response['created']) && is_numeric($response['created']) ? (int)$response['created'] : time();
+    $response['model'] = isset($response['model']) && is_string($response['model']) && $response['model'] !== '' ? $response['model'] : MODEL_ID;
+
+    foreach ($response['choices'] as $index => &$choice) {
+        if (!is_array($choice) || !isset($choice['message']) || !is_array($choice['message'])) {
+            output_error(400, 'response error: choice.message must be an object');
+        }
+        $choice['index'] = isset($choice['index']) && is_int($choice['index']) ? $choice['index'] : $index;
+        $choice['finish_reason'] = isset($choice['finish_reason']) && is_string($choice['finish_reason']) ? $choice['finish_reason'] : 'stop';
+        if (isset($choice['message']['tool_calls']) && is_array($choice['message']['tool_calls'])) {
+            foreach ($choice['message']['tool_calls'] as &$tool_call) {
+                if (!is_array($tool_call) || !isset($tool_call['function']) || !is_array($tool_call['function'])) {
+                    output_error(400, 'response error: tool_call.function must be an object');
+                }
+                if (!isset($tool_call['function']['name']) || !is_string($tool_call['function']['name']) || $tool_call['function']['name'] === '') {
+                    output_error(400, 'response error: tool_call.function.name must be a non-empty string');
+                }
+                if (!array_key_exists('arguments', $tool_call['function'])) {
+                    output_error(400, 'response error: tool_call.function.arguments is missing');
+                }
+                if (!is_string($tool_call['function']['arguments'])) {
+                    $arguments = json_encode($tool_call['function']['arguments'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                    if ($arguments === false) {
+                        output_error(400, 'response error: tool arguments cannot be encoded - ' . json_last_error_msg());
+                    }
+                    $tool_call['function']['arguments'] = $arguments;
+                }
+                json_decode($tool_call['function']['arguments'], true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    output_error(400, 'response error: tool arguments are not valid JSON - ' . json_last_error_msg());
+                }
+            }
+            if (count($choice['message']['tool_calls']) > 0) {
+                $choice['finish_reason'] = 'tool_calls';
+            }
+            unset($tool_call);
+        }
+    }
+    unset($choice);
+    return $response;
+}
+
+function output_chat_completion_chunk($chunk, $choices, $usage = null) {
+    $chunk['choices'] = $choices;
+    if ($usage !== null) {
+        $chunk['usage'] = $usage;
+    }
+    echo 'data: ' . json_encode($chunk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n\n";
+}
+
+function output_chat_completion_stream($response) {
+    header('Content-Type: text/event-stream; charset=utf-8');
+    header('Cache-Control: no-cache');
+    header('X-Accel-Buffering: no');
+
+    $chunk = [
+        'id' => $response['id'],
+        'object' => 'chat.completion.chunk',
+        'created' => $response['created'],
+        'model' => $response['model'],
+    ];
+    if (isset($response['system_fingerprint'])) {
+        $chunk['system_fingerprint'] = $response['system_fingerprint'];
+    }
+
+    $choice = $response['choices'][0];
+    $message = $choice['message'];
+
+    output_chat_completion_chunk($chunk, [[
+        'index' => $choice['index'],
+        'delta' => ['role' => 'assistant', 'content' => isset($message['content']) ? $message['content'] : ''],
+        'finish_reason' => null,
+    ]]);
+
+    $tool_deltas = [];
+    if (isset($message['tool_calls']) && is_array($message['tool_calls'])) {
+        foreach ($message['tool_calls'] as $index => $tool_call) {
+            $tool_deltas[] = [
+                'index' => $index,
+                'id' => isset($tool_call['id']) ? $tool_call['id'] : '',
+                'type' => isset($tool_call['type']) ? $tool_call['type'] : 'function',
+                'function' => [
+                    'name' => $tool_call['function']['name'],
+                    'arguments' => $tool_call['function']['arguments'],
+                ],
+            ];
+        }
+        if (count($tool_deltas) > 0) {
+            output_chat_completion_chunk($chunk, [[
+                'index' => $choice['index'],
+                'delta' => ['tool_calls' => $tool_deltas],
+                'finish_reason' => null,
+            ]]);
+        }
+    }
+
+    output_chat_completion_chunk($chunk, [[
+        'index' => $choice['index'],
+        'delta' => new stdClass(),
+        'finish_reason' => $choice['finish_reason'],
+    ]]);
+
+    if (isset($response['usage'])) {
+        output_chat_completion_chunk($chunk, [], $response['usage']);
+    }
+
+    echo "data: [DONE]\n\n";
+    exit;
+}
+
+function try_output_handled($redis, $key, $request, $original_stream) {
+    $value = $redis->get($key);
+    if (!is_string($value)) {
+        return;
+    }
+    $record = json_decode($value, true);
+    if (!is_array($record) || !isset($record['status']) || $record['status'] !== 'handled') {
+        return;
+    }
+    append_proxy_log($request, 200, $record['response']);
+    if ($original_stream) {
+        output_chat_completion_stream($record['response']);
+    }
+    output_json(200, $record['response']);
+}
+
 function proxy_request($redis) {
     $input = file_get_contents('php://input');
     $request = json_decode($input, true);
@@ -271,24 +287,12 @@ function proxy_request($redis) {
     }
 
     $original_stream = isset($request['stream']) && $request['stream'] === true;
-    if ($original_stream) {
-        $request['stream'] = false;
-    }
+    $request['stream'] = false;
+    $request_json = json_encode($request, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-    $hash = hash('sha256', $input);
+    $hash = hash('sha256', $request_json);
     $key = PROXY_REQUEST_PREFIX . $hash;
-    $value = $redis->get($key);
-    if (is_string($value)) {
-        $record = json_decode($value, true);
-        if (is_array($record) && isset($record['status']) && $record['status'] === 'handled') {
-            append_proxy_log($request, 200, $record['response']);
-            $response = normalize_chat_completion_response($record['response']);
-            if ($original_stream) {
-                output_chat_completion_stream($response);
-            }
-            output_json(200, $response);
-        }
-    }
+    try_output_handled($redis, $key, $request, $original_stream);
 
     $saved_at = time();
     $record = ['hash' => $hash, 'request' => $request, 'status' => 'pending', 'response' => null, 'saved_at' => $saved_at];
@@ -299,18 +303,7 @@ function proxy_request($redis) {
     $poll_count = (int)ceil(WAIT_SECONDS / POLL_SECONDS);
     for ($index = 0; $index < $poll_count; $index++) {
         sleep(POLL_SECONDS);
-        $value = $redis->get($key);
-        if (is_string($value)) {
-            $current = json_decode($value, true);
-            if (is_array($current) && isset($current['status']) && $current['status'] === 'handled') {
-                append_proxy_log($request, 200, $current['response']);
-                $response = normalize_chat_completion_response($current['response']);
-                if ($original_stream) {
-                    output_chat_completion_stream($response);
-                }
-                output_json(200, $response);
-            }
-        }
+        try_output_handled($redis, $key, $request, $original_stream);
     }
 
     $elapsed_seconds = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
@@ -361,8 +354,9 @@ function handle_request($redis) {
         output_error(429, 'request already handled');
     }
 
+    $response = normalize_chat_completion_response($result['response']);
     $record['status'] = 'handled';
-    $record['response'] = $result['response'];
+    $record['response'] = $response;
     $record_json = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $redis->set($key, $record_json, REQUEST_TTL);
     $redis->lRem(PROXY_QUEUE, $hash, 0);
