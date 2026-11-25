@@ -16,7 +16,7 @@ var findComposer = function () {
     return document.querySelector('[data-testid="chat_input_input"] [contenteditable="true"]');
 };
 
-// 开启新对话，等待输入框就绪
+// 开启新对话
 var startNewChat = async function () {
     var button = document.querySelector('[data-testid="create_conversation_button"] span');
     if (button) {
@@ -65,7 +65,7 @@ var getLastAssistantMessageId = function () {
     return content ? content.getAttribute('data-message-id') : null;
 };
 
-// 最后一条助手回复文本（流式输出未完成时不读取）
+// 最后一条助手回复文本
 var getLastAssistantResponse = function () {
     var message = getLastAssistantMessage();
     if (!message) {
@@ -110,7 +110,7 @@ var inputPromptText = function (text) {
         setTimeout(function () {
             var currentText = (composer.innerText || composer.textContent || '').trim();
             resolve(currentText.indexOf(text.trim().slice(0, 20)) !== -1);
-        }, 100);
+        }, 1000);
     });
 };
 

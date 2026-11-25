@@ -44,7 +44,7 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: master
           # 站点地图按源文件的 Git 提交时间生成 lastmod，需要完整历史
