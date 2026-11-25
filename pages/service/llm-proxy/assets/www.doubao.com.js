@@ -21,21 +21,18 @@ var findNewChatButton = function () {
     return document.querySelector('[data-testid="create_conversation_button"]');
 };
 
-// 开启新对话，等待输入框就绪且旧回复清空
+// 开启新对话，等待输入框就绪
 var startNewChat = async function () {
     var button = findNewChatButton();
-    if (!button) {
-        return;
+    if (button) {
+        button.click();
     }
-    button.click();
-    while (true) {
-        var composer = findComposer();
-        var responseCount = document.querySelectorAll('[data-testid="receive_message"]').length;
-        if (composer && responseCount === 0) {
+    var deadline = Date.now() + 10000;
+    while (Date.now() < deadline) {
+        if (findComposer()) {
             return;
         }
-        var reason = !composer ? '输入框未出现' : '旧回复未清空';
-        console.log('doubao.com 等待新对话：' + reason);
+        console.log('doubao.com 等待新对话：输入框未出现');
         await new Promise(function (resolve) {
             setTimeout(resolve, 1000);
         });
@@ -54,19 +51,42 @@ var findSendButton = function () {
 // 是否仍在生成回复
 var isGenerating = function () {
     var breakButton = document.querySelector('[data-testid="chat_input_local_break_button"]');
-    return !!breakButton && breakButton.className.indexOf('!hidden') === -1 && breakButton.offsetParent !== null;
+    if (breakButton && breakButton.className.indexOf('!hidden') === -1 && breakButton.offsetParent !== null) {
+        return true;
+    }
+    return !!document.querySelector('[data-testid="message_text_content"][data-streaming="true"]');
 };
 
-// 最后一条助手回复文本
+// 最后一条助手回复消息
+var getLastAssistantMessage = function () {
+    var messages = document.querySelectorAll('[data-testid="receive_message"][data-message-role="assistant"]');
+    return messages.length > 0 ? messages[messages.length - 1] : null;
+};
+
+// 最后一条助手回复的消息 ID，用于区分新旧回复
+var getLastAssistantMessageId = function () {
+    var message = getLastAssistantMessage();
+    var content = message ? message.querySelector('[data-testid="message_content"]') : null;
+    return content ? content.getAttribute('data-message-id') : null;
+};
+
+// 最后一条助手回复文本（流式输出未完成时不读取）
 var getLastAssistantResponse = function () {
-    var responses = document.querySelectorAll('[data-testid="receive_message"] [data-testid="message_text_content"]');
-    if (responses.length === 0) {
+    var message = getLastAssistantMessage();
+    if (!message) {
         return null;
     }
-    var last = responses[responses.length - 1];
-    var message = last.closest('[data-testid="receive_message"]') || last;
-    var codeElement = message.querySelector('pre code');
-    return codeElement ? codeElement.textContent.trim() : (last.innerText || last.textContent || '').trim();
+    var contents = message.querySelectorAll('[data-testid="message_text_content"]');
+    if (contents.length === 0) {
+        return null;
+    }
+    var last = contents[contents.length - 1];
+    if (last.getAttribute('data-streaming') === 'true') {
+        return null;
+    }
+    var codeElement = last.querySelector('pre code') || (last.matches('pre code') ? last : null);
+    var text = codeElement ? codeElement.textContent : (last.innerText || last.textContent || '');
+    return text.trim().replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '').trim() || null;
 };
 
 // 把文本写入输入框并读回校验
@@ -100,18 +120,21 @@ var inputPromptText = function (text) {
 };
 
 // 等待新回复生成完成
-var waitForResponse = async function (previousText) {
-    while (true) {
+var waitForResponse = async function (previousMessageId) {
+    var deadline = Date.now() + 180000;
+    while (Date.now() < deadline) {
+        var messageId = getLastAssistantMessageId();
         var currentText = getLastAssistantResponse() || '';
-        if (currentText && currentText !== previousText && !isGenerating()) {
+        if (messageId && messageId !== previousMessageId && currentText && !isGenerating()) {
             return currentText;
         }
-        var reason = !currentText ? '暂无回复' : (currentText === previousText ? '回复未变化' : '仍在生成');
+        var reason = !currentText ? '暂无回复' : (!messageId || messageId === previousMessageId ? '回复未变化' : '仍在生成');
         console.log('doubao.com 等待回复：' + reason);
         await new Promise(function (resolve) {
             setTimeout(resolve, 1000);
         });
     }
+    return null;
 };
 
 // 取一个请求，交给豆包处理，再把响应写回队列
@@ -133,7 +156,7 @@ var runOnce = async function () {
         var prompt = promptInstruction + JSON.stringify(pending.request || {}, null, 2);
 
         await startNewChat();
-        var previousText = getLastAssistantResponse() || '';
+        var previousMessageId = getLastAssistantMessageId();
         var inputOk = await inputPromptText(prompt);
         var sendButton = findSendButton();
         if (!inputOk || !sendButton) {
@@ -142,7 +165,11 @@ var runOnce = async function () {
         }
         sendButton.click();
 
-        var text = await waitForResponse(previousText);
+        var text = await waitForResponse(previousMessageId);
+        if (!text) {
+            console.log('doubao.com 等待回复超时');
+            return;
+        }
         console.log('doubao.com 输出: ' + text);
 
         var responseBody;
@@ -156,15 +183,6 @@ var runOnce = async function () {
             console.log('doubao.com 回复不是 JSON 对象，跳过本轮');
             return;
         }
-
-        var responseData = {
-            hash: pending.hash,
-            prompt: prompt,
-            text: text,
-            time: Date.now()
-        };
-        chrome.storage.local.set({ doubaoLastResponse: responseData });
-        document.dispatchEvent(new CustomEvent('MyChromeExtensionDoubaoResponse', { detail: responseData }));
 
         var handleResponse = await fetch(proxyBaseUrl + '/v1/request/handle', {
             method: 'POST',
