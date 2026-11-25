@@ -8,7 +8,7 @@ var intervalSeconds = 2;
 var isBusy = false;
 
 var promptInstruction1 = '现在你是一个 LLM 的 Chat Completions API 服务，使用 OpenAI API 协议，并且支持 tools 工具调用。';
-var promptInstruction2 = '请处理以下的 JSON 请求，并按照 OpenAI API 协议，回复 JSON 响应。';
+var promptInstruction2 = '请处理以下的 JSON 请求，按照 OpenAI API 协议，回复纯文本的 JSON 响应。';
 var promptInstruction = promptInstruction1 + '\n'+ promptInstruction2 + '\n\n';
 
 // 对话输入框
@@ -79,9 +79,7 @@ var getLastAssistantResponse = function () {
     if (last.getAttribute('data-streaming') === 'true') {
         return null;
     }
-    var codeElement = last.querySelector('pre code') || (last.matches('pre code') ? last : null);
-    var text = codeElement ? codeElement.textContent : (last.innerText || last.textContent || '');
-    return text.trim().replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '').trim() || null;
+    return (last.innerText || last.textContent || '').trim() || null;
 };
 
 // 把文本写入输入框并读回校验
@@ -116,7 +114,7 @@ var inputPromptText = function (text) {
 
 // 等待新回复生成完成
 var waitForResponse = async function (previousMessageId) {
-    var deadline = Date.now() + 180000;
+    var deadline = Date.now() + 120000;
     while (Date.now() < deadline) {
         var messageId = getLastAssistantMessageId();
         var currentText = getLastAssistantResponse() || '';
