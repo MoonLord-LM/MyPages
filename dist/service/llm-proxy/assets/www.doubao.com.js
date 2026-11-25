@@ -16,14 +16,9 @@ var findComposer = function () {
     return document.querySelector('[data-testid="chat_input_input"] [contenteditable="true"]');
 };
 
-// 新对话按钮
-var findNewChatButton = function () {
-    return document.querySelector('[data-testid="create_conversation_button"]');
-};
-
 // 开启新对话，等待输入框就绪
 var startNewChat = async function () {
-    var button = findNewChatButton();
+    var button = document.querySelector('[data-testid="create_conversation_button"] span');
     if (button) {
         button.click();
     }
