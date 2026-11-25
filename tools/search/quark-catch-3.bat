@@ -9,7 +9,7 @@ powershell -NoProfile -Command "Write-Host '[ !script_name_ext! ]' -ForegroundCo
 
 
 powershell -NoProfile -Command "Write-Host '从指定的网站的 /sitemap.xml 列出的网页中，采集夸克网盘资源链接' -ForegroundColor Green"
-powershell -NoProfile -Command "Write-Host '采集数据源 https://www.soquark.com' -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host '采集数据源 https://www.soquark.com https://dagehao889.cn' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '通过调用夸克 API 接口，验证资源有效性' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '有效的完整信息按日期保存到 quark-valid-日期.json 中，无效的链接保存到 quark-invalid.json 中' -ForegroundColor Green"
 powershell -NoProfile -Command "Write-Host '在 quark-valid-*.json 或 quark-invalid.json 中已存在的链接，不做处理' -ForegroundColor Green"
@@ -154,7 +154,8 @@ $staticSet = [System.Collections.Generic.HashSet[string]]::new([string[]]$static
 $badEscape = @('%60', '%22', '%27', '%00', '%0A', '%0D')
 
 $sites = @(
-    @{ Host = 'soquark.com';   Root = 'https://www.soquark.com/' }
+    @{ Host = 'soquark.com';    Root = 'https://www.soquark.com/' }
+    @{ Host = 'dagehao889.cn';  Root = 'https://dagehao889.cn/' }
 )
 $pageLogStep = 1000
 $logDir = $dataDir
