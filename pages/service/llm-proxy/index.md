@@ -3,8 +3,8 @@
 ## 1. 简单的 LLM API 代理分发服务
 
 将请求分发给后端配置的服务器（一些免费的 API 资源）  
-支持动态配置、负载均衡、流式请求、日志记录  
 可用于分析调试 LLM 模型或 Agent 工具，例如查看 `system prompt` / `tools` / `tool_calls` 等  
+可支持动态配置、负载均衡、流式请求、日志记录  
 查看源代码：[index.php ](https://github.com/MoonLord-LM/MyPages/blob/master/pages/service/llm-proxy/index.php)  
 
 API 清单：  
@@ -21,7 +21,7 @@ API 清单：
 ## 2. 利用浏览器处理请求的 LLM API 代理服务
 
 将请求分发给浏览器网页来处理（可利用免费的网页版 API 资源）  
-需要在浏览器控制台执行脚本，脚本定时从队列取任务，交给网页版 API 生成 JSON 响应，再写回队列  
+需要在浏览器控制台执行脚本，脚本定时从接口拉取任务请求，交给网页处理，生成 JSON 响应，再上报回去  
 查看源代码：[local.php ](https://github.com/MoonLord-LM/MyPages/blob/master/pages/service/llm-proxy/local.php)  
 豆包网页版：[豆包网页版](https://www.doubao.com/chat)，浏览器脚本：[www.doubao.com.js ](https://github.com/MoonLord-LM/MyPages/blob/master/pages/service/llm-proxy/assets/www.doubao.com.js)  
 
