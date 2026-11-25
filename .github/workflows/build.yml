@@ -75,6 +75,10 @@ jobs:
         with:
           path: './dist'
 
+      - name: Wait for artifact registration
+        shell: powershell
+        run: Start-Sleep -Seconds 30
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
