@@ -177,7 +177,7 @@ var runOnce = async function () {
             console.log('doubao.com 输出: ' + text);
 
             try {
-                responseBody = JSON.parse(text.trim());
+                responseBody = JSON.parse(text.trim().replace(/^json/, '').trim());
                 break;
             } catch (error) {
                 parseError = error;
