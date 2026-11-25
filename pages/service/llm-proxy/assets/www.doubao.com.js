@@ -158,7 +158,7 @@ var runOnce = async function () {
         while (retryCount <= maxRetryCount) {
             var currentPrompt = retryCount === 0
                 ? prompt
-                : 'JSON 解析报错（' + parseError.message + '）。请重新生成 JSON 响应。输出严格合法的 JSON 对象。';
+                : '对回复的内容做 JSON 解析时报错（' + parseError.message + '），请按照要求处理。\n\n' + prompt;
 
             var previousMessageId = getLastAssistantMessageId();
             var inputOk = await inputPromptText(currentPrompt);

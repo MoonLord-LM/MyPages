@@ -119,33 +119,55 @@ function clear_proxy_log() {
     echo 'clear ok';
 }
 
+function normalize_chat_completion_response($response) {
+    if (!is_array($response) || !isset($response['choices']) || !is_array($response['choices'])) {
+        output_error(500, 'response error: choices must be an array');
+    }
+    foreach ($response['choices'] as &$choice) {
+        if (!is_array($choice) || !isset($choice['message']) || !is_array($choice['message'])) {
+            output_error(500, 'response error: choice.message must be an object');
+        }
+        if (!array_key_exists('tool_calls', $choice['message'])) {
+            continue;
+        }
+        if (!is_array($choice['message']['tool_calls'])) {
+            output_error(500, 'response error: tool_calls must be an array');
+        }
+        foreach ($choice['message']['tool_calls'] as &$tool_call) {
+            if (!is_array($tool_call) || !isset($tool_call['function']) || !is_array($tool_call['function'])) {
+                output_error(500, 'response error: tool_call.function must be an object');
+            }
+            if (!isset($tool_call['function']['name']) || !is_string($tool_call['function']['name']) || $tool_call['function']['name'] === '') {
+                output_error(500, 'response error: tool_call.function.name must be a non-empty string');
+            }
+            if (!array_key_exists('arguments', $tool_call['function'])) {
+                output_error(500, 'response error: tool_call.function.arguments is missing');
+            }
+            if (!is_string($tool_call['function']['arguments'])) {
+                $arguments = json_encode($tool_call['function']['arguments'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                if ($arguments === false) {
+                    output_error(500, 'response error: tool arguments cannot be encoded - ' . json_last_error_msg());
+                }
+                $tool_call['function']['arguments'] = $arguments;
+            }
+            json_decode($tool_call['function']['arguments'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                output_error(500, 'response error: tool arguments are not valid JSON - ' . json_last_error_msg());
+            }
+        }
+        unset($tool_call);
+        if (count($choice['message']['tool_calls']) > 0) {
+            $choice['finish_reason'] = 'tool_calls';
+        }
+    }
+    unset($choice);
+    return $response;
+}
+
 function output_chat_completion_stream($response) {
     header('Content-Type: text/event-stream; charset=utf-8');
     header('Cache-Control: no-cache');
     header('X-Accel-Buffering: no');
-
-    $is_raw_stream = is_array($response) && count($response) > 0;
-    if ($is_raw_stream) {
-        foreach ($response as $line) {
-            if (!is_string($line) || strpos($line, 'data: ') !== 0) {
-                $is_raw_stream = false;
-                break;
-            }
-        }
-    }
-    if ($is_raw_stream) {
-        $has_done = false;
-        foreach ($response as $line) {
-            echo $line;
-            if (strpos($line, 'data: [DONE]') !== false) {
-                $has_done = true;
-            }
-        }
-        if (!$has_done) {
-            echo "data: [DONE]\n\n";
-        }
-        exit;
-    }
 
     $choices = is_array($response) && isset($response['choices']) && is_array($response['choices']) ? $response['choices'] : [];
     $choice = count($choices) > 0 && is_array($choices[0]) ? $choices[0] : [];
@@ -154,9 +176,6 @@ function output_chat_completion_stream($response) {
     $tool_calls = isset($message['tool_calls']) && is_array($message['tool_calls']) ? $message['tool_calls'] : [];
     $finish_reason = isset($choice['finish_reason']) ? $choice['finish_reason'] : 'stop';
 
-    if (count($tool_calls) > 0 && $finish_reason !== 'tool_calls') {
-        $finish_reason = 'tool_calls';
-    }
     $chunk = [
         'id' => is_array($response) && isset($response['id']) ? $response['id'] : 'chatcmpl-' . bin2hex(random_bytes(16)),
         'object' => 'chat.completion.chunk',
@@ -182,9 +201,6 @@ function output_chat_completion_stream($response) {
         }
         $function = isset($tool_call['function']) && is_array($tool_call['function']) ? $tool_call['function'] : [];
         $function_arguments = isset($function['arguments']) ? $function['arguments'] : '';
-        if (!is_string($function_arguments)) {
-            $function_arguments = json_encode($function_arguments, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        }
         $tool_deltas[] = [
             'index' => $index,
             'id' => isset($tool_call['id']) ? $tool_call['id'] : '',
@@ -266,10 +282,11 @@ function proxy_request($redis) {
         $record = json_decode($value, true);
         if (is_array($record) && isset($record['status']) && $record['status'] === 'handled') {
             append_proxy_log($request, 200, $record['response']);
+            $response = normalize_chat_completion_response($record['response']);
             if ($original_stream) {
-                output_chat_completion_stream($record['response']);
+                output_chat_completion_stream($response);
             }
-            output_json(200, $record['response']);
+            output_json(200, $response);
         }
     }
 
@@ -287,10 +304,11 @@ function proxy_request($redis) {
             $current = json_decode($value, true);
             if (is_array($current) && isset($current['status']) && $current['status'] === 'handled') {
                 append_proxy_log($request, 200, $current['response']);
+                $response = normalize_chat_completion_response($current['response']);
                 if ($original_stream) {
-                    output_chat_completion_stream($current['response']);
+                    output_chat_completion_stream($response);
                 }
-                output_json(200, $current['response']);
+                output_json(200, $response);
             }
         }
     }
