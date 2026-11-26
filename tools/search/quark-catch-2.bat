@@ -202,10 +202,18 @@ function Set-Fastest-Proxy([string]$testUrl, [object]$testHeaders, [int]$count) 
     }
 }
 
+function Get-Delay-Minutes([object]$RateNumber) {
+    if ($null -eq $RateNumber) { return 0 }
+    $minutes = (100.0 - [double]$RateNumber) * 60.0
+    if ($minutes -le 0) { return 0 }
+    return [int][math]::Ceiling($minutes)
+}
+
 function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
     $unitSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $invalidCount = 0
     $validCount = 0
+    $rateNumber = $null
     foreach ($link in $Links) {
         $url = ([string]$link).Trim()
         if (-not $url -or -not $unitSeen.Add($url)) { continue }
@@ -217,9 +225,12 @@ function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
         $rate = 'NA'
     } else {
         $percent = 100.0 * $validCount / $known
+        $rateNumber = $percent
         $rate = ('{0:0.00}%（{1}/{2}）' -f $percent, $validCount, $known)
     }
-    Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate)
+    $delayMinutes = Get-Delay-Minutes $rateNumber
+    Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate + '；采集延时阈值：' + $delayMinutes + ' 分钟')
+    return $rateNumber
 }
 
 $probe = Set-Fastest-Proxy 'https://t.me/' $headers 3
@@ -232,10 +243,11 @@ if ($probe.ProxyOk -eq 0 -and $probe.DirectOk -eq 0) {
 }
 Write-Host ('采用' + $probe.Name)
 
-$rawLinks = [System.Collections.Generic.List[string]]::new()
+$rawLinks = [System.Collections.Generic.List[object]]::new()
 foreach ($ch in $tgChannels) {
     Write-Host ('开始采集频道 ' + $ch)
     $unitLinks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $channelStartIndex = $rawLinks.Count
     $before = $null
     for ($page = 0; $page -lt $tgMaxPages; $page++) {
         $uri = 'https://t.me/s/' + $ch
@@ -249,7 +261,7 @@ foreach ($ch in $tgChannels) {
         }
         $m = [regex]::Matches($html, $extractPattern)
         foreach ($x in $m) {
-            [void]$rawLinks.Add($x.Value)
+            [void]$rawLinks.Add([pscustomobject]@{ Url = $x.Value; MinAgeMinutes = 0 })
             [void]$unitLinks.Add($x.Value)
         }
         Write-Host ('频道 ' + $ch + ' 第 ' + ($page + 1) + ' 页，本页 ' + $m.Count + ' 条，累计 ' + $rawLinks.Count + ' 条')
@@ -264,7 +276,11 @@ foreach ($ch in $tgChannels) {
         $before = $minId
     }
     Write-Host ('频道 ' + $ch + ' 采集完成，累计 ' + $rawLinks.Count + ' 条')
-    Write-Estimated-Rate $ch '频道' $unitLinks
+    $sourceRate = Write-Estimated-Rate $ch '频道' $unitLinks
+    $sourceDelayMinutes = Get-Delay-Minutes $sourceRate
+    for ($i = $channelStartIndex; $i -lt $rawLinks.Count; $i++) {
+        $rawLinks[$i].MinAgeMinutes = $sourceDelayMinutes
+    }
     Write-Host ''
 }
 if ($rawLinks.Count -eq 0) {
@@ -313,12 +329,15 @@ foreach ($rec in $invalidRecords) {
 $candidates = [System.Collections.Generic.List[object]]::new()
 $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($rawUrl in $rawLinks) {
-    $url = ([string]$rawUrl).Trim()
+    $url = ([string]$rawUrl.Url).Trim()
+    $minAgeMinutes = 0
+    if ($null -ne $rawUrl.MinAgeMinutes) { $minAgeMinutes = [int]$rawUrl.MinAgeMinutes }
     if ($existing.Contains($url)) { continue }
     if (-not $seen.Add($url)) { continue }
     $candidates.Add([pscustomobject]@{
         Index = $candidates.Count + 1
         Url   = $url
+        MinAgeMinutes = $minAgeMinutes
         Title = ''
         Time  = ''
     })
@@ -383,6 +402,28 @@ $workerScript = @'
             $title = [string]$share.title
             $fileTime = if ($share.first_file -and $share.first_file.updated_at) { $share.first_file.updated_at } else { $share.created_at }
             $time = [System.DateTimeOffset]::FromUnixTimeMilliseconds([int64]$fileTime).ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
+            $minAgeMinutes = 0
+            if ($null -ne $item.MinAgeMinutes) { $minAgeMinutes = [int]$item.MinAgeMinutes }
+            if ($minAgeMinutes -gt 0) {
+                $ageMinutes = [math]::Floor(([System.DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - [int64]$fileTime) / 60000.0)
+                if ($ageMinutes -lt $minAgeMinutes) {
+                    $skip = $true
+                    $reason = '不满足采集延时要求：资源时间 ' + $time + '，当前约 ' + $ageMinutes + ' 分钟，需至少 ' + $minAgeMinutes + ' 分钟'
+                    return [pscustomobject]@{
+                        Index     = $item.Index
+                        Url       = $url
+                        Title     = $title
+                        Desc      = $desc
+                        Time      = $time
+                        Author    = $author
+                        FileCount = $fileCount
+                        FileSize  = $fileSize
+                        Valid     = $valid
+                        Skip      = $skip
+                        Reason    = $reason
+                    }
+                }
+            }
             $expiredAt = [int64]$share.expired_at
             if ($expiredAt -gt 0 -and $expiredAt -lt [System.DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) {
                 $reason = '链接已过期'

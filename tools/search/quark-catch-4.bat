@@ -218,10 +218,18 @@ function Set-Fastest-Proxy([string]$testUrl, [object]$testHeaders, [int]$count) 
     }
 }
 
+function Get-Delay-Minutes([object]$RateNumber) {
+    if ($null -eq $RateNumber) { return 0 }
+    $minutes = (100.0 - [double]$RateNumber) * 60.0
+    if ($minutes -le 0) { return 0 }
+    return [int][math]::Ceiling($minutes)
+}
+
 function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
     $unitSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $invalidCount = 0
     $validCount = 0
+    $rateNumber = $null
     foreach ($link in $Links) {
         $url = ([string]$link).Trim()
         if (-not $url -or -not $unitSeen.Add($url)) { continue }
@@ -233,12 +241,15 @@ function Write-Estimated-Rate([string]$Name, [string]$Kind, [object]$Links) {
         $rate = 'NA'
     } else {
         $percent = 100.0 * $validCount / $known
+        $rateNumber = $percent
         $rate = ('{0:0.00}%（{1}/{2}）' -f $percent, $validCount, $known)
     }
-    Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate)
+    $delayMinutes = Get-Delay-Minutes $rateNumber
+    Write-Host ('基于已有数据，预估 ' + $Name + ' ' + $Kind + '的采集资源有效率：' + $rate + '；采集延时阈值：' + $delayMinutes + ' 分钟')
+    return $rateNumber
 }
 
-$rawLinks = [System.Collections.Generic.List[string]]::new()
+$rawLinks = [System.Collections.Generic.List[object]]::new()
 $collectedSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
 $collectScript = {
@@ -356,6 +367,7 @@ foreach ($site in $sites) {
     $pageOk = 0
     $pageFail = 0
     $unitLinks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $siteStartRaw = $rawLinks.Count
 
     $startUrl = [System.Uri]::new($root, 'sitemap.xml').AbsoluteUri
     [void]$sitemapSeen.Add($startUrl)
@@ -424,7 +436,7 @@ foreach ($site in $sites) {
             [void]$collectedPages.Add($res.Url)
             foreach ($lk in $res.Links) {
                 [void]$unitLinks.Add($lk)
-                if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add($lk) }
+                if ($collectedSeen.Add($lk)) { [void]$rawLinks.Add([pscustomobject]@{ Url = $lk; MinAgeMinutes = 0 }) }
             }
             $pageBase = $null
             try { $pageBase = [System.Uri]::new($res.Url) } catch { $pageBase = $root }
@@ -441,13 +453,17 @@ foreach ($site in $sites) {
             Save-Page-Log $logPath $collectedPages
             $foundLinks = $rawLinks.Count - $lastLogLinks
             $lastLogLinks = $rawLinks.Count
-            Write-Host ('站点 ' + $site.Host + ' 已采集 ' + $donePages + ' / ' + $pageSeen.Count + ' 页，已失败 ' + $pageFail + ' 页，发现 ' + $foundLinks + ' 条，累计 ' + $rawLinks.Count + ' 条')
+            Write-Host ('站点 ' + $site.Host + ' 已采集 ' + $donePages + ' / ' + $pageSeen.Count + ' 页，已失败 ' + $pageFail + ' 页，发现 ' + $foundLinks + ' 条，本站累计 ' + ($rawLinks.Count - $siteStartRaw) + ' 条')
         }
     }
 
     Save-Page-Log $logPath $collectedPages
-    Write-Host ('站点 ' + $site.Host + ' 采集完成，累计 ' + $rawLinks.Count + ' 条')
-    Write-Estimated-Rate $site.Host '网站' $unitLinks
+    Write-Host ('站点 ' + $site.Host + ' 采集完成，本站累计 ' + ($rawLinks.Count - $siteStartRaw) + ' 条')
+    $sourceRate = Write-Estimated-Rate $site.Host '网站' $unitLinks
+    $sourceDelayMinutes = Get-Delay-Minutes $sourceRate
+    for ($i = $siteStartRaw; $i -lt $rawLinks.Count; $i++) {
+        $rawLinks[$i].MinAgeMinutes = $sourceDelayMinutes
+    }
     Write-Host ''
 }
 
@@ -501,12 +517,15 @@ foreach ($rec in $invalidRecords) {
 $candidates = [System.Collections.Generic.List[object]]::new()
 $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($rawUrl in $rawLinks) {
-    $url = ([string]$rawUrl).Trim()
+    $url = ([string]$rawUrl.Url).Trim()
+    $minAgeMinutes = 0
+    if ($null -ne $rawUrl.MinAgeMinutes) { $minAgeMinutes = [int]$rawUrl.MinAgeMinutes }
     if ($existing.Contains($url)) { continue }
     if (-not $seen.Add($url)) { continue }
     $candidates.Add([pscustomobject]@{
         Index = $candidates.Count + 1
         Url   = $url
+        MinAgeMinutes = $minAgeMinutes
         Title = ''
         Time  = ''
     })
@@ -517,7 +536,7 @@ if ($candidates.Count -eq 0) {
     exit 0
 }
 
-Write-Host ('采集 ' + $rawLinks.Count + ' 条，已有 ' + $existing.Count + ' 条，待验证 ' + $candidates.Count + ' 条')
+Write-Host ('所有站点合计：采集 ' + $rawLinks.Count + ' 条，已有 ' + $existing.Count + ' 条，待验证 ' + $candidates.Count + ' 条')
 
 $workerScript = @'
     param($item)
@@ -571,6 +590,28 @@ $workerScript = @'
             $title = [string]$share.title
             $fileTime = if ($share.first_file -and $share.first_file.updated_at) { $share.first_file.updated_at } else { $share.created_at }
             $time = [System.DateTimeOffset]::FromUnixTimeMilliseconds([int64]$fileTime).ToOffset($cnOffset).ToString('yyyy-MM-dd HH:mm')
+            $minAgeMinutes = 0
+            if ($null -ne $item.MinAgeMinutes) { $minAgeMinutes = [int]$item.MinAgeMinutes }
+            if ($minAgeMinutes -gt 0) {
+                $ageMinutes = [math]::Floor(([System.DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - [int64]$fileTime) / 60000.0)
+                if ($ageMinutes -lt $minAgeMinutes) {
+                    $skip = $true
+                    $reason = '不满足采集延时要求：资源时间 ' + $time + '，当前约 ' + $ageMinutes + ' 分钟，需至少 ' + $minAgeMinutes + ' 分钟'
+                    return [pscustomobject]@{
+                        Index     = $item.Index
+                        Url       = $url
+                        Title     = $title
+                        Desc      = $desc
+                        Time      = $time
+                        Author    = $author
+                        FileCount = $fileCount
+                        FileSize  = $fileSize
+                        Valid     = $valid
+                        Skip      = $skip
+                        Reason    = $reason
+                    }
+                }
+            }
             $expiredAt = [int64]$share.expired_at
             if ($expiredAt -gt 0 -and $expiredAt -lt [System.DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) {
                 $reason = '链接已过期'
